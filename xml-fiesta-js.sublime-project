@@ -1,0 +1,20 @@
+{
+  "folders":
+  [
+    {
+      "file_exclude_patterns": [
+        "*.log",
+        "*.orig",
+        "*.sublime-workspace"
+      ],
+      "folder_exclude_patterns": [
+        "node_modules",
+        "builds",
+        "lib",
+        "dist",
+        "coverage"
+      ],
+      "path": "."
+    }
+  ]
+}

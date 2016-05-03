@@ -1,0 +1,26 @@
+{
+  "name": "xml-fiesta",
+  "authors": [
+    "Genaro Madrid <genmadrid@gmail.com>"
+  ],
+  "description": "Electronic signed document XML Protocol for JS",
+  "main": "./dist/xml-fiesta.js",
+  "moduleType": [],
+  "keywords": [
+    "Electronic",
+    "document",
+    "electronic",
+    "signatures",
+    "RSA",
+    "XML"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/Mifiel/xml-fiesta-js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
