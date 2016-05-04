@@ -18,10 +18,10 @@ module.exports = (grunt) ->
     watch:
       clear:
         files: ['**/**/*.coffee']
-        tasks: ['clear']
+        # tasks: ['clear']
       scripts:
         files: ['**/**/*.coffee']
-        tasks: ['mochaTest', 'run:coverage']
+        tasks: ['clear', 'mochaTest', 'run:coverage']
         options: {}
 
     browserify:

@@ -1,0 +1,18 @@
+InvalidSignerError = (@message) ->
+  @stack = (new Error()).stack
+  this.name = 'InvalidSignerError'
+  return
+
+InvalidSignerError.prototype = Object.create(Error.prototype)
+
+DuplicateSignersError = (@message) ->
+  @stack = (new Error()).stack
+  this.name = 'DuplicateSignersError'
+  return
+
+DuplicateSignersError.prototype = Object.create(Error.prototype)
+
+module.exports = {
+  InvalidSignerError: InvalidSignerError
+  DuplicateSignersError: DuplicateSignersError
+}
