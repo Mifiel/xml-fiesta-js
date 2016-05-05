@@ -1,7 +1,7 @@
 Signature = require './signature'
 common = require './common'
 errors = require './errors'
-crypto = require 'crypto'
+jsrsasign = require 'jsrsasign'
 
 parseString = require('xml2js').parseString
 
@@ -21,9 +21,11 @@ class Document
     options = common.extend(defaultOpts, options)
 
     @version = options.version
-    hash = crypto.createHash('sha256')
-    hash.update(@pdfBuffer())
-    @originalHash = hash.digest('hex')
+    hash = new jsrsasign.crypto.MessageDigest({
+      alg: 'sha256',
+      prov: 'cryptojs'
+    })
+    @originalHash = hash.digestHex(@pdfHex())
 
     if options.signers.length > 0
       options.signers.forEach (el) ->
@@ -32,6 +34,10 @@ class Document
   pdfBuffer: ->
     return null unless _pdf
     new Buffer(_pdf, 'base64')
+
+  pdfHex: ->
+    return null unless _pdf
+    common.b64toHex(_pdf)
 
   pdf: ->
     return null unless _pdf

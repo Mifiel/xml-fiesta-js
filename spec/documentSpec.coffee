@@ -3,7 +3,6 @@ Signature = require '../src/signature'
 errors = require '../src/errors'
 common = require '../src/common'
 fs = require 'fs'
-crypto = require 'crypto'
 
 expect = require('expect.js')
 
