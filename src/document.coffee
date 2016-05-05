@@ -25,7 +25,7 @@ class Document
       alg: 'sha256',
       prov: 'cryptojs'
     })
-    @originalHash = hash.digestHex(@pdfHex())
+    @originalHash = hash.digestHex(@pdf('hex'))
 
     if options.signers.length > 0
       options.signers.forEach (el) ->
@@ -35,13 +35,12 @@ class Document
     return null unless _pdf
     new Buffer(_pdf, 'base64')
 
-  pdfHex: ->
+  pdf: (format) ->
     return null unless _pdf
-    common.b64toHex(_pdf)
-
-  pdf: ->
-    return null unless _pdf
-    new Buffer(_pdf, 'base64').toString('utf8')
+    return common.b64toAscii(_pdf) unless format
+    return common.b64toHex(_pdf) if format is 'hex'
+    return _pdf if format is 'base64'
+    throw new errors.ArgumentError "unknown format #{format}"
 
   signers: -> _signers
 

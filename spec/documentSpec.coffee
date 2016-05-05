@@ -82,6 +82,16 @@ describe 'Document', ->
         pdf = doc.pdf()
         expect(pdf).to.be 'pdf-base64-content'
 
+      describe 'with unkown format', ->
+        it 'should throw Exception', ->
+          expect ->
+            doc.pdf('blah')
+          .to.throwException(errors.ArgumenError)
+
+      describe.only 'with base64 format', ->
+        it 'should throw Exception', ->
+          expect(doc.pdf('base64')).to.be 'cGRmLWJhc2U2NC1jb250ZW50'
+
     describe '.signers', ->
       it 'should be defined', ->
         expect(doc.signers).to.be.a('function')

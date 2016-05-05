@@ -8,13 +8,12 @@ expect = require('expect.js')
 describe 'Signature', ->
   cer = null
   doneCer = false
-  sig = common.b64toHex(
-          'Ia+HMpJt1SGe0fZ1PQmxUO96slPPnbilb94vB/' +
-          'FDZl1iJ/68yeHa4ooftn/HuYqGbAHzCxnCGEYo' +
-          'E16yyLMB2U9TKKBpGzEipHkD1AyRF8L07ykH+e' +
-          'EuHLgdIcMtSP/2lyoWX5x7Au6JTBdQb5qk8cZM' +
-          'Nu43DO2SEnszEouNIiU='
-        )
+  sigB64 = 'Ia+HMpJt1SGe0fZ1PQmxUO96slPPnbilb94vB/' +
+           'FDZl1iJ/68yeHa4ooftn/HuYqGbAHzCxnCGEYo' +
+           'E16yyLMB2U9TKKBpGzEipHkD1AyRF8L07ykH+e' +
+           'EuHLgdIcMtSP/2lyoWX5x7Au6JTBdQb5qk8cZM' +
+           'Nu43DO2SEnszEouNIiU='
+  sig = common.b64toHex(sigB64)
 
   beforeEach (done) ->
     fs.readFile "#{__dirname}/fixtures/FIEL_AAA010101AAA.cer", (err, data) ->
@@ -55,9 +54,24 @@ describe 'Signature', ->
     beforeEach ->
       signature = new Signature(cer, sig, date, 'other@email.com')
 
-    describe '.signature', ->
-      it 'should be the same as passed', ->
-        expect(signature.signature()).to.be sig
+    describe '.sig', ->
+      describe 'without params', ->
+        it 'should be the same as passed', ->
+          expect(signature.sig()).to.be sig
+
+      describe 'with hex', ->
+        it 'should be the same as passed', ->
+          expect(signature.sig('hex')).to.be sig
+
+      describe 'with base64', ->
+        it 'should be the same as passed', ->
+          expect(signature.sig('base64')).to.be sigB64
+
+      describe 'with unknwon format', ->
+        it 'should throw exception', ->
+          expect ->
+            signature.sig('blah')
+          .to.throwException(errors.ArgumentError)
 
     describe '.certificate', ->
       it 'should not be null', ->
