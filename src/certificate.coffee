@@ -1,3 +1,4 @@
+errors = require './errors'
 jsrsasign = require 'jsrsasign'
 
 jsrsasign.X509.hex2dnobj = (e) ->
@@ -48,12 +49,9 @@ Certificate = (binaryString, hexString) ->
   certificate = new jsrsasign.X509()
   pubKey = null
   subject = null
-  @error = {}
 
   if (binaryString.length == 0 || !jsrsasign.ASN1HEX.isASN1HEX(hex))
-    @error =
-      code: 403,
-      message: 'El archivo no es un certificado valido.'
+    throw new errors.CertificateError('The certificate is not valid.')
     return this
 
   buildPemFromHex = (hex) ->

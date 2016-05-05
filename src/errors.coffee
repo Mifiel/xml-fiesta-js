@@ -12,7 +12,14 @@ DuplicateSignersError = (@message) ->
 
 DuplicateSignersError.prototype = Object.create(Error.prototype)
 
+CertificateError = (@message) ->
+  @stack = (new Error()).stack
+  this.name = 'CertificateError'
+  return
+
+CertificateError.prototype = Object.create(Error.prototype)
 module.exports = {
   InvalidSignerError: InvalidSignerError
   DuplicateSignersError: DuplicateSignersError
+  CertificateError: CertificateError
 }

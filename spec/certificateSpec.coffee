@@ -1,3 +1,5 @@
+errors = require '../src/errors'
+
 jsrsasign = require 'jsrsasign'
 expect = require 'expect.js'
 sinon = require 'sinon'
@@ -11,19 +13,23 @@ describe 'Certificate', ->
   fielCertificate = new Certificate(false, certificatesAndKeys.FIELCer)
   csdCertificate = new Certificate(false, certificatesAndKeys.CSDCer)
 
-  describe 'Certificate instance', ->
+  describe 'instance', ->
     describe 'when the provided string is not a certificate', ->
       it 'should have an error', ->
-        certificate = new Certificate('')
-        expect(certificate.error.code).to.be(403)
+        expect(->
+          new Certificate('')
+        ).to.throwError(errors.CertificateError)
 
       it 'should have an error', ->
-        certificate = new Certificate('not a valid certificate string')
-        expect(certificate.error.code).to.be(403)
+        expect(->
+          new Certificate('not a valid certificate string')
+        ).to.throwError(errors.CertificateError)
 
     describe 'when provide a hex string', ->
       it 'should have no errors', ->
-        expect(fielCertificate.error).to.be.empty()
+        expect(->
+          new Certificate(false, certificatesAndKeys.FIELCer)
+        ).not.to.throwError
 
     describe 'toBinaryString', ->
       it 'should be defined', ->
