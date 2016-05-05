@@ -20,7 +20,34 @@ npm install xml-fiesta --save
 
 ## Usage
 
-TODO: Add documentation
+```javascript
+var fs        = require 'fs';
+var XMLFiesta = require 'xml-fiesta';
+var xml = "#{__dirname}/spec/fixtures/example_signed.xml";
+
+fs.readFile(xml, function(err, data) {
+  doc = XMLFiesta.fromXml(data)
+  doc.pdf() // ASCII PDF
+  doc.pdf('hex') // HEX PDF
+  doc.pdf('base64') // Base64 PDF
+  signatures = doc.signatures()
+  signature = signatures[0]
+  signature.certificate()
+  signature.sig() // HEX signature
+  signature.sig('base64') // Base64 signature
+  signature.signedAt() // 2016-05-03T00:51:05+00:00
+  signature.valid() // true
+  signature.signer
+  // {
+  //   id: 'AAA010101AAA',
+  //   name: 'ACCEM SERVICIOS EMPRESARIALES SC',
+  //   email: 'some@email.com'
+  // }
+
+  doc.validSignatures() // true
+});
+
+```
 
 ## Development
 
