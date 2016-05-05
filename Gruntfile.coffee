@@ -18,10 +18,10 @@ module.exports = (grunt) ->
     watch:
       clear:
         files: ['**/**/*.coffee']
-        tasks: ['clear']
+        # tasks: ['clear']
       scripts:
         files: ['**/**/*.coffee']
-        tasks: ['mochaTest']
+        tasks: ['clear', 'mochaTest', 'run:coverage']
         options: {}
 
     browserify:
@@ -68,6 +68,15 @@ module.exports = (grunt) ->
     clean:
       all: ['dist', 'lib', 'coverage']
       coverage: 'coverage'
+
+    run:
+      coverage:
+        cmd: './node_modules/.bin/istanbul'
+        args: [
+          'report'
+          'text-summary'
+          'lcov'
+        ]
   }
 
   grunt.event.on 'coverage', (lcovFileContents, done) ->
@@ -81,6 +90,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-bump')
   grunt.loadNpmTasks('grunt-contrib-clean')
   grunt.loadNpmTasks('grunt-mocha-test')
+  grunt.loadNpmTasks('grunt-run')
 
   grunt.registerTask('default', ['watch'])
   grunt.registerTask('build', ['clean', 'coffee', 'browserify'])
