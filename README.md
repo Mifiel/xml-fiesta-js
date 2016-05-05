@@ -21,8 +21,8 @@ npm install xml-fiesta --save
 ## Usage
 
 ```javascript
-var fs        = require 'fs';
-var XMLFiesta = require 'xml-fiesta';
+var fs        = require('fs');
+var XMLFiesta = require('xml-fiesta');
 var xml = "#{__dirname}/spec/fixtures/example_signed.xml";
 
 fs.readFile(xml, function(err, data) {
