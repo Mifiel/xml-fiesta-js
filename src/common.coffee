@@ -8,7 +8,7 @@ module.exports =
     new Buffer(b64String, 'base64').toString('hex')
 
   hextoB64: (hexString) ->
-    new Buffer(hexString, 'hex').toString('base65')
+    new Buffer(hexString, 'hex').toString('base64')
 
   b64toAscii: (b64String) ->
     new Buffer(b64String, 'base64').toString('ascii')

@@ -3,7 +3,6 @@ Signature = require '../src/signature'
 errors = require '../src/errors'
 common = require '../src/common'
 fs = require 'fs'
-crypto = require 'crypto'
 
 expect = require('expect.js')
 
@@ -82,6 +81,16 @@ describe 'Document', ->
       it 'should be an ascci string', ->
         pdf = doc.pdf()
         expect(pdf).to.be 'pdf-base64-content'
+
+      describe 'with unkown format', ->
+        it 'should throw Exception', ->
+          expect ->
+            doc.pdf('blah')
+          .to.throwException(errors.ArgumenError)
+
+      describe 'with base64 format', ->
+        it 'should throw Exception', ->
+          expect(doc.pdf('base64')).to.be 'cGRmLWJhc2U2NC1jb250ZW50'
 
     describe '.signers', ->
       it 'should be defined', ->

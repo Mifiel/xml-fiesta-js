@@ -2,7 +2,7 @@
   "name": "xml-fiesta",
   "version": "0.0.0",
   "description": "Electronic signed document XML Protocol for Node & Browser",
-  "main": "./dist/xml-fiesta.js",
+  "main": "./lib/xml-fiesta",
   "scripts": {
     "test": "grunt test",
     "coverage": "istanbul report text-summary lcov",

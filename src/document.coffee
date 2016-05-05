@@ -1,7 +1,7 @@
 Signature = require './signature'
 common = require './common'
 errors = require './errors'
-crypto = require 'crypto'
+jsrsasign = require 'jsrsasign'
 
 parseString = require('xml2js').parseString
 
@@ -21,9 +21,11 @@ class Document
     options = common.extend(defaultOpts, options)
 
     @version = options.version
-    hash = crypto.createHash('sha256')
-    hash.update(@pdfBuffer())
-    @originalHash = hash.digest('hex')
+    hash = new jsrsasign.crypto.MessageDigest({
+      alg: 'sha256',
+      prov: 'cryptojs'
+    })
+    @originalHash = hash.digestHex(@pdf('hex'))
 
     if options.signers.length > 0
       options.signers.forEach (el) ->
@@ -33,9 +35,12 @@ class Document
     return null unless _pdf
     new Buffer(_pdf, 'base64')
 
-  pdf: ->
+  pdf: (format) ->
     return null unless _pdf
-    new Buffer(_pdf, 'base64').toString('utf8')
+    return common.b64toAscii(_pdf) unless format
+    return common.b64toHex(_pdf) if format is 'hex'
+    return _pdf if format is 'base64'
+    throw new errors.ArgumentError "unknown format #{format}"
 
   signers: -> _signers
 

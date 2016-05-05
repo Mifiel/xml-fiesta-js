@@ -1,3 +1,5 @@
 coverage
 node_modules
 *.sublime-workspace
+lib
+dist

@@ -1,5 +1,6 @@
 Certificate = require './certificate'
 errors = require './errors'
+common = require './common'
 
 class Signature
   _certificate = null
@@ -30,7 +31,11 @@ class Signature
 
   certificate: -> _certificate
   signedAt: -> _signedAt
-  signature: -> _signature
+
+  sig: (format) ->
+    return _signature if format is 'hex' or !format
+    return common.hextoB64(_signature) if format is 'base64'
+    throw new errors.ArgumentError "unknown format #{format}"
 
   valid: (hash) ->
     throw new errors.ArgumentError 'hash is required' unless hash
