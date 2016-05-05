@@ -70,10 +70,20 @@ Certificate = (binaryString, hexString) ->
 
   @getSubject = -> subject
 
+  @email = -> subject.EMAIL
+  @owner = -> subject.NAME
+  @owner_id = ->
+    identifier = @getUniqueIdentifier()
+    identifier[0]
+
+  @getUniqueIdentifier = ->
+    if subject.UI then subject.UI.split(' / ') else null
+
   @getRSAPublicKey = ->
     pubKey = if pubKey == null then certificate.subjectPublicKeyRSA else pubKey
 
   @verifyString = (string, signedString) ->
+    throw new errors.ArgumentError 'string is required' unless string
     try
       @verifyHexString(string, jsrsasign.b64toutf8(signedString))
     catch error

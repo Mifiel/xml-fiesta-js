@@ -1,5 +1,7 @@
+Signature = require './signature'
 common = require './common'
 errors = require './errors'
+crypto = require 'crypto'
 
 parseString = require('xml2js').parseString
 
@@ -17,26 +19,52 @@ class Document
       signers: []
 
     options = common.extend(defaultOpts, options)
+
+    @version = options.version
+    hash = crypto.createHash('sha256')
+    hash.update(@pdfBuffer())
+    @originalHash = hash.digest('hex')
+
     if options.signers.length > 0
       options.signers.forEach (el) ->
         add_signer(el)
 
+  pdfBuffer: ->
+    return null unless _pdf
+    new Buffer(_pdf, 'base64')
+
   pdf: ->
     return null unless _pdf
-    new Buffer(_pdf, 'base64').toString('ascii')
+    new Buffer(_pdf, 'base64').toString('utf8')
 
   signers: -> _signers
 
   add_signer = (signer) ->
-    if !signer.cer || !signer.signature
+    if !signer.cer || !signer.signature || !signer.signedAt
       throw new errors.InvalidSignerError(
-        'signer must contain at least cer and signature'
+        'signer must contain cer, signature and signedAt'
       )
     if signer_exist(signer)
       throw new errors.DuplicateSignersError(
         'signer already exists'
       )
     _signers.push(signer)
+
+  signatures: ->
+    _signers.map (signer) ->
+      new Signature(
+        signer.cer,
+        signer.signature,
+        signer.signedAt
+      )
+
+  validSignatures: ->
+    return false unless @originalHash
+    valid = true
+    oHash = @originalHash
+    @signatures().forEach (signature) ->
+      valid = false if valid && !signature.valid(oHash)
+    valid
 
   signer_exist = (signer) ->
     selected = _signers.filter (s) ->
@@ -53,15 +81,15 @@ class Document
       pdf = result.electronicDocument.pdf[0]._
       pdfAttrs = result.electronicDocument.pdf[0].$
       signers = result.electronicDocument.signers
-
       parsedSigners = []
       signers.forEach (signer) ->
         signer = signer.signer[0]
         attrs = signer.$
         parsedSigners.push({
           email: attrs.email
-          cer: signer.certificate[0]._
-          signature: signer.signature[0]._
+          cer: common.b64toHex(signer.certificate[0]._)
+          signature: common.b64toHex(signer.signature[0]._)
+          signedAt: signer.signature[0].$.signedAt
         })
 
       doc = new Document(pdf, signers: parsedSigners)

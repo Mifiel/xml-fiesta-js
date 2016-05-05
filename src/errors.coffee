@@ -18,8 +18,17 @@ CertificateError = (@message) ->
   return
 
 CertificateError.prototype = Object.create(Error.prototype)
+
+ArgumentError = (@message) ->
+  @stack = (new Error()).stack
+  this.name = 'ArgumentError'
+  return
+
+ArgumentError.prototype = Object.create(Error.prototype)
+
 module.exports = {
   InvalidSignerError: InvalidSignerError
   DuplicateSignersError: DuplicateSignersError
   CertificateError: CertificateError
+  ArgumentError: ArgumentError
 }

@@ -4,6 +4,15 @@ module.exports =
       object[key] = val
     object
 
+  b64toHex: (b64String) ->
+    new Buffer(b64String, 'base64').toString('hex')
+
+  hextoB64: (hexString) ->
+    new Buffer(hexString, 'hex').toString('base65')
+
+  b64toAscii: (b64String) ->
+    new Buffer(b64String, 'base64').toString('ascii')
+
   isEmpty: (obj) ->
     # Speed up calls to hasOwnProperty
     hasOwnProperty = Object.prototype.hasOwnProperty;
