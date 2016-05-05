@@ -1,17 +1,33 @@
 Document = require '../src/document'
 errors = require '../src/errors'
+common = require '../src/common'
 fs = require 'fs'
 
 expect = require('expect.js')
 
 describe 'Document', ->
+  sig = common.b64toAscii(
+          'Ia+HMpJt1SGe0fZ1PQmxUO96slPPnbilb94vB/' +
+          'FDZl1iJ/68yeHa4ooftn/HuYqGbAHzCxnCGEYo' +
+          'E16yyLMB2U9TKKBpGzEipHkD1AyRF8L07ykH+e' +
+          'EuHLgdIcMtSP/2lyoWX5x7Au6JTBdQb5qk8cZM' +
+          'Nu43DO2SEnszEouNIiU='
+        )
   signers = [
     {
       email: 'some@gmail.com'
-      signature: 'asd'
-      cer: 'some-cer'
+      signature: sig
+      cer: null
+      signedAt: new Date()
     }
   ]
+
+  beforeEach (done) ->
+    fs.readFile "#{__dirname}/fixtures/FIEL_AAA010101AAA.cer", (err, data) ->
+      throw err if err
+      signers[0].cer = data.toString 'hex'
+      doneCer = true
+      done()
 
   describe 'initialize', ->
     describe 'without pdf', ->
