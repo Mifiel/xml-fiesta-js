@@ -88,7 +88,7 @@ describe 'Document', ->
             doc.pdf('blah')
           .to.throwException(errors.ArgumenError)
 
-      describe.only 'with base64 format', ->
+      describe 'with base64 format', ->
         it 'should throw Exception', ->
           expect(doc.pdf('base64')).to.be 'cGRmLWJhc2U2NC1jb250ZW50'
 
