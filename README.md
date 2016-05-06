@@ -26,7 +26,7 @@ var XMLFiesta = require('xml-fiesta');
 var xml = "#{__dirname}/spec/fixtures/example_signed.xml";
 
 fs.readFile(xml, function(err, data) {
-  doc = XMLFiesta.fromXml(data)
+  doc = XMLFiesta.Document.fromXml(data)
   doc.pdf() // ASCII PDF
   doc.pdf('hex') // HEX PDF
   doc.pdf('base64') // Base64 PDF
