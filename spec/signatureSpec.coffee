@@ -46,7 +46,7 @@ describe 'Signature', ->
     describe '.email', ->
       it 'should be the email of the certificate', ->
         signature = new Signature(cer, sig, new Date())
-        expect(signature.email()).to.be('pruebas@sat.gob.mx')
+        expect(signature.email).to.be('pruebas@sat.gob.mx')
 
   describe 'with everything OK', ->
     signature = null
@@ -75,19 +75,19 @@ describe 'Signature', ->
 
     describe '.certificate', ->
       it 'should not be null', ->
-        expect(signature.certificate()).not.to.be null
+        expect(signature.certificate).not.to.be null
 
     describe '.signedAt', ->
       it 'should be the same as passed', ->
-        expect(signature.signedAt()).to.be date
+        expect(signature.signedAt).to.be date
 
     describe '.email', ->
       it 'should be the email provided', ->
-        expect(signature.email()).to.be('other@email.com')
+        expect(signature.email).to.be('other@email.com')
 
     describe '.signer', ->
       it 'should be valid', ->
-        signer = signature.signer()
+        signer = signature.signer
         expect(signer.id).to.be 'AAA010101AAA'
         expect(signer.name).to.be 'ACCEM SERVICIOS EMPRESARIALES SC'
         expect(signer.email).to.be 'other@email.com'
