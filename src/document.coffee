@@ -19,7 +19,7 @@ class Document
       signers: []
 
     options = common.extend(defaultOpts, options)
-
+    @name = options.name
     @version = options.version
     hash = new jsrsasign.crypto.MessageDigest({
       alg: 'sha256',
@@ -81,6 +81,7 @@ class Document
   this.fromXml = (xml, validate) ->
     throw new Error('xml is required') unless xml
     doc = null
+    options = null
     parseString xml, (err, result) ->
       throw new Error("Unable to parse xml: #{err}") if err
       pdf = result.electronicDocument.pdf[0]._
@@ -97,7 +98,16 @@ class Document
           signedAt: signer.signature[0].$.signedAt
         })
 
-      doc = new Document(pdf, signers: parsedSigners)
-    return doc
+      options =
+        signers: parsedSigners
+        version: pdfAttrs.version
+        name: pdfAttrs.name
+        originalHash: pdfAttrs.originalHash
+
+      doc = new Document(pdf, options)
+    return {
+      document: doc,
+      xmlOriginalHash: options.originalHash
+    }
 
 module.exports = Document
