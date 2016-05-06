@@ -1,4 +1,5 @@
 errors = require './errors'
+common = require './common'
 jsrsasign = require 'jsrsasign'
 
 jsrsasign.X509.hex2dnobj = (e) ->
@@ -67,6 +68,8 @@ Certificate = (binaryString, hexString) ->
   @getX509 = -> certificate
 
   @getSerialNumberHex = -> certificate.getSerialNumberHex()
+  @getSerialNumber = ->
+    common.hextoAscii(@getSerialNumberHex())
 
   @getSubject = -> subject
 
