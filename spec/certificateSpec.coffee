@@ -63,14 +63,6 @@ describe 'Certificate', ->
       it 'should not be null', ->
         expect(fielCertificate.getSerialNumber()).to.be '20001000000200001410'
 
-    describe 'verifyString', ->
-      it 'should be defined', ->
-        expect(fielCertificate.verifyString).to.be.a('function')
-
-      describe 'when invalid', ->
-        it 'should return false', ->
-          expect(fielCertificate.verifyString('hello', 'bad-signature12')).to.be(false)
-
     describe 'getSubject', ->
       it 'should be defined', ->
         expect(fielCertificate.getSubject).to.be.a('function')

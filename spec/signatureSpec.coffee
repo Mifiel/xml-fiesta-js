@@ -104,7 +104,7 @@ describe 'Signature', ->
           expect(signature.valid(originalHash)).to.be false
 
       describe 'without hash', ->
-        it 'should be true', ->
+        it 'should throw exception', ->
           expect ->
             signature.valid()
           .to.throwException errors.ArgumentError
