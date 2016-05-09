@@ -1,11 +1,14 @@
-errors = require './errors'
-common = require './common'
+errors    = require './errors'
+common    = require './common'
 jsrsasign = require 'jsrsasign'
+certs     = require 'pem'
+Promise   = require './bluebird-promise'
 
 jsrsasign.X509.hex2dnobj = (e) ->
   f = {}
   c = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(e, 0)
   d = 0
+
   while d < c.length
     b = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(e, c[d])
     try
@@ -63,6 +66,7 @@ Certificate = (binaryString, hexString) ->
   @toBinaryString = -> binaryString
 
   @toHex = -> hex
+  @toPem = -> pem
 
   @getX509 = -> certificate
 
@@ -108,6 +112,21 @@ Certificate = (binaryString, hexString) ->
     notAfter = parseDate(certificate.getNotAfter())
     notAfter.getTime() < new Date().getTime()
 
+  @isCa = (rootCa, intermediate) ->
+    rootCerts = [rootCa, intermediate]
+    new Promise (resolve, reject) ->
+      try
+        certs.verifySigningChain pem, rootCerts, (err, result) ->
+          if (err)
+            resolve(false)
+          else
+            resolve(true)
+      catch
+        resolve(false)
+
+
   return
 
+
 module.exports = Certificate
+

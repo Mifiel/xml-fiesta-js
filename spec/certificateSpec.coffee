@@ -1,3 +1,4 @@
+fs = require 'fs'
 errors = require '../src/errors'
 common = require '../src/common'
 
@@ -85,3 +86,27 @@ describe 'Certificate', ->
 
       it 'should be true', ->
         expect(fielCertificate.hasExpired()).to.be(false)
+
+    describe 'isCa', ->
+      rootCa = null
+      intermediate = null
+      cert = null
+      certificate = null
+      beforeEach ->
+        rootCa = fs.readFileSync("#{__dirname}/../docs/Banxico/AgenciaRegistradoraCentral.crt").toString()
+        intermediate = fs.readFileSync("#{__dirname}/../docs/AC2_Sat.crt").toString()
+        cert = fs.readFileSync("#{__dirname}/fixtures/production-certificate.cer")
+        certificate = new Certificate(false, cert.toString('hex'))
+
+      describe 'when a CA', ->
+        it 'should be true', (done) ->
+          certificate.isCa(rootCa, intermediate).then (result) ->
+            expect(result).to.be true
+            done()
+
+      describe 'when no a CA', ->
+        it 'should be false', (done) ->
+          intermediate = fs.readFileSync("#{__dirname}/../docs/AC1_Sat.crt").toString()
+          certificate.isCa(rootCa, intermediate).then (result) ->
+            expect(result).to.be false
+            done()
