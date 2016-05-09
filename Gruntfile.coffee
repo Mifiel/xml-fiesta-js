@@ -26,11 +26,15 @@ module.exports = (grunt) ->
 
     browserify:
       dist:
-        alias: 'XMLFiesta'
+        options:
+          browserifyOptions:
+            standalone: 'XMLFiesta'
         src: 'lib/xml-fiesta.js'
         dest: 'dist/xml-fiesta.js'
       builds:
-        alias: 'XMLFiesta'
+        options:
+          browserifyOptions:
+            standalone: 'XMLFiesta'
         src: 'lib/xml-fiesta.js'
         dest: "builds/xml-fiesta-#{pkg['version']}.js"
 

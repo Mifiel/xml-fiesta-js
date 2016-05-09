@@ -1,4 +1,5 @@
 errors = require '../src/errors'
+common = require '../src/common'
 
 jsrsasign = require 'jsrsasign'
 expect = require 'expect.js'
@@ -53,13 +54,14 @@ describe 'Certificate', ->
         expect(fielCertificate.getX509()).to.have.property('getIssuerHex')
         expect(fielCertificate.getX509()).to.have.property('getNotAfter')
 
-    describe 'verifyString', ->
-      it 'should be defined', ->
-        expect(fielCertificate.verifyString).to.be.a('function')
+    describe 'getSerialNumberHex', ->
+      it 'should not be null', ->
+        serialHex = '3230303031303030303030323030303031343130'
+        expect(fielCertificate.getSerialNumberHex()).to.be serialHex
 
-      describe 'when invalid', ->
-        it 'should return false', ->
-          expect(fielCertificate.verifyString('hello', 'bad-signature12')).to.be(false)
+    describe 'getSerialNumberHex', ->
+      it 'should not be null', ->
+        expect(fielCertificate.getSerialNumber()).to.be '20001000000200001410'
 
     describe 'getSubject', ->
       it 'should be defined', ->

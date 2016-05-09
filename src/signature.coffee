@@ -3,34 +3,25 @@ errors = require './errors'
 common = require './common'
 
 class Signature
-  _certificate = null
   _signature = null
-  _signedAt = null
-  _email = null
 
-  constructor: (cer, signature, signedAt, email) ->
+  constructor: (cer, signature, @signedAt, @email) ->
     throw new errors.ArgumentError(
       'Signature must have signedAt'
-    ) unless signedAt
+    ) unless @signedAt
     throw new errors.ArgumentError(
       'Signature must have cer'
     ) unless cer
 
     _signature = signature
-    _signedAt = signedAt
-    _certificate = new Certificate(false, cer)
-    _email = email
-    _email ?= _certificate.email()
+    @certificate = new Certificate(false, cer)
+    @email ?= @certificate.email()
 
-  signer: ->
-    {
-      id: _certificate.owner_id(),
-      name: _certificate.owner(),
-      email: _email
+    @signer = {
+      id: @certificate.owner_id(),
+      name: @certificate.owner(),
+      email: @email
     }
-
-  certificate: -> _certificate
-  signedAt: -> _signedAt
 
   sig: (format) ->
     return _signature if format is 'hex' or !format
@@ -39,8 +30,6 @@ class Signature
 
   valid: (hash) ->
     throw new errors.ArgumentError 'hash is required' unless hash
-    _certificate.verifyHexString(hash, _signature)
-
-  email: -> _email
+    @certificate.verifyHexString(hash, _signature)
 
 module.exports = Signature

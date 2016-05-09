@@ -1,4 +1,5 @@
 errors = require './errors'
+common = require './common'
 jsrsasign = require 'jsrsasign'
 
 jsrsasign.X509.hex2dnobj = (e) ->
@@ -54,10 +55,9 @@ Certificate = (binaryString, hexString) ->
     throw new errors.CertificateError('The certificate is not valid.')
     return this
 
-  buildPemFromHex = (hex) ->
-    jsrsasign.asn1.ASN1Util.getPEMStringFromHex(hex, 'CERTIFICATE')
+  pem = jsrsasign.asn1.ASN1Util.getPEMStringFromHex(hex, 'CERTIFICATE')
 
-  certificate.readCertPEM(buildPemFromHex(hex))
+  certificate.readCertPEM(pem)
   subject = certificate.getSubjectObject()
 
   @toBinaryString = -> binaryString
@@ -67,6 +67,8 @@ Certificate = (binaryString, hexString) ->
   @getX509 = -> certificate
 
   @getSerialNumberHex = -> certificate.getSerialNumberHex()
+  @getSerialNumber = ->
+    common.hextoAscii(@getSerialNumberHex())
 
   @getSubject = -> subject
 
@@ -82,18 +84,15 @@ Certificate = (binaryString, hexString) ->
   @getRSAPublicKey = ->
     pubKey = if pubKey == null then certificate.subjectPublicKeyRSA else pubKey
 
-  @verifyString = (string, signedString) ->
-    throw new errors.ArgumentError 'string is required' unless string
-    try
-      @verifyHexString(string, jsrsasign.b64toutf8(signedString))
-    catch error
-      false
-
   @verifyHexString = (string, signedHexString) ->
     try
-      @getRSAPublicKey().verifyString(string, signedHexString)
+      sig = new jsrsasign.crypto.Signature(alg: 'SHA256withRSA')
+      sig.init(pem)
+      sig.updateString(string)
+      sig.verify(signedHexString)
     catch error
       false
+      throw error
 
   @getUniqueIdentifierString = (joinVal) ->
     joinVal = if joinVal then joinVal else ', '

@@ -117,9 +117,12 @@ describe 'Document', ->
     describe 'with valid xml', ->
       originalHash = '73c818b60eea60e6c1a1e5688a373c6b8376ca4ea2ff269695fe6eeef134b3c8'
       doc = null
+      parsedOHash = null
       beforeEach (done) ->
         fs.readFile "#{__dirname}/fixtures/example_signed.xml", (err, data) ->
-          doc = Document.fromXml(data)
+          parsed = Document.fromXml(data)
+          doc = parsed.document
+          parsedOHash = parsed.xmlOriginalHash
           done()
 
       it 'should parse the xml', ->
@@ -130,6 +133,7 @@ describe 'Document', ->
         expect(doc.pdfBuffer()).not.to.be null
         expect(doc.pdf()).not.to.be null
         expect(doc.originalHash).to.be originalHash
+        expect(parsedOHash).to.be originalHash
         expect(xmlSigners).not.to.be.empty()
         expect(signer.email).to.be 'some@email.com'
 
