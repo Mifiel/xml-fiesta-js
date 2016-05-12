@@ -96,7 +96,6 @@ Certificate = (binaryString, hexString) ->
       sig.verify(signedHexString)
     catch error
       false
-      throw error
 
   @verifyHexString = (hexString, signedHexString, alg) ->
     try
@@ -107,7 +106,6 @@ Certificate = (binaryString, hexString) ->
       sig.verify(signedHexString)
     catch error
       false
-      throw error
 
   @getUniqueIdentifierString = (joinVal) ->
     joinVal = if joinVal then joinVal else ', '
