@@ -1,6 +1,0 @@
-instrumentation:
-  extensions:
-    - .js
-    - .coffee
-  excludes: ['spec']
-  include-all-sources: true
