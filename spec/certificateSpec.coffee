@@ -111,3 +111,7 @@ describe 'Certificate', ->
         it 'should be false', ->
           cert = fs.readFileSync("#{__dirname}/fixtures/production-certificate.pem")
           expect(certificate.isCa(cert.toString())).to.be false
+
+      describe 'when CA is not even a certificate', ->
+        it 'should be false', ->
+          expect(certificate.isCa('blahblahpem')).to.be false

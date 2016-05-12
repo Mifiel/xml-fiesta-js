@@ -1,8 +1,6 @@
 errors    = require './errors'
 common    = require './common'
 jsrsasign = require 'jsrsasign'
-certs     = require 'pem'
-Promise   = require './bluebird-promise'
 
 jsrsasign.X509.hex2dnobj = (e) ->
   f = {}
@@ -98,7 +96,6 @@ Certificate = (binaryString, hexString) ->
       sig.verify(signedHexString)
     catch error
       false
-      throw error
 
   @verifyHexString = (hexString, signedHexString, alg) ->
     try
@@ -109,7 +106,6 @@ Certificate = (binaryString, hexString) ->
       sig.verify(signedHexString)
     catch error
       false
-      throw error
 
   @getUniqueIdentifierString = (joinVal) ->
     joinVal = if joinVal then joinVal else ', '
@@ -130,20 +126,23 @@ Certificate = (binaryString, hexString) ->
 
   @tbsCertificate = ->
     # 1st child of SEQ is tbsCert
-    hTbsCert = jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0])
+    jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0])
 
   @signature = ->
     jsrsasign.X509.getSignatureValueHex(hex)
 
   @isCa = (rootCa) ->
-    rootCaCert = new jsrsasign.X509()
-    rootCaCert.readCertPEM(rootCa)
-    rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(rootCaCert.hex).cA
-    # root certificate provided is not CA
-    return false unless rootCaIsCa
-    rootCaCert = new Certificate(false, rootCaCert.hex)
+    try
+      rootCaCert = new jsrsasign.X509()
+      rootCaCert.readCertPEM(rootCa)
+      rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(rootCaCert.hex).cA
+      # root certificate provided is not CA
+      return false unless rootCaIsCa
+      rootCaCert = new Certificate(false, rootCaCert.hex)
 
-    rootCaCert.verifyHexString(@tbsCertificate(), @signature() , @algorithm())
+      rootCaCert.verifyHexString(@tbsCertificate(), @signature() , @algorithm())
+    catch err
+      false
   return
 
 module.exports = Certificate
