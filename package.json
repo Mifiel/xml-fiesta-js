@@ -1,6 +1,6 @@
 {
   "name": "xml-fiesta",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Electronic signed document XML Protocol for Node & Browser",
   "main": "./lib/xml-fiesta",
   "scripts": {
