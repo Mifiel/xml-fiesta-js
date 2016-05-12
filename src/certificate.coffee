@@ -132,14 +132,17 @@ Certificate = (binaryString, hexString) ->
     jsrsasign.X509.getSignatureValueHex(hex)
 
   @isCa = (rootCa) ->
-    rootCaCert = new jsrsasign.X509()
-    rootCaCert.readCertPEM(rootCa)
-    rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(rootCaCert.hex).cA
-    # root certificate provided is not CA
-    return false unless rootCaIsCa
-    rootCaCert = new Certificate(false, rootCaCert.hex)
+    try
+      rootCaCert = new jsrsasign.X509()
+      rootCaCert.readCertPEM(rootCa)
+      rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(rootCaCert.hex).cA
+      # root certificate provided is not CA
+      return false unless rootCaIsCa
+      rootCaCert = new Certificate(false, rootCaCert.hex)
 
-    rootCaCert.verifyHexString(@tbsCertificate(), @signature() , @algorithm())
+      rootCaCert.verifyHexString(@tbsCertificate(), @signature() , @algorithm())
+    catch err
+      false
   return
 
 module.exports = Certificate
