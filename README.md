@@ -1,6 +1,6 @@
 # XMLFiesta
 
-Version: 0.0.0
+Version: 0.0.1
 
 Electronic signed document XML Protocol for Node & Browser
 
