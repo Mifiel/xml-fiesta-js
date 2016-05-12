@@ -40,13 +40,32 @@ jsrsasign.X509.DN_ATTRHEX =
   '060355040a': 'O'
   '060355040b': 'OU'
   '0603550403': 'CN'
-  '0603550405': 'SN'
+  '0603550405': 'serialNumber'
   '0603550408': 'ST'
   '0603550407': 'L'
   '060355042d': 'UI'
-  # Attrbutes added by SAT
-  '0603550429': 'NAME'
-  '06092a864886f70d010901': 'EMAIL'
+  '0603550409': 'street'
+  '0603550429': 'name'
+  '0603550411': 'postalCode'
+  '06092a864886f70d010901': 'emailAddress'
+  '06092a864886f70d010902': 'unstructuredName'
+
+KJUR.asn1.x509.OID.atype2oidList =
+  C:  '2.5.4.6'
+  O:  '2.5.4.10'
+  OU: '2.5.4.11'
+  ST: '2.5.4.8'
+  L:  '2.5.4.7'
+  CN: '2.5.4.3'
+  DN: '2.5.4.49'
+  DC: '0.9.2342.19200300.100.1.25'
+  serialNumber:     '2.5.4.5'
+  UI:               '2.5.4.45'
+  name:             '2.5.4.41'
+  street:           '2.5.4.9'
+  postalCode:       '2.5.4.17'
+  emailAddress:     '1.2.840.113549.1.9.1'
+  unstructuredName: '1.2.840.113549.1.9.2'
 
 Certificate = (binaryString, hexString) ->
   hex = if binaryString then jsrsasign.rstrtohex(binaryString) else hexString
@@ -75,9 +94,8 @@ Certificate = (binaryString, hexString) ->
     common.hextoAscii(@getSerialNumberHex())
 
   @getSubject = -> subject
-
-  @email = -> subject.EMAIL
-  @owner = -> subject.NAME
+  @email = -> subject.emailAddress
+  @owner = -> subject.name
   @owner_id = ->
     identifier = @getUniqueIdentifier()
     identifier[0]
@@ -88,11 +106,23 @@ Certificate = (binaryString, hexString) ->
   @getRSAPublicKey = ->
     pubKey = if pubKey == null then certificate.subjectPublicKeyRSA else pubKey
 
-  @verifyHexString = (string, signedHexString) ->
+  @verifyString = (string, signedHexString, alg) ->
     try
-      sig = new jsrsasign.crypto.Signature(alg: 'SHA256withRSA')
+      alg ?= 'SHA256withRSA'
+      sig = new jsrsasign.crypto.Signature(alg: alg)
       sig.init(pem)
       sig.updateString(string)
+      sig.verify(signedHexString)
+    catch error
+      false
+      throw error
+
+  @verifyHexString = (hexString, signedHexString, alg) ->
+    try
+      alg ?= 'SHA256withRSA'
+      sig = new jsrsasign.crypto.Signature(alg: alg)
+      sig.init(pem)
+      sig.updateHex(hexString)
       sig.verify(signedHexString)
     catch error
       false
@@ -112,21 +142,25 @@ Certificate = (binaryString, hexString) ->
     notAfter = parseDate(certificate.getNotAfter())
     notAfter.getTime() < new Date().getTime()
 
-  @isCa = (rootCa, intermediate) ->
-    rootCerts = [rootCa, intermediate]
-    new Promise (resolve, reject) ->
-      try
-        certs.verifySigningChain pem, rootCerts, (err, result) ->
-          if (err)
-            resolve(false)
-          else
-            resolve(true)
-      catch
-        resolve(false)
+  @algorithm = ->
+    certificate.getSignatureAlgorithmField()
 
+  @tbsCertificate = ->
+    # 1st child of SEQ is tbsCert
+    hTbsCert = jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0])
 
+  @signature = ->
+    jsrsasign.X509.getSignatureValueHex(hex)
+
+  @isCa = (rootCa) ->
+    rootCaCert = new jsrsasign.X509()
+    rootCaCert.readCertPEM(rootCa)
+    rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(rootCaCert.hex).cA
+    # root certificate provided is not CA
+    return false unless rootCaIsCa
+    rootCaCert = new Certificate(false, rootCaCert.hex)
+
+    rootCaCert.verifyHexString(@tbsCertificate(), @signature() , @algorithm())
   return
 
-
 module.exports = Certificate
-
