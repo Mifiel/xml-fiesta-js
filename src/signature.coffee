@@ -30,6 +30,6 @@ class Signature
 
   valid: (hash) ->
     throw new errors.ArgumentError 'hash is required' unless hash
-    @certificate.verifyHexString(hash, _signature)
+    @certificate.verifyString(hash, _signature)
 
 module.exports = Signature

@@ -49,6 +49,10 @@ fs.readFile(xml, function(err, data) {
 
 ```
 
+## OpenSSL validations
+
+Please read [this gist](https://gist.github.com/genaromadrid/9075d315e949fb4b3760db5c36c9a8ca) to see how to Validate a Certificate against a Certificate authority using OpenSSL.
+
 ## Development
 
 Just run `grunt` in the root of this project and start developing, the terminal will run the tests on each change.

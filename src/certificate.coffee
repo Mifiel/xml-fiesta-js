@@ -1,11 +1,14 @@
-errors = require './errors'
-common = require './common'
+errors    = require './errors'
+common    = require './common'
 jsrsasign = require 'jsrsasign'
+certs     = require 'pem'
+Promise   = require './bluebird-promise'
 
 jsrsasign.X509.hex2dnobj = (e) ->
   f = {}
   c = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(e, 0)
   d = 0
+
   while d < c.length
     b = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(e, c[d])
     try
@@ -37,13 +40,15 @@ jsrsasign.X509.DN_ATTRHEX =
   '060355040a': 'O'
   '060355040b': 'OU'
   '0603550403': 'CN'
-  '0603550405': 'SN'
+  '0603550405': 'serialNumber'
   '0603550408': 'ST'
   '0603550407': 'L'
   '060355042d': 'UI'
-  # Attrbutes added by SAT
-  '0603550429': 'NAME'
-  '06092a864886f70d010901': 'EMAIL'
+  '0603550409': 'street'
+  '0603550429': 'name'
+  '0603550411': 'postalCode'
+  '06092a864886f70d010901': 'emailAddress'
+  '06092a864886f70d010902': 'unstructuredName'
 
 Certificate = (binaryString, hexString) ->
   hex = if binaryString then jsrsasign.rstrtohex(binaryString) else hexString
@@ -63,6 +68,7 @@ Certificate = (binaryString, hexString) ->
   @toBinaryString = -> binaryString
 
   @toHex = -> hex
+  @toPem = -> pem
 
   @getX509 = -> certificate
 
@@ -71,9 +77,8 @@ Certificate = (binaryString, hexString) ->
     common.hextoAscii(@getSerialNumberHex())
 
   @getSubject = -> subject
-
-  @email = -> subject.EMAIL
-  @owner = -> subject.NAME
+  @email = -> subject.emailAddress
+  @owner = -> subject.name
   @owner_id = ->
     identifier = @getUniqueIdentifier()
     identifier[0]
@@ -84,11 +89,23 @@ Certificate = (binaryString, hexString) ->
   @getRSAPublicKey = ->
     pubKey = if pubKey == null then certificate.subjectPublicKeyRSA else pubKey
 
-  @verifyHexString = (string, signedHexString) ->
+  @verifyString = (string, signedHexString, alg) ->
     try
-      sig = new jsrsasign.crypto.Signature(alg: 'SHA256withRSA')
+      alg ?= 'SHA256withRSA'
+      sig = new jsrsasign.crypto.Signature(alg: alg)
       sig.init(pem)
       sig.updateString(string)
+      sig.verify(signedHexString)
+    catch error
+      false
+      throw error
+
+  @verifyHexString = (hexString, signedHexString, alg) ->
+    try
+      alg ?= 'SHA256withRSA'
+      sig = new jsrsasign.crypto.Signature(alg: alg)
+      sig.init(pem)
+      sig.updateHex(hexString)
       sig.verify(signedHexString)
     catch error
       false
@@ -108,6 +125,25 @@ Certificate = (binaryString, hexString) ->
     notAfter = parseDate(certificate.getNotAfter())
     notAfter.getTime() < new Date().getTime()
 
+  @algorithm = ->
+    certificate.getSignatureAlgorithmField()
+
+  @tbsCertificate = ->
+    # 1st child of SEQ is tbsCert
+    hTbsCert = jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0])
+
+  @signature = ->
+    jsrsasign.X509.getSignatureValueHex(hex)
+
+  @isCa = (rootCa) ->
+    rootCaCert = new jsrsasign.X509()
+    rootCaCert.readCertPEM(rootCa)
+    rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(rootCaCert.hex).cA
+    # root certificate provided is not CA
+    return false unless rootCaIsCa
+    rootCaCert = new Certificate(false, rootCaCert.hex)
+
+    rootCaCert.verifyHexString(@tbsCertificate(), @signature() , @algorithm())
   return
 
 module.exports = Certificate

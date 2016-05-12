@@ -1,3 +1,4 @@
+fs = require 'fs'
 errors = require '../src/errors'
 common = require '../src/common'
 
@@ -71,11 +72,11 @@ describe 'Certificate', ->
         subject = fielCertificate.getSubject()
         expect(subject).to.be.a('object')
         expect(subject.CN).to.be('ACCEM SERVICIOS EMPRESARIALES SC')
-        expect(subject.NAME).to.be('ACCEM SERVICIOS EMPRESARIALES SC')
+        expect(subject.name).to.be('ACCEM SERVICIOS EMPRESARIALES SC')
         expect(subject.O).to.be('ACCEM SERVICIOS EMPRESARIALES SC')
         expect(subject.UI).to.be('AAA010101AAA / HEGT7610034S2')
-        expect(subject.SN).to.be(' / HEGT761003MDFNSR08')
-        expect(subject.EMAIL).to.be('pruebas@sat.gob.mx')
+        expect(subject.serialNumber).to.be(' / HEGT761003MDFNSR08')
+        expect(subject.emailAddress).to.be('pruebas@sat.gob.mx')
 
     # TODO: Mock the current date,
     # when the cert actually expires this will break
@@ -85,3 +86,28 @@ describe 'Certificate', ->
 
       it 'should be true', ->
         expect(fielCertificate.hasExpired()).to.be(false)
+
+    describe 'isCa', ->
+      rootCa = null
+      intermediate = null
+      cert = null
+      certificate = null
+      beforeEach ->
+        intermediate = fs.readFileSync("#{__dirname}/../docs/AC2_Sat.crt").toString()
+        cert = fs.readFileSync("#{__dirname}/fixtures/production-certificate.cer")
+        certificate = new Certificate(false, cert.toString('hex'))
+
+      describe 'when a CA', ->
+        it 'should be true', ->
+          valid = certificate.isCa(intermediate)
+          expect(valid).to.be true
+
+      describe 'when no a CA', ->
+        it 'should be false', ->
+          intermediate = fs.readFileSync("#{__dirname}/../docs/AC1_Sat.crt").toString()
+          expect(certificate.isCa(intermediate)).to.be false
+
+      describe 'when CA is not CA', ->
+        it 'should be false', ->
+          cert = fs.readFileSync("#{__dirname}/fixtures/production-certificate.pem")
+          expect(certificate.isCa(cert.toString())).to.be false
