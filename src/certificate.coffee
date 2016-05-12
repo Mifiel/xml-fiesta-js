@@ -1,8 +1,6 @@
 errors    = require './errors'
 common    = require './common'
 jsrsasign = require 'jsrsasign'
-certs     = require 'pem'
-Promise   = require './bluebird-promise'
 
 jsrsasign.X509.hex2dnobj = (e) ->
   f = {}
