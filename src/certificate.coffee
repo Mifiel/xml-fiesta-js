@@ -50,23 +50,6 @@ jsrsasign.X509.DN_ATTRHEX =
   '06092a864886f70d010901': 'emailAddress'
   '06092a864886f70d010902': 'unstructuredName'
 
-KJUR.asn1.x509.OID.atype2oidList =
-  C:  '2.5.4.6'
-  O:  '2.5.4.10'
-  OU: '2.5.4.11'
-  ST: '2.5.4.8'
-  L:  '2.5.4.7'
-  CN: '2.5.4.3'
-  DN: '2.5.4.49'
-  DC: '0.9.2342.19200300.100.1.25'
-  serialNumber:     '2.5.4.5'
-  UI:               '2.5.4.45'
-  name:             '2.5.4.41'
-  street:           '2.5.4.9'
-  postalCode:       '2.5.4.17'
-  emailAddress:     '1.2.840.113549.1.9.1'
-  unstructuredName: '1.2.840.113549.1.9.2'
-
 Certificate = (binaryString, hexString) ->
   hex = if binaryString then jsrsasign.rstrtohex(binaryString) else hexString
   certificate = new jsrsasign.X509()
