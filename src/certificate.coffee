@@ -126,7 +126,7 @@ Certificate = (binaryString, hexString) ->
 
   @tbsCertificate = ->
     # 1st child of SEQ is tbsCert
-    hTbsCert = jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0])
+    jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0])
 
   @signature = ->
     jsrsasign.X509.getSignatureValueHex(hex)
