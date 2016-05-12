@@ -1,5 +1,6 @@
 {
   "name": "xml-fiesta",
+  "version": "0.0.1",
   "authors": [
     "Genaro Madrid <genmadrid@gmail.com>"
   ],
@@ -18,9 +19,17 @@
   "homepage": "https://github.com/Mifiel/xml-fiesta-js",
   "ignore": [
     "**/.*",
+    "package.json",
+    "*.sublime-project",
+    "*.sublime-workspace",
+    "Gruntfile.coffee",
+    "coverage-reporter.coffee",
     "node_modules",
     "bower_components",
-    "test",
-    "tests"
+    "spec",
+    "src",
+    "docs",
+    "lib",
+    "builds"
   ]
 }
