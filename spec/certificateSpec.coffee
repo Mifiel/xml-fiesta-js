@@ -106,3 +106,8 @@ describe 'Certificate', ->
         it 'should be false', ->
           intermediate = fs.readFileSync("#{__dirname}/../docs/AC1_Sat.crt").toString()
           expect(certificate.isCa(intermediate)).to.be false
+
+      describe 'when CA is not CA', ->
+        it 'should be false', ->
+          cert = fs.readFileSync("#{__dirname}/fixtures/production-certificate.pem")
+          expect(certificate.isCa(cert.toString())).to.be false
