@@ -87,7 +87,7 @@ describe 'Certificate', ->
       it 'should be true', ->
         expect(fielCertificate.hasExpired()).to.be(false)
 
-    describe.only 'isCa', ->
+    describe 'isCa', ->
       rootCa = null
       intermediate = null
       cert = null
