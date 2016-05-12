@@ -2,11 +2,12 @@
   "name": "xml-fiesta",
   "version": "0.0.3",
   "description": "Electronic signed document XML Protocol for Node & Browser",
-  "main": "./lib/xml-fiesta",
+  "main": "lib",
   "scripts": {
     "test": "grunt test",
     "coverage": "istanbul report text-summary lcov",
-    "open-coverage": "open coverage/lcov-report/index.html"
+    "open-coverage": "open coverage/lcov-report/index.html",
+    "prepublish": "grunt build"
   },
   "repository": {
     "type": "git",
