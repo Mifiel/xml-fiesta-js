@@ -1,5 +1,10 @@
 # XMLFiesta
 
+[![npm version][npm-image]][npm-url]
+[![Bower version][bower-image]][bower-url]
+[![Build Status][travis-image]](travis-url)
+[![Coverage Status][coveralls-image]][coveralls-url]
+
 Version: 0.0.3
 
 Electronic signed document XML Protocol for Node & Browser
@@ -65,3 +70,15 @@ Run `npm test` or `grunt test`. The coverage info is still pending.
 
 - Run `grunt build` to generate the files to bower.
 - Run `grunt bump` to bump versions in bower and npm.
+
+[npm-url]: https://badge.fury.io/js/xml-fiesta
+[npm-image]: https://badge.fury.io/js/xml-fiesta.svg
+
+[bower-image]: https://badge.fury.io/bo/xml-fiesta.svg
+[bower-url]: https://badge.fury.io/bo/xml-fiesta
+
+[travis-image]: https://travis-ci.org/Mifiel/xml-fiesta-js.svg?branch=master
+[travis-url]: https://travis-ci.org/Mifiel/xml-fiesta-js
+
+[coveralls-image]: https://coveralls.io/repos/github/Mifiel/xml-fiesta-js/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/Mifiel/xml-fiesta-js?branch=master

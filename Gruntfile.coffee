@@ -15,6 +15,13 @@ module.exports = (grunt) ->
           exlude: ['spec']
         src: ['spec/*.coffee']
 
+    coveralls:
+      options:
+        # dont fail ci if coveralls.io is down
+        force: false
+      test:
+        src: 'coverage/lcov.info'
+
     watch:
       clear:
         files: ['**/**/*.coffee']
@@ -95,7 +102,8 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-clean')
   grunt.loadNpmTasks('grunt-mocha-test')
   grunt.loadNpmTasks('grunt-run')
+  grunt.loadNpmTasks('grunt-coveralls')
 
   grunt.registerTask('default', ['watch'])
   grunt.registerTask('build', ['clean', 'coffee', 'browserify'])
-  grunt.registerTask('test', ['clean:coverage', 'mochaTest'])
+  grunt.registerTask('test', ['clean:coverage', 'mochaTest', 'run:coverage'])
