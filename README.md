@@ -2,7 +2,7 @@
 
 [![npm version][npm-image]][npm-url]
 [![Bower version][bower-image]][bower-url]
-[![Build Status][travis-image]](travis-url)
+[![Build Status][travis-image]][travis-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
 Version: 0.0.3
