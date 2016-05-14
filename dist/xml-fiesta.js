@@ -244,21 +244,17 @@
   parseString = require('xml2js').parseString;
 
   Document = (function() {
-    var VERSION, _pdf, _signers, add_signer, signer_exist;
+    var VERSION;
 
     VERSION = '0.0.1';
 
-    _pdf = null;
-
-    _signers = null;
-
     function Document(pdf, options) {
-      var defaultOpts, hash;
+      var defaultOpts, doc, hash;
       if (!pdf) {
         throw new Error('pdf is required');
       }
-      _signers = [];
-      _pdf = pdf;
+      this.pdf_content = pdf;
+      this.signers = [];
       defaultOpts = {
         version: VERSION,
         signers: []
@@ -272,51 +268,48 @@
       });
       this.originalHash = hash.digestHex(this.pdf('hex'));
       if (options.signers.length > 0) {
+        doc = this;
         options.signers.forEach(function(el) {
-          return add_signer(el);
+          return doc.add_signer(el);
         });
       }
     }
 
     Document.prototype.pdfBuffer = function() {
-      if (!_pdf) {
+      if (!this.pdf_content) {
         return null;
       }
-      return new Buffer(_pdf, 'base64');
+      return new Buffer(this.pdf_content, 'base64');
     };
 
     Document.prototype.pdf = function(format) {
-      if (!_pdf) {
+      if (!this.pdf_content) {
         return null;
       }
       if (!format) {
-        return common.b64toAscii(_pdf);
+        return common.b64toAscii(this.pdf_content);
       }
       if (format === 'hex') {
-        return common.b64toHex(_pdf);
+        return common.b64toHex(this.pdf_content);
       }
       if (format === 'base64') {
-        return _pdf;
+        return this.pdf_content;
       }
       throw new errors.ArgumentError("unknown format " + format);
     };
 
-    Document.prototype.signers = function() {
-      return _signers;
-    };
-
-    add_signer = function(signer) {
+    Document.prototype.add_signer = function(signer) {
       if (!signer.cer || !signer.signature || !signer.signedAt) {
         throw new errors.InvalidSignerError('signer must contain cer, signature and signedAt');
       }
-      if (signer_exist(signer)) {
+      if (this.signer_exist(signer)) {
         throw new errors.DuplicateSignersError('signer already exists');
       }
-      return _signers.push(signer);
+      return this.signers.push(signer);
     };
 
     Document.prototype.signatures = function() {
-      return _signers.map(function(signer) {
+      return this.signers.map(function(signer) {
         return new Signature(signer.cer, signer.signature, signer.signedAt);
       });
     };
@@ -336,9 +329,9 @@
       return valid;
     };
 
-    signer_exist = function(signer) {
+    Document.prototype.signer_exist = function(signer) {
       var selected;
-      selected = _signers.filter(function(s) {
+      selected = this.signers.filter(function(s) {
         return s.email === signer.email || s.cer === signer.cer || s.signature === signer.signature;
       });
       return selected.length > 0;
@@ -360,9 +353,8 @@
         pdfAttrs = result.electronicDocument.pdf[0].$;
         signers = result.electronicDocument.signers;
         parsedSigners = [];
-        signers.forEach(function(signer) {
+        signers[0].signer.forEach(function(signer) {
           var attrs;
-          signer = signer.signer[0];
           attrs = signer.$;
           return parsedSigners.push({
             email: attrs.email,
@@ -450,11 +442,8 @@
   common = require('./common');
 
   Signature = (function() {
-    var _signature;
-
-    _signature = null;
-
     function Signature(cer, signature, signedAt, email) {
+      this.signature = signature;
       this.signedAt = signedAt;
       this.email = email;
       if (!this.signedAt) {
@@ -463,7 +452,6 @@
       if (!cer) {
         throw new errors.ArgumentError('Signature must have cer');
       }
-      _signature = signature;
       this.certificate = new Certificate(false, cer);
       if (this.email == null) {
         this.email = this.certificate.email();
@@ -477,10 +465,10 @@
 
     Signature.prototype.sig = function(format) {
       if (format === 'hex' || !format) {
-        return _signature;
+        return this.signature;
       }
       if (format === 'base64') {
-        return common.hextoB64(_signature);
+        return common.hextoB64(this.signature);
       }
       throw new errors.ArgumentError("unknown format " + format);
     };
@@ -489,7 +477,7 @@
       if (!hash) {
         throw new errors.ArgumentError('hash is required');
       }
-      return this.certificate.verifyString(hash, _signature);
+      return this.certificate.verifyString(hash, this.signature);
     };
 
     return Signature;
@@ -505,12 +493,13 @@
   module.exports = {
     Certificate: require('./document'),
     Document: require('./document'),
-    Signature: require('./document')
+    Signature: require('./document'),
+    errors: require('./errors')
   };
 
 }).call(this);
 
-},{"./document":3}],7:[function(require,module,exports){
+},{"./document":3,"./errors":4}],7:[function(require,module,exports){
 
 },{}],8:[function(require,module,exports){
 arguments[4][7][0].apply(exports,arguments)

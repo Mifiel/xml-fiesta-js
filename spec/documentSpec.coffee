@@ -40,7 +40,7 @@ describe 'Document', ->
     describe 'without signers', ->
       it 'should be OK', ->
         doc = new Document('cGRmLWJhc2U2NC1jb250ZW50')
-        expect(doc.signers()).to.be.empty()
+        expect(doc.signers).to.be.empty()
 
     describe 'without cer', ->
       it 'should raise error', (done) ->
@@ -94,10 +94,10 @@ describe 'Document', ->
 
     describe '.signers', ->
       it 'should be defined', ->
-        expect(doc.signers).to.be.a('function')
+        expect(doc.signers).to.be.an('array')
 
       it 'should have signers', ->
-        expect(doc.signers()[0].email).to.be signers[0].email
+        expect(doc.signers[0].email).to.be signers[0].email
 
     describe '.signatures', ->
       it 'should be defined', ->
@@ -126,7 +126,7 @@ describe 'Document', ->
           done()
 
       it 'should parse the xml', ->
-        xmlSigners = doc.signers()
+        xmlSigners = doc.signers
         signer = xmlSigners[0]
 
         expect(doc).to.be.a Document
