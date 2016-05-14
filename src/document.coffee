@@ -7,13 +7,11 @@ parseString = require('xml2js').parseString
 
 class Document
   VERSION = '0.0.1'
-  _pdf = null
-  _signers = null
 
   constructor: (pdf, options) ->
     throw new Error('pdf is required') unless pdf
-    _signers = []
-    _pdf = pdf
+    @pdf_content = pdf
+    @signers = []
     defaultOpts =
       version: VERSION
       signers: []
@@ -28,35 +26,34 @@ class Document
     @originalHash = hash.digestHex(@pdf('hex'))
 
     if options.signers.length > 0
+      doc = this
       options.signers.forEach (el) ->
-        add_signer(el)
+        doc.add_signer(el)
 
   pdfBuffer: ->
-    return null unless _pdf
-    new Buffer(_pdf, 'base64')
+    return null unless @pdf_content
+    new Buffer(@pdf_content, 'base64')
 
   pdf: (format) ->
-    return null unless _pdf
-    return common.b64toAscii(_pdf) unless format
-    return common.b64toHex(_pdf) if format is 'hex'
-    return _pdf if format is 'base64'
+    return null unless @pdf_content
+    return common.b64toAscii(@pdf_content) unless format
+    return common.b64toHex(@pdf_content) if format is 'hex'
+    return @pdf_content if format is 'base64'
     throw new errors.ArgumentError "unknown format #{format}"
 
-  signers: -> _signers
-
-  add_signer = (signer) ->
+  add_signer: (signer) ->
     if !signer.cer || !signer.signature || !signer.signedAt
       throw new errors.InvalidSignerError(
         'signer must contain cer, signature and signedAt'
       )
-    if signer_exist(signer)
+    if @signer_exist(signer)
       throw new errors.DuplicateSignersError(
         'signer already exists'
       )
-    _signers.push(signer)
+    @signers.push(signer)
 
   signatures: ->
-    _signers.map (signer) ->
+    @signers.map (signer) ->
       new Signature(
         signer.cer,
         signer.signature,
@@ -71,8 +68,8 @@ class Document
       valid = false if valid && !signature.valid(oHash)
     valid
 
-  signer_exist = (signer) ->
-    selected = _signers.filter (s) ->
+  signer_exist: (signer) ->
+    selected = @signers.filter (s) ->
       s.email == signer.email ||
         s.cer == signer.cer ||
         s.signature == signer.signature
@@ -88,8 +85,7 @@ class Document
       pdfAttrs = result.electronicDocument.pdf[0].$
       signers = result.electronicDocument.signers
       parsedSigners = []
-      signers.forEach (signer) ->
-        signer = signer.signer[0]
+      signers[0].signer.forEach (signer) ->
         attrs = signer.$
         parsedSigners.push({
           email: attrs.email
