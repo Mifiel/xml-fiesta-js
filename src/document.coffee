@@ -1,4 +1,5 @@
 Signature = require './signature'
+ConservancyRecord = require './conservancyRecord'
 common = require './common'
 errors = require './errors'
 jsrsasign = require 'jsrsasign'
@@ -16,7 +17,21 @@ class Document
       version: VERSION
       signers: []
 
+    @errors = []
     options = common.extend(defaultOpts, options)
+    if options.conservancyRecord
+      try
+        @conservancyRecord = new ConservancyRecord(
+          options.conservancyRecord.caCert,
+          options.conservancyRecord.userCert,
+          options.conservancyRecord.record,
+          options.conservancyRecord.timestamp
+        )
+      catch e
+        @errors.push({
+          recordInvalid: 'The conservancy record is not valid'
+        })
+
     @name = options.name
     @version = options.version
     hash = new jsrsasign.crypto.MessageDigest({
@@ -81,9 +96,10 @@ class Document
     options = null
     parseString xml, (err, result) ->
       throw new Error("Unable to parse xml: #{err}") if err
-      pdf = result.electronicDocument.pdf[0]._
-      pdfAttrs = result.electronicDocument.pdf[0].$
-      signers = result.electronicDocument.signers
+      eDocument = result.electronicDocument
+      pdf = eDocument.pdf[0]._
+      pdfAttrs = eDocument.pdf[0].$
+      signers = eDocument.signers
       parsedSigners = []
       signers[0].signer.forEach (signer) ->
         attrs = signer.$
@@ -94,11 +110,17 @@ class Document
           signedAt: signer.signature[0].$.signedAt
         })
 
+      conservancyRecord = eDocument.conservancyRecord[0]
       options =
         signers: parsedSigners
         version: pdfAttrs.version
         name: pdfAttrs.name
         originalHash: pdfAttrs.originalHash
+        conservancyRecord:
+          caCert: conservancyRecord.caCertificate[0]._
+          userCert: conservancyRecord.userCertificate[0]._
+          record: conservancyRecord.record[0]
+          timestamp: conservancyRecord.$.timestamp
 
       doc = new Document(pdf, options)
     return {

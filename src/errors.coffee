@@ -26,6 +26,13 @@ ArgumentError = (@message) ->
 
 ArgumentError.prototype = Object.create(Error.prototype)
 
+InvalidRecordError = (@message) ->
+  @stack = (new Error()).stack
+  this.name = 'InvalidRecordError'
+  return
+
+InvalidRecordError.prototype = Object.create(Error.prototype)
+
 module.exports = {
   InvalidSignerError: InvalidSignerError
   DuplicateSignersError: DuplicateSignersError

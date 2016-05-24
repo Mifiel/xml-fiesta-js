@@ -119,7 +119,8 @@ describe 'Document', ->
       doc = null
       parsedOHash = null
       beforeEach (done) ->
-        fs.readFile "#{__dirname}/fixtures/example_signed.xml", (err, data) ->
+        xmlExample = "#{__dirname}/fixtures/example_signed_cr.xml"
+        fs.readFile xmlExample, (err, data) ->
           parsed = Document.fromXml(data)
           doc = parsed.document
           parsedOHash = parsed.xmlOriginalHash
