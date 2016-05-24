@@ -8,12 +8,12 @@ expect = require('expect.js')
 
 describe 'Document', ->
   sig = common.b64toHex(
-          'Ia+HMpJt1SGe0fZ1PQmxUO96slPPnbilb94vB/' +
-          'FDZl1iJ/68yeHa4ooftn/HuYqGbAHzCxnCGEYo' +
-          'E16yyLMB2U9TKKBpGzEipHkD1AyRF8L07ykH+e' +
-          'EuHLgdIcMtSP/2lyoWX5x7Au6JTBdQb5qk8cZM' +
-          'Nu43DO2SEnszEouNIiU='
-        )
+    'Ia+HMpJt1SGe0fZ1PQmxUO96slPPnbilb94vB/' +
+    'FDZl1iJ/68yeHa4ooftn/HuYqGbAHzCxnCGEYo' +
+    'E16yyLMB2U9TKKBpGzEipHkD1AyRF8L07ykH+e' +
+    'EuHLgdIcMtSP/2lyoWX5x7Au6JTBdQb5qk8cZM' +
+    'Nu43DO2SEnszEouNIiU='
+  )
   signers = [
     {
       email: 'some@gmail.com'
@@ -115,11 +115,13 @@ describe 'Document', ->
 
   describe 'fromXml', ->
     describe 'with valid xml', ->
-      originalHash = '73c818b60eea60e6c1a1e5688a373c6b8376ca4ea2ff269695fe6eeef134b3c8'
+      originalHash = '73c818b60eea60e6c1a1e5688a37' +
+                     '3c6b8376ca4ea2ff269695fe6eeef134b3c8'
       doc = null
       parsedOHash = null
       beforeEach (done) ->
-        fs.readFile "#{__dirname}/fixtures/example_signed.xml", (err, data) ->
+        xmlExample = "#{__dirname}/fixtures/example_signed_cr.xml"
+        fs.readFile xmlExample, (err, data) ->
           parsed = Document.fromXml(data)
           doc = parsed.document
           parsedOHash = parsed.xmlOriginalHash
