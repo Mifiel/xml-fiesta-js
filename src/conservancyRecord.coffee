@@ -47,8 +47,6 @@ class ConservancyRecord
     common.parseDate(common.hextoAscii(date))
 
   equalTimestamps: ->
-    console.log new Date Date.parse(@timestamp)
-    console.log @recordTimestamp()
     Date.parse(@timestamp) == @recordTimestamp().getTime()
 
   signedData: ->
