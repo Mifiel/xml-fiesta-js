@@ -46,6 +46,11 @@ class ConservancyRecord
     date = jsrsasign.ASN1HEX.getHexOfV_AtObj(@timestampHex(), ts_pos[4])
     common.parseDate(common.hextoAscii(date))
 
+  equalTimestamps: ->
+    console.log new Date Date.parse(@timestamp)
+    console.log @recordTimestamp()
+    Date.parse(@timestamp) == @recordTimestamp().getTime()
+
   signedData: ->
     nameHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[0])
     recordHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[1])

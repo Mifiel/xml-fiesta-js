@@ -23,6 +23,14 @@ describe 'ConservancyRecord', ->
         date = conservancyRecord.recordTimestamp()
         expect(date instanceof Date).to.be true
 
+    describe 'equalTimestamps', ->
+      it 'should be true when valid', ->
+        expect(conservancyRecord.equalTimestamps()).to.be true
+
+      it 'should be true when invalid', ->
+        conservancyRecord.timestamp = Date.now()
+        expect(conservancyRecord.equalTimestamps()).to.be false
+
     describe 'caName', ->
       it 'should be valid', ->
         expect(conservancyRecord.caName()).to.be 'Advantage Security, S. de R.L. de C.V.'

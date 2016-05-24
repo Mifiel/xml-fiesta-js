@@ -24,8 +24,8 @@ module.exports =
         parseInt(parsed[0]),
         parseInt(parsed[1]) - 1,
         parseInt(parsed[2]),
-        parseInt(parsed[3]) - 1,
-        parseInt(parsed[4]) - 1,
-        parseInt(parsed[5]) - 1
+        parseInt(parsed[3]),
+        parseInt(parsed[4]),
+        parseInt(parsed[5])
       )
     )
