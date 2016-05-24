@@ -15,3 +15,17 @@ module.exports =
 
   b64toAscii: (b64String) ->
     new Buffer(b64String, 'base64').toString('ascii')
+
+  parseDate: (date) ->
+    parsed = date.match(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\..*Z/)
+    parsed.shift(1)
+    new Date(
+      Date.UTC(
+        parseInt(parsed[0]),
+        parseInt(parsed[1]) - 1,
+        parseInt(parsed[2]),
+        parseInt(parsed[3]),
+        parseInt(parsed[4]),
+        parseInt(parsed[5])
+      )
+    )
