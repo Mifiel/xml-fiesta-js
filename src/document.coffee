@@ -110,17 +110,21 @@ class Document
           signedAt: signer.signature[0].$.signedAt
         })
 
-      conservancyRecord = eDocument.conservancyRecord[0]
+      conservancyRecord = {}
+      if eDocument.conservancyRecord
+        cr = eDocument.conservancyRecord[0]
+        conservancyRecord =
+          caCert: cr.caCertificate[0]._
+          userCert: cr.userCertificate[0]._
+          record: cr.record[0]
+          timestamp: cr.$.timestamp
+
       options =
         signers: parsedSigners
         version: pdfAttrs.version
         name: pdfAttrs.name
         originalHash: pdfAttrs.originalHash
-        conservancyRecord:
-          caCert: conservancyRecord.caCertificate[0]._
-          userCert: conservancyRecord.userCertificate[0]._
-          record: conservancyRecord.record[0]
-          timestamp: conservancyRecord.$.timestamp
+        conservancyRecord: conservancyRecord
 
       doc = new Document(pdf, options)
     return {
