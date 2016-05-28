@@ -62,5 +62,8 @@ class ConservancyRecord
   valid: ->
     @caCertificate.verifyHexString(@signedData(), @signature())
 
+  isCa: (caPemCert) ->
+    @caCertificate.isCa(caPemCert) if @caCertificate
+
 
 module.exports = ConservancyRecord
