@@ -9,12 +9,12 @@ class ConservancyRecord
     try
       @caCertificate = new Certificate(false, common.b64toHex(@caCert))
     catch error
-      throw new errors.ArgumentError("caCert is invalid: #{error}")
+      @caCertificate = null
 
     try
       @userCertificate = new Certificate(false, common.b64toHex(@userCert))
     catch error
-      throw new errors.ArgumentError('userCert is invalid')
+      @userCertificate = null
 
     @recordHex = common.b64toHex(@record)
 
@@ -25,10 +25,10 @@ class ConservancyRecord
     return
 
   caName: ->
-    @caCertificate.getSubject().O
+    return @caCertificate.getSubject().O if @caCertificate
 
   userName: ->
-    @userCertificate.getSubject().O
+    @userCertificate.getSubject().O if @userCertificate
 
   timestampHex: ->
     jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[2])
@@ -60,6 +60,7 @@ class ConservancyRecord
     jsrsasign.ASN1HEX.getHexOfV_AtObj(@recordHex, signature_pos[1])
 
   valid: ->
+    return false unless @caCertificate
     @caCertificate.verifyHexString(@signedData(), @signature())
 
   isCa: (caPemCert) ->
