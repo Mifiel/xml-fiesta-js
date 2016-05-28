@@ -257,13 +257,13 @@
         this.caCertificate = new Certificate(false, common.b64toHex(this.caCert));
       } catch (error1) {
         error = error1;
-        throw new errors.ArgumentError("caCert is invalid: " + error);
+        this.caCertificate = null;
       }
       try {
         this.userCertificate = new Certificate(false, common.b64toHex(this.userCert));
       } catch (error2) {
         error = error2;
-        throw new errors.ArgumentError('userCert is invalid');
+        this.userCertificate = null;
       }
       this.recordHex = common.b64toHex(this.record);
       if (!jsrsasign.ASN1HEX.isASN1HEX(this.recordHex)) {
@@ -274,11 +274,15 @@
     }
 
     ConservancyRecord.prototype.caName = function() {
-      return this.caCertificate.getSubject().O;
+      if (this.caCertificate) {
+        return this.caCertificate.getSubject().O;
+      }
     };
 
     ConservancyRecord.prototype.userName = function() {
-      return this.userCertificate.getSubject().O;
+      if (this.userCertificate) {
+        return this.userCertificate.getSubject().O;
+      }
     };
 
     ConservancyRecord.prototype.timestampHex = function() {
@@ -318,7 +322,16 @@
     };
 
     ConservancyRecord.prototype.valid = function() {
+      if (!this.caCertificate) {
+        return false;
+      }
       return this.caCertificate.verifyHexString(this.signedData(), this.signature());
+    };
+
+    ConservancyRecord.prototype.isCa = function(caPemCert) {
+      if (this.caCertificate) {
+        return this.caCertificate.isCa(caPemCert);
+      }
     };
 
     return ConservancyRecord;
@@ -364,13 +377,14 @@
       };
       this.errors = [];
       options = common.extend(defaultOpts, options);
+      this.conservancyRecord = null;
       if (options.conservancyRecord) {
         try {
           this.conservancyRecord = new ConservancyRecord(options.conservancyRecord.caCert, options.conservancyRecord.userCert, options.conservancyRecord.record, options.conservancyRecord.timestamp);
         } catch (error) {
           e = error;
           this.errors.push({
-            recordInvalid: 'The conservancy record is not valid'
+            recordInvalid: "The conservancy record is not valid: " + e.message
           });
         }
       }
