@@ -19,6 +19,7 @@ class Document
 
     @errors = []
     options = common.extend(defaultOpts, options)
+    @conservancyRecord = null
     if options.conservancyRecord
       try
         @conservancyRecord = new ConservancyRecord(
@@ -29,7 +30,7 @@ class Document
         )
       catch e
         @errors.push({
-          recordInvalid: 'The conservancy record is not valid'
+          recordInvalid: "The conservancy record is not valid: #{e.message}"
         })
 
     @name = options.name
