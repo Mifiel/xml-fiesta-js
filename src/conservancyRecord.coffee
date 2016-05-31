@@ -33,6 +33,9 @@ class ConservancyRecord
   timestampHex: ->
     jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[2])
 
+  archiveHex: ->
+    jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[1])
+
   recordTimestamp: ->
     ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@timestampHex(), 0)
     ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@timestampHex(), ts_pos[0])
@@ -51,9 +54,8 @@ class ConservancyRecord
 
   signedData: ->
     nameHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[0])
-    recordHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[1])
 
-    nameHex + recordHex + @timestampHex()
+    nameHex + @archiveHex() + @timestampHex()
 
   signature: ->
     signature_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@recordHex, @positions[3])
