@@ -17,10 +17,12 @@ class Document
       version: VERSION
       signers: []
 
-    @errors = []
+    @errors = {}
     options = common.extend(defaultOpts, options)
     @conservancyRecord = null
+    @recordPresent = false
     if options.conservancyRecord
+      @recordPresent = true
       try
         @conservancyRecord = new ConservancyRecord(
           options.conservancyRecord.caCert,
@@ -29,9 +31,7 @@ class Document
           options.conservancyRecord.timestamp
         )
       catch e
-        @errors.push({
-          recordInvalid: "The conservancy record is not valid: #{e.message}"
-        })
+        @errors.recordInvalid = "The conservancy record is not valid: #{e.message}"
 
     @name = options.name
     @version = options.version
@@ -111,7 +111,7 @@ class Document
           signedAt: signer.signature[0].$.signedAt
         })
 
-      conservancyRecord = {}
+      conservancyRecord = null
       if eDocument.conservancyRecord
         cr = eDocument.conservancyRecord[0]
         conservancyRecord =
