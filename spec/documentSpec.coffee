@@ -121,10 +121,14 @@ describe 'Document', ->
       parsedOHash = null
       beforeEach (done) ->
         xmlExample = "#{__dirname}/fixtures/example_signed_cr.xml"
-        fs.readFile xmlExample, (err, data) ->
-          parsed = Document.fromXml(data)
+        xml = fs.readFileSync(xmlExample)
+        parsedP = Document.fromXml(xml)
+        parsedP.then (parsed) ->
           doc = parsed.document
           parsedOHash = parsed.xmlOriginalHash
+          done()
+        , (err) ->
+          console.log('Error', err)
           done()
 
       it 'should parse the xml', ->
