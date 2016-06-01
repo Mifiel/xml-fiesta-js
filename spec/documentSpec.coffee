@@ -141,7 +141,7 @@ describe 'Document', ->
         expect(doc.originalHash).to.be originalHash
         expect(parsedOHash).to.be originalHash
         expect(xmlSigners).not.to.be.empty()
-        expect(signer.email).to.be 'some@email.com'
+        expect(signer.email).to.be 'genmadrid@gmail.com'
 
       describe '.signatures', ->
         it 'should have Signature objects', ->
@@ -153,6 +153,10 @@ describe 'Document', ->
       describe '.validSignatures', ->
         it 'should be true', ->
           expect(doc.validSignatures()).to.be true
+
+      describe '.conservancyRecord.validArchiveHash', ->
+        it 'should be true', ->
+          expect(doc.conservancyRecord.validArchiveHash()).to.be true
 
     describe 'without xml', ->
       it 'should throw an error', ->
