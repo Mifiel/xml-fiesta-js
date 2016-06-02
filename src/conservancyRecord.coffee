@@ -5,7 +5,7 @@ errors = require './errors'
 
 class ConservancyRecord
 
-  constructor: (@caCert, @userCert, @record, @timestamp) ->
+  constructor: (@caCert, @userCert, @record, @timestamp, @signedHash) ->
     try
       @caCertificate = new Certificate(false, common.b64toHex(@caCert))
     catch error
@@ -33,6 +33,27 @@ class ConservancyRecord
   timestampHex: ->
     jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[2])
 
+  archiveHex: ->
+    jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[1])
+
+  archiveSignature: ->
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@archiveHex(), 0)
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@archiveHex(), ar_pos[3])
+    jsrsasign.ASN1HEX.getHexOfV_AtObj(@archiveHex(), ar_pos[1])
+
+  archiveSignedHash: ->
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@archiveHex(), 0)
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@archiveHex(), ar_pos[1])
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@archiveHex(), ar_pos[0])
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@archiveHex(), ar_pos[1])
+    signedHashH = jsrsasign.ASN1HEX.getHexOfV_AtObj(@archiveHex(), ar_pos[1])
+    # remove leading 0
+    common.hextoAscii(signedHashH.replace(/^[0]+/g, ''))
+
+  validArchiveHash: ->
+    return false unless @signedHash == @archiveSignedHash()
+    @userCertificate.verifyString(@signedHash, @archiveSignature())
+
   recordTimestamp: ->
     ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@timestampHex(), 0)
     ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@timestampHex(), ts_pos[0])
@@ -51,9 +72,8 @@ class ConservancyRecord
 
   signedData: ->
     nameHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[0])
-    recordHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(@recordHex, @positions[1])
 
-    nameHex + recordHex + @timestampHex()
+    nameHex + @archiveHex() + @timestampHex()
 
   signature: ->
     signature_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(@recordHex, @positions[3])

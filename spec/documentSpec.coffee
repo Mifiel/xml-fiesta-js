@@ -121,10 +121,14 @@ describe 'Document', ->
       parsedOHash = null
       beforeEach (done) ->
         xmlExample = "#{__dirname}/fixtures/example_signed_cr.xml"
-        fs.readFile xmlExample, (err, data) ->
-          parsed = Document.fromXml(data)
+        xml = fs.readFileSync(xmlExample)
+        parsedP = Document.fromXml(xml)
+        parsedP.then (parsed) ->
           doc = parsed.document
           parsedOHash = parsed.xmlOriginalHash
+          done()
+        , (err) ->
+          console.log('Error', err)
           done()
 
       it 'should parse the xml', ->
@@ -137,7 +141,7 @@ describe 'Document', ->
         expect(doc.originalHash).to.be originalHash
         expect(parsedOHash).to.be originalHash
         expect(xmlSigners).not.to.be.empty()
-        expect(signer.email).to.be 'some@email.com'
+        expect(signer.email).to.be 'genmadrid@gmail.com'
 
       describe '.signatures', ->
         it 'should have Signature objects', ->
@@ -149,6 +153,10 @@ describe 'Document', ->
       describe '.validSignatures', ->
         it 'should be true', ->
           expect(doc.validSignatures()).to.be true
+
+      describe '.conservancyRecord.validArchiveHash', ->
+        it 'should be true', ->
+          expect(doc.conservancyRecord.validArchiveHash()).to.be true
 
     describe 'without xml', ->
       it 'should throw an error', ->
