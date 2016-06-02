@@ -1,3 +1,5 @@
+jsrsasign = require 'jsrsasign'
+
 module.exports =
   extend: (object, properties) ->
     for key, val of properties
@@ -29,3 +31,12 @@ module.exports =
         parseInt(parsed[5])
       )
     )
+
+  sha256: (string) ->
+    digest = new jsrsasign.crypto.MessageDigest(
+      alg: 'sha256'
+      prov: 'cryptojs'
+    )
+    digest.digestString(string)
+
+return

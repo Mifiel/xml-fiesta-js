@@ -5,7 +5,7 @@
 [![Build Status][travis-image]][travis-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
-Version: 0.0.6
+Version: 1.0.0
 
 Electronic signed document XML Protocol for Node & Browser
 

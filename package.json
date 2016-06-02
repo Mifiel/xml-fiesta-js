@@ -1,6 +1,6 @@
 {
   "name": "xml-fiesta",
-  "version": "0.0.6",
+  "version": "1.0.0",
   "description": "Electronic signed document XML Protocol for Node & Browser",
   "main": "lib",
   "scripts": {
@@ -50,6 +50,10 @@
   },
   "dependencies": {
     "jsrsasign": "^5.0.10",
-    "xml2js": "^0.4.16"
+    "promise": "^7.1.1",
+    "xml-crypto": "^0.8.4",
+    "xml2js": "^0.4.16",
+    "xmldom": "^0.1.22",
+    "xpath.js": "^1.0.6"
   }
 }
