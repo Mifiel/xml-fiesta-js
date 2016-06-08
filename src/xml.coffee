@@ -18,10 +18,19 @@ class XML
         return reject(err) if err
         el.eDocument = result.electronicDocument
         eDocumentAttrs = el.eDocument.$
-        pdfAttrs = el.eDocument.pdf[0].$
         el.version = eDocumentAttrs.version
         el.signed = eDocumentAttrs.signed
+        v = el.version.split(/\./).map (v) -> parseInt(v)
+        el.version_int = v[0] * 100 + v[1] * 10 + v[2]
+
+        if el.version_int < 100
+          el.fileElementName = 'pdf'
+        else
+          el.fileElementName = 'file'
+
+        pdfAttrs = el.eDocument[el.fileElementName][0].$
         el.name = pdfAttrs.name
+        el.contentType = pdfAttrs.contentType
         el.originalHash = pdfAttrs.originalHash
         resolve(el)
 
@@ -40,7 +49,7 @@ class XML
     can = new ExclusiveCanonicalization()
     can.process(elem).toString()
 
-  pdf: -> @eDocument.pdf[0]._
+  pdf: -> @eDocument[@fileElementName][0]._
 
   xmlSigners: ->
     parsedSigners = []
