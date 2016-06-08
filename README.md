@@ -5,7 +5,7 @@
 [![Build Status][travis-image]][travis-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
-Version: 1.0.0
+Version: 1.1.0
 
 Electronic signed document XML Protocol **reader** and validator for Node & Browser.
 
