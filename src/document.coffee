@@ -10,9 +10,9 @@ XML = require './xml'
 class Document
   VERSION = '0.0.1'
 
-  constructor: (pdf, options) ->
-    throw new Error('pdf is required') unless pdf
-    @pdf_content = pdf
+  constructor: (file, options) ->
+    throw new Error('file is required') unless file
+    @pdf_content = file
     @signers = []
     defaultOpts =
       version: VERSION
@@ -35,29 +35,36 @@ class Document
       catch e
         @errors.recordInvalid = "The conservancy record is not valid: #{e.message}"
 
+    @contentType = options.contentType
     @name = options.name
     @version = options.version
     digest = new jsrsasign.crypto.MessageDigest({
       alg: 'sha256',
       prov: 'cryptojs'
     })
-    @originalHash = digest.digestHex(@pdf('hex'))
+    @originalHash = digest.digestHex(@file('hex'))
 
     if options.signers.length > 0
       doc = this
       options.signers.forEach (el) ->
         doc.add_signer(el)
 
-  pdfBuffer: ->
+  fileBuffer: ->
     return null unless @pdf_content
     new Buffer(@pdf_content, 'base64')
 
-  pdf: (format) ->
+  # @deprecated
+  pdfBuffer: -> @fileBuffer()
+
+  file: (format) ->
     return null unless @pdf_content
     return common.b64toAscii(@pdf_content) unless format
     return common.b64toHex(@pdf_content) if format is 'hex'
     return @pdf_content if format is 'base64'
     throw new errors.ArgumentError "unknown format #{format}"
+
+  # @deprecated
+  pdf: (format) -> @file(format)
 
   add_signer: (signer) ->
     if !signer.cer || !signer.signature || !signer.signedAt
@@ -102,8 +109,9 @@ class Document
           signers: xml.xmlSigners()
           version: xml.version
           name: xml.name
+          contentType: xml.contentType
           conservancyRecord: xml.getConservancyRecord()
-        doc = new Document(xml.pdf(), opts)
+        doc = new Document(xml.file(), opts)
         resolve({
           document: doc
           # hash as attribute in the xml
