@@ -18,29 +18,45 @@ class XML
         return reject(err) if err
         el.eDocument = result.electronicDocument
         eDocumentAttrs = el.eDocument.$
-        pdfAttrs = el.eDocument.pdf[0].$
         el.version = eDocumentAttrs.version
         el.signed = eDocumentAttrs.signed
+        v = el.version.split(/\./).map (v) -> parseInt(v)
+        el.version_int = v[0] * 100 + v[1] * 10 + v[2]
+
+        if el.version_int < 100
+          el.fileElementName = 'pdf'
+        else
+          el.fileElementName = 'file'
+
+        pdfAttrs = el.eDocument[el.fileElementName][0].$
         el.name = pdfAttrs.name
+        el.contentType = pdfAttrs.contentType
         el.originalHash = pdfAttrs.originalHash
         resolve(el)
 
   canonical: ->
-    if @eDocument.conservancyRecord
-      delete @eDocument.conservancyRecord
+    edoc = JSON.parse(JSON.stringify(@eDocument))
+    if edoc.conservancyRecord
+      delete edoc.conservancyRecord
+    if @version_int >= 100
+      edoc[@fileElementName][0]._ = ''
+
     builder = new xml2js.Builder(
       rootName: 'electronicDocument'
       renderOpts:
         pretty: false
     )
-    originalXml = builder.buildObject(@eDocument)
+    originalXml = builder.buildObject(edoc)
 
     doc = new Dom().parseFromString(originalXml)
     elem = select(doc, "//*")[0]
     can = new ExclusiveCanonicalization()
     can.process(elem).toString()
 
-  pdf: -> @eDocument.pdf[0]._
+  file: ->
+    @eDocument[@fileElementName][0]._
+
+  pdf: -> @file()
 
   xmlSigners: ->
     parsedSigners = []
