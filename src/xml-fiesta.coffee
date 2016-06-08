@@ -3,4 +3,5 @@ module.exports =
   Document: require './document'
   Signature: require './signature'
   ConservancyRecord: require './conservancyRecord'
+  XML: require './xml'
   errors: require './errors'

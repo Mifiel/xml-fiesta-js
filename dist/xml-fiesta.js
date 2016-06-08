@@ -408,12 +408,12 @@
 
     VERSION = '0.0.1';
 
-    function Document(pdf, options) {
+    function Document(file, options) {
       var defaultOpts, digest, doc, e, error1;
-      if (!pdf) {
-        throw new Error('pdf is required');
+      if (!file) {
+        throw new Error('file is required');
       }
-      this.pdf_content = pdf;
+      this.pdf_content = file;
       this.signers = [];
       defaultOpts = {
         version: VERSION,
@@ -432,13 +432,14 @@
           this.errors.recordInvalid = "The conservancy record is not valid: " + e.message;
         }
       }
+      this.contentType = options.contentType;
       this.name = options.name;
       this.version = options.version;
       digest = new jsrsasign.crypto.MessageDigest({
         alg: 'sha256',
         prov: 'cryptojs'
       });
-      this.originalHash = digest.digestHex(this.pdf('hex'));
+      this.originalHash = digest.digestHex(this.file('hex'));
       if (options.signers.length > 0) {
         doc = this;
         options.signers.forEach(function(el) {
@@ -447,14 +448,18 @@
       }
     }
 
-    Document.prototype.pdfBuffer = function() {
+    Document.prototype.fileBuffer = function() {
       if (!this.pdf_content) {
         return null;
       }
       return new Buffer(this.pdf_content, 'base64');
     };
 
-    Document.prototype.pdf = function(format) {
+    Document.prototype.pdfBuffer = function() {
+      return this.fileBuffer();
+    };
+
+    Document.prototype.file = function(format) {
       if (!this.pdf_content) {
         return null;
       }
@@ -468,6 +473,10 @@
         return this.pdf_content;
       }
       throw new errors.ArgumentError("unknown format " + format);
+    };
+
+    Document.prototype.pdf = function(format) {
+      return this.file(format);
     };
 
     Document.prototype.add_signer = function(signer) {
@@ -522,9 +531,10 @@
             signers: xml.xmlSigners(),
             version: xml.version,
             name: xml.name,
+            contentType: xml.contentType,
             conservancyRecord: xml.getConservancyRecord()
           };
-          doc = new Document(xml.pdf(), opts);
+          doc = new Document(xml.file(), opts);
           return resolve({
             document: doc,
             xmlOriginalHash: xml.originalHash
@@ -661,12 +671,13 @@
     Document: require('./document'),
     Signature: require('./signature'),
     ConservancyRecord: require('./conservancyRecord'),
+    XML: require('./xml'),
     errors: require('./errors')
   };
 
 }).call(this);
 
-},{"./certificate":1,"./conservancyRecord":3,"./document":4,"./errors":5,"./signature":6}],8:[function(require,module,exports){
+},{"./certificate":1,"./conservancyRecord":3,"./document":4,"./errors":5,"./signature":6,"./xml":8}],8:[function(require,module,exports){
 (function() {
   var Dom, ExclusiveCanonicalization, Promise, XML, common, select, xml2js, xmlCrypto;
 
@@ -692,16 +703,26 @@
       el = this;
       return new Promise(function(resolve, reject) {
         return xml2js.parseString(xml, function(err, result) {
-          var eDocumentAttrs, pdfAttrs;
+          var eDocumentAttrs, pdfAttrs, v;
           if (err) {
             return reject(err);
           }
           el.eDocument = result.electronicDocument;
           eDocumentAttrs = el.eDocument.$;
-          pdfAttrs = el.eDocument.pdf[0].$;
           el.version = eDocumentAttrs.version;
           el.signed = eDocumentAttrs.signed;
+          v = el.version.split(/\./).map(function(v) {
+            return parseInt(v);
+          });
+          el.version_int = v[0] * 100 + v[1] * 10 + v[2];
+          if (el.version_int < 100) {
+            el.fileElementName = 'pdf';
+          } else {
+            el.fileElementName = 'file';
+          }
+          pdfAttrs = el.eDocument[el.fileElementName][0].$;
           el.name = pdfAttrs.name;
+          el.contentType = pdfAttrs.contentType;
           el.originalHash = pdfAttrs.originalHash;
           return resolve(el);
         });
@@ -709,9 +730,13 @@
     };
 
     XML.prototype.canonical = function() {
-      var builder, can, doc, elem, originalXml;
-      if (this.eDocument.conservancyRecord) {
-        delete this.eDocument.conservancyRecord;
+      var builder, can, doc, edoc, elem, originalXml;
+      edoc = JSON.parse(JSON.stringify(this.eDocument));
+      if (edoc.conservancyRecord) {
+        delete edoc.conservancyRecord;
+      }
+      if (this.version_int >= 100) {
+        edoc[this.fileElementName][0]._ = '';
       }
       builder = new xml2js.Builder({
         rootName: 'electronicDocument',
@@ -719,15 +744,19 @@
           pretty: false
         }
       });
-      originalXml = builder.buildObject(this.eDocument);
+      originalXml = builder.buildObject(edoc);
       doc = new Dom().parseFromString(originalXml);
       elem = select(doc, "//*")[0];
       can = new ExclusiveCanonicalization();
       return can.process(elem).toString();
     };
 
+    XML.prototype.file = function() {
+      return this.eDocument[this.fileElementName][0]._;
+    };
+
     XML.prototype.pdf = function() {
-      return this.eDocument.pdf[0]._;
+      return this.file();
     };
 
     XML.prototype.xmlSigners = function() {
