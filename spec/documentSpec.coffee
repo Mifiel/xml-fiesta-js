@@ -128,7 +128,7 @@ describe 'Document', ->
           parsedOHash = parsed.xmlOriginalHash
           done()
         , (err) ->
-          console.log('Error', err)
+          console.log('Error', err.stack)
           done()
 
       it 'should parse the xml', ->
