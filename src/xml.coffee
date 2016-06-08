@@ -35,21 +35,28 @@ class XML
         resolve(el)
 
   canonical: ->
-    if @eDocument.conservancyRecord
-      delete @eDocument.conservancyRecord
+    edoc = JSON.parse(JSON.stringify(@eDocument))
+    if edoc.conservancyRecord
+      delete edoc.conservancyRecord
+    if @version_int >= 100
+      edoc[@fileElementName][0]._ = ''
+
     builder = new xml2js.Builder(
       rootName: 'electronicDocument'
       renderOpts:
         pretty: false
     )
-    originalXml = builder.buildObject(@eDocument)
+    originalXml = builder.buildObject(edoc)
 
     doc = new Dom().parseFromString(originalXml)
     elem = select(doc, "//*")[0]
     can = new ExclusiveCanonicalization()
     can.process(elem).toString()
 
-  pdf: -> @eDocument[@fileElementName][0]._
+  file: ->
+    @eDocument[@fileElementName][0]._
+
+  pdf: -> @file()
 
   xmlSigners: ->
     parsedSigners = []

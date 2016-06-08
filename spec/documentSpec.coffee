@@ -113,7 +113,7 @@ describe 'Document', ->
       it 'should be defined', ->
         expect(doc.validSignatures).to.be.a('function')
 
-  describe 'fromXml', ->
+  describe 'fromXml v0.0.1+', ->
     describe 'with valid xml', ->
       originalHash = '73c818b60eea60e6c1a1e5688a37' +
                      '3c6b8376ca4ea2ff269695fe6eeef134b3c8'
@@ -121,6 +121,57 @@ describe 'Document', ->
       parsedOHash = null
       beforeEach (done) ->
         xmlExample = "#{__dirname}/fixtures/example_signed_cr.xml"
+        xml = fs.readFileSync(xmlExample)
+        parsedP = Document.fromXml(xml)
+        parsedP.then (parsed) ->
+          doc = parsed.document
+          parsedOHash = parsed.xmlOriginalHash
+          done()
+        , (err) ->
+          console.log('Error', err.stack)
+          done()
+
+      it 'should parse the xml', ->
+        xmlSigners = doc.signers
+        signer = xmlSigners[0]
+
+        expect(doc).to.be.a Document
+        expect(doc.pdfBuffer()).not.to.be null
+        expect(doc.pdf()).not.to.be null
+        expect(doc.originalHash).to.be originalHash
+        expect(parsedOHash).to.be originalHash
+        expect(xmlSigners).not.to.be.empty()
+        expect(signer.email).to.be 'genmadrid@gmail.com'
+
+      describe '.signatures', ->
+        it 'should have Signature objects', ->
+          expect(doc.signatures()[0]).to.be.a Signature
+
+        it 'should have 1 Signature', ->
+          expect(doc.signatures().length).to.be 1
+
+      describe '.validSignatures', ->
+        it 'should be true', ->
+          expect(doc.validSignatures()).to.be true
+
+      describe '.conservancyRecord.validArchiveHash', ->
+        it 'should be true', ->
+          expect(doc.conservancyRecord.validArchiveHash()).to.be true
+
+    describe 'without xml', ->
+      it 'should throw an error', ->
+        expect ->
+          Document.fromXml()
+        .to.throwError()
+
+  describe 'fromXml v1.0.0+', ->
+    describe 'with valid xml', ->
+      originalHash = '73c818b60eea60e6c1a1e5688a37' +
+                     '3c6b8376ca4ea2ff269695fe6eeef134b3c8'
+      doc = null
+      parsedOHash = null
+      beforeEach (done) ->
+        xmlExample = "#{__dirname}/fixtures/example_signed_cr-v1.0.0.xml"
         xml = fs.readFileSync(xmlExample)
         parsedP = Document.fromXml(xml)
         parsedP.then (parsed) ->
