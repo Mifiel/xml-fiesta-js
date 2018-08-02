@@ -214,3 +214,54 @@ describe 'Document', ->
         expect ->
           Document.fromXml()
         .to.throwError()
+
+  describe 'fromXml NOM151-2016', ->
+    describe 'with valid xml', ->
+      originalHash = 'e1899493f5cea98b4aadece50fb0e' +
+                     '08f5523a342cb2925dc50ef604c6d9d7357'
+      doc = null
+      parsedOHash = null
+      beforeEach (done) ->
+        xmlExample = "#{__dirname}/fixtures/NOM151-2016.xml"
+        xml = fs.readFileSync(xmlExample)
+        parsedP = Document.fromXml(xml)
+        parsedP.then (parsed) ->
+          doc = parsed.document
+          parsedOHash = parsed.xmlOriginalHash
+          done()
+        , (err) ->
+          console.log('Error', err.stack)
+          done()
+
+      it 'should parse the xml', ->
+        xmlSigners = doc.signers
+        signer = xmlSigners[0]
+
+        expect(doc).to.be.a Document
+        expect(doc.pdfBuffer()).not.to.be null
+        expect(doc.pdf()).not.to.be null
+        expect(doc.originalHash).to.be originalHash
+        expect(parsedOHash).to.be originalHash
+        expect(xmlSigners).not.to.be.empty()
+        expect(signer.email).to.be 'genmadrid@gmail.com'
+
+      describe '.signatures', ->
+        it 'should have Signature objects', ->
+          expect(doc.signatures()[0]).to.be.a Signature
+
+        it 'should have 1 Signature', ->
+          expect(doc.signatures().length).to.be 1
+
+      describe '.validSignatures', ->
+        it 'should be true', ->
+          expect(doc.validSignatures()).to.be true
+
+      describe '.conservancyRecord.validArchiveHash', ->
+        it 'should be true', ->
+          expect(doc.conservancyRecord.validArchiveHash()).to.be true
+
+    describe 'without xml', ->
+      it 'should throw an error', ->
+        expect ->
+          Document.fromXml()
+        .to.throwError()
