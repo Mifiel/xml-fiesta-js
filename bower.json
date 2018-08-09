@@ -31,8 +31,5 @@
     "docs",
     "lib",
     "builds"
-  ],
-  "dependencies": {
-    "xml-fiesta": "^1.1.0"
-  }
+  ]
 }
