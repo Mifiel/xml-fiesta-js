@@ -3,6 +3,7 @@ jsrsasign = require 'jsrsasign'
 
 Signature = require './signature'
 ConservancyRecord = require './conservancyRecord'
+ConservancyRecordNom2016 = require './conservancyRecordNom2016'
 common = require './common'
 errors = require './errors'
 XML = require './xml'
@@ -25,13 +26,22 @@ class Document
     if options.conservancyRecord
       @recordPresent = true
       try
-        @conservancyRecord = new ConservancyRecord(
-          options.conservancyRecord.caCert,
-          options.conservancyRecord.userCert,
-          options.conservancyRecord.record,
-          options.conservancyRecord.timestamp,
-          options.conservancyRecord.originalXmlHash
-        )
+        unless options.conservancyRecord.version
+          @conservancyRecord = new ConservancyRecord(
+            options.conservancyRecord.caCert,
+            options.conservancyRecord.userCert,
+            options.conservancyRecord.record,
+            options.conservancyRecord.timestamp,
+            options.conservancyRecord.originalXmlHash,
+          )
+        else 
+          @conservancyRecord = new ConservancyRecordNom2016(
+            options.conservancyRecord.caCert,
+            options.conservancyRecord.record,
+            options.conservancyRecord.timestamp,
+            options.conservancyRecord.originalXmlHash,
+          )
+         
       catch e
         @errors.recordInvalid = "The conservancy record is not valid: #{e.message}"
 

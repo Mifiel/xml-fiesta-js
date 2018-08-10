@@ -74,12 +74,18 @@ class XML
   getConservancyRecord: ->
     return null unless @eDocument.conservancyRecord
     cr = @eDocument.conservancyRecord[0]
-    {
+    if !cr.$.version 
+      userCertificate = cr.userCertificate[0]._ 
+    else 
+      crVersion = cr.$.version
+
+    { 
       caCert: cr.caCertificate[0]._
-      userCert: cr.userCertificate[0]._
+      userCert: userCertificate
       record: cr.record[0]
       timestamp: cr.$.timestamp
       originalXmlHash: common.sha256(@canonical())
+      version: crVersion
     }
 
 module.exports = XML

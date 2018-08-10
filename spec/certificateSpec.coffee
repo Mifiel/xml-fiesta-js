@@ -85,7 +85,7 @@ describe 'Certificate', ->
         expect(fielCertificate.hasExpired).to.be.a('function')
 
       it 'should be true', ->
-        expect(fielCertificate.hasExpired()).to.be(false)
+        expect(fielCertificate.hasExpired()).to.be(true)
 
     describe 'isCa', ->
       rootCa = null
