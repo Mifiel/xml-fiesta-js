@@ -54,18 +54,22 @@ Certificate = (binaryString, hexString) ->
   pubKey = null
   subject = null
 
-  if (binaryString.length == 0 || !jsrsasign.ASN1HEX.isASN1HEX(hex))
+  if (binaryString.length == 0 || !jsrsasign.ASN1HEX.isASN1HEX(hex) && !hex.startsWith('2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d49494'))
     throw new errors.CertificateError('The certificate is not valid.')
     return this
 
-  pem = jsrsasign.asn1.ASN1Util.getPEMStringFromHex(hex, 'CERTIFICATE')
-
+  if hex.startsWith('2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d49494')
+    pem = jsrsasign.hextorstr(hex) 
+  else
+    pem = jsrsasign.asn1.ASN1Util.getPEMStringFromHex(hex, 'CERTIFICATE')
+   
   certificate.readCertPEM(pem)
+  hex = certificate.hex
   subject = certificate.getSubjectObject()
 
   @toBinaryString = -> binaryString
 
-  @toHex = -> hex
+  @toHex = -> certificate.hex
   @toPem = -> pem
 
   @getX509 = -> certificate
@@ -120,6 +124,11 @@ Certificate = (binaryString, hexString) ->
   @hasExpired = ->
     notAfter = parseDate(certificate.getNotAfter())
     notAfter.getTime() < new Date().getTime()
+
+  @isValidOn = (date)->
+    notAfter = parseDate(certificate.getNotAfter())
+    notBefore = parseDate(certificate.getNotBefore())
+    notAfter.getTime() >= date.getTime() && date.getTime() >= notBefore.getTime()
 
   @algorithm = ->
     certificate.getSignatureAlgorithmField()
