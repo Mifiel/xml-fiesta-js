@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.2.0
+- Add support for NOM2016
+
 ## v1.1.0
 - Add support to version 1 of XMLFiesta protocol
 - Deprecate some methods
