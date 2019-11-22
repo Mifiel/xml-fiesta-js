@@ -5,5 +5,4 @@ spec
 dist
 *.sublime-project
 *.sublime-workspace
-*.coffee
 bower.json

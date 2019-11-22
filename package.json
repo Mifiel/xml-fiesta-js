@@ -30,15 +30,12 @@
   "homepage": "https://github.com/Mifiel/xml-fiesta-js#readme",
   "devDependencies": {
     "browserify": "^11.0.1",
-    "coffee-coverage": "^1.0.1",
-    "coffee-script": "^1.10.0",
     "expect.js": "^0.3.1",
     "grunt": "^0.4.5",
     "grunt-browserify": "^5.0.0",
     "grunt-bump": "^0.7.0",
     "grunt-clear": "^0.2.1",
     "grunt-contrib-clean": "^1.0.0",
-    "grunt-contrib-coffee": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-coveralls": "^1.0.1",
     "grunt-mocha-test": "^0.12.7",
@@ -49,6 +46,7 @@
     "uglify-js": "^2.6.0"
   },
   "dependencies": {
+    "babel-register": "^6.26.0",
     "jsrsasign": "^5.0.10",
     "promise": "^7.1.1",
     "xml-crypto": "^0.8.4",
