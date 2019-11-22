@@ -5,9 +5,7 @@
   "main": "lib",
   "scripts": {
     "test": "grunt test",
-    "coverage": "istanbul report text-summary lcov",
-    "open-coverage": "open coverage/lcov-report/index.html",
-    "prepublish": "grunt build"
+    "coverage": "nyc --reporter=html --reporter=text --reporter=lcov --include=src/** npm test"
   },
   "repository": {
     "type": "git",
@@ -29,6 +27,8 @@
   },
   "homepage": "https://github.com/Mifiel/xml-fiesta-js#readme",
   "devDependencies": {
+    "@babel/core": "^7.7.2",
+    "@babel/register": "^7.7.0",
     "browserify": "^11.0.1",
     "expect.js": "^0.3.1",
     "grunt": "^0.4.5",
@@ -39,14 +39,12 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-coveralls": "^1.0.1",
     "grunt-mocha-test": "^0.12.7",
-    "grunt-run": "^0.6.0",
-    "istanbul": "^0.4.2",
     "mocha": "^2.4.5",
+    "nyc": "^14.1.1",
     "sinon": "^1.17.3",
     "uglify-js": "^2.6.0"
   },
   "dependencies": {
-    "babel-register": "^6.26.0",
     "jsrsasign": "^5.0.10",
     "promise": "^7.1.1",
     "xml-crypto": "^0.8.4",

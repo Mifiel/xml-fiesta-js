@@ -8,7 +8,7 @@ module.exports = function(grunt) {
       test: {
         options: {
           reporter: 'spec',
-          require: 'babel-register',
+          require: '@babel/register',
           exlude: ['spec']
         },
         src: ['spec/*.js']
@@ -83,19 +83,7 @@ module.exports = function(grunt) {
     },
 
     clean: {
-      all: ['dist', 'src', 'coverage'],
-      coverage: 'coverage'
-    },
-
-    run: {
-      coverage: {
-        cmd: './node_modules/.bin/istanbul',
-        args: [
-          'report',
-          'text-summary',
-          'lcov'
-        ]
-      }
+      dist: ['dist'],
     }
   });
 
@@ -105,10 +93,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-test');
-  grunt.loadNpmTasks('grunt-run');
   grunt.loadNpmTasks('grunt-coveralls');
 
   grunt.registerTask('default', ['watch']);
   grunt.registerTask('build', ['clean', 'browserify']);
-  grunt.registerTask('test', ['clean:coverage', 'mochaTest', 'run:coverage']);
+  grunt.registerTask('test', ['mochaTest']);
 };
