@@ -1,6 +1,6 @@
 import Signature from '../src/signature';
 import Document from '../src/document';
-import { InvalidSignerError, DuplicateSignersError, ArgumenError } from '../src/errors';
+import { InvalidSignerError, ArgumenError } from '../src/errors';
 import { b64toHex } from '../src/common';
 
 const fs = require('fs');
@@ -49,11 +49,6 @@ describe('Document', function() {
       expect(e).to.be.a(InvalidSignerError);
       done();
     })));
-
-    describe('with duplicated signers', () => it('should raise error', () => expect(() => new Document(
-      'cGRmLWJhc2U2NC1jb250ZW50',
-      {signers: [signers[0], signers[0]]}
-    )).to.throwException(e => expect(e).to.be.a(DuplicateSignersError))));
   });
 
   describe('methods', function() {

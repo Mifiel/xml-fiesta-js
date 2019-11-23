@@ -6,7 +6,6 @@ import ConservancyRecordNom2016 from './conservancyRecordNom2016'
 import XML from './xml'
 import {
   InvalidSignerError,
-  DuplicateSignersError,
   CertificateError,
   ArgumentError,
   InvalidRecordError,
@@ -14,7 +13,6 @@ import {
 
 const errors = {
   InvalidSignerError,
-  DuplicateSignersError,
   CertificateError,
   ArgumentError,
   InvalidRecordError,

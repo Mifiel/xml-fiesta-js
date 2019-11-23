@@ -8,8 +8,6 @@ class CustomError extends Error {
 
 export class InvalidSignerError extends CustomError {};
 
-export class DuplicateSignersError extends CustomError {};
-
 export class CertificateError extends CustomError {};
 
 export class ArgumentError extends CustomError {};

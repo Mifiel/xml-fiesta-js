@@ -8,7 +8,6 @@ import { extend, b64toAscii, b64toHex } from './common';
 import {
   ArgumentError,
   InvalidSignerError,
-  DuplicateSignersError,
   InvalidRecordError
 } from './errors';
 import XML from './xml';
@@ -97,11 +96,6 @@ export default class Document {
         'signer must contain cer, signature and signedAt'
       );
     }
-    if (this.signer_exist(signer)) {
-      throw new DuplicateSignersError(
-        'signer already exists'
-      );
-    }
     return this.signers.push(signer);
   }
 
@@ -121,13 +115,6 @@ export default class Document {
       if (valid && !signature.valid(oHash)) { return valid = false; }
     });
     return valid;
-  }
-
-  signer_exist(signer) {
-    const selected = this.signers.filter(s => (s.email === signer.email) ||
-      (s.cer === signer.cer) ||
-      (s.signature === signer.signature));
-    return selected.length > 0;
   }
 
   static fromXml(xmlString, validate) {
