@@ -3,6 +3,7 @@ node_modules
 *.sublime-workspace
 lib
 builds
+dist
 package-lock.json
 .nyc_output
 yarn-error.log
