@@ -1,21 +1,16 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const Promise = require('promise');
 const xml2js = require('xml2js');
 const xmlCrypto = require('xml-crypto');
 const select = require('xpath.js');
 const Dom = require('xmldom').DOMParser;
 
+import { b64toHex, sha256 } from './common';
+
 const ExclusiveCanonicalization = xmlCrypto.
                             SignedXml.
                             CanonicalizationAlgorithms['http://www.w3.org/2001/10/xml-exc-c14n#'];
 
-const common = require('./common');
-
-class XML {
+export default class XML {
   parse(xml) {
     const el = this;
     return new Promise((resolve, reject) => xml2js.parseString(xml, function(err, result) {
@@ -79,8 +74,8 @@ class XML {
       const attrs = signer.$;
       return parsedSigners.push({
         email: attrs.email,
-        cer: common.b64toHex(signer.certificate[0]._),
-        signature: common.b64toHex(signer.signature[0]._),
+        cer: b64toHex(signer.certificate[0]._),
+        signature: b64toHex(signer.signature[0]._),
         signedAt: signer.signature[0].$.signedAt
       });
     });
@@ -102,10 +97,8 @@ class XML {
       userCert: userCertificate,
       record: cr.record[0],
       timestamp: cr.$.timestamp,
-      originalXmlHash: common.sha256(this.canonical()),
+      originalXmlHash: sha256(this.canonical()),
       version: crVersion
     };
   }
 }
-
-module.exports = XML;

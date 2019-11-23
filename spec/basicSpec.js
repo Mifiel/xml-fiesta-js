@@ -1,12 +1,5 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-const common = require('../src/common');
 const jsrsasign = require('jsrsasign');
 const fs = require('fs');
-
 const expect = require('expect.js');
 
 const intermediate = fs.readFileSync(`${__dirname}/../docs/AC2_Sat.crt`).toString();
@@ -23,5 +16,5 @@ describe('Basic certificate validation', () => it('should be true', function() {
   const sig = new jsrsasign.crypto.Signature({alg});
   sig.init(intermediate);
   sig.updateHex(hTbsCert);
-  return expect(sig.verify(signature)).to.be(true);
+  expect(sig.verify(signature)).to.be(true);
 }));

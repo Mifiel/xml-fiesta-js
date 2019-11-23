@@ -1,15 +1,10 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
+import { b64toHex, hextoAscii, parseDate } from './common';
+import Certificate from './certificate';
+import { InvalidRecordError } from './errors';
+
 const jsrsasign = require('jsrsasign');
-const common = require('./common');
-const Certificate = require('./certificate');
-const errors = require('./errors');
 
-class ConservancyRecord {
-
+export default class ConservancyRecord {
   constructor(caCert, userCert, record, timestamp, signedHash) {
     let error;
     this.caCert = caCert;
@@ -18,34 +13,35 @@ class ConservancyRecord {
     this.timestamp = timestamp;
     this.signedHash = signedHash;
     try {
-      this.caCertificate = new Certificate(false, common.b64toHex(this.caCert));
-    } catch (error1) {
-      error = error1;
+      this.caCertificate = new Certificate(false, b64toHex(this.caCert));
+    } catch (err) {
       this.caCertificate = null;
     }
 
     try {
-      this.userCertificate = new Certificate(false, common.b64toHex(this.userCert));
-    } catch (error2) {
-      error = error2;
+      this.userCertificate = new Certificate(false, b64toHex(this.userCert));
+    } catch (err) {
       this.userCertificate = null;
     }
 
-    this.recordHex = common.b64toHex(this.record);
-
+    this.recordHex = b64toHex(this.record);
     if (!jsrsasign.ASN1HEX.isASN1HEX(this.recordHex)) {
-      throw new errors.InvalidRecordError('The record provided is invalid');
+      throw new InvalidRecordError('The record provided is invalid');
     }
 
     this.positions = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.recordHex, 0);
   }
 
   caName() {
-    if (this.caCertificate) { return this.caCertificate.getSubject().O; }
+    if (this.caCertificate) {
+      return this.caCertificate.getSubject().O;
+    }
   }
 
   userName() {
-    if (this.userCertificate) { return this.userCertificate.getSubject().O; }
+    if (this.userCertificate) {
+      return this.userCertificate.getSubject().O;
+    }
   }
 
   timestampHex() {
@@ -69,7 +65,7 @@ class ConservancyRecord {
     ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[1]);
     const signedHashH = jsrsasign.ASN1HEX.getHexOfV_AtObj(this.archiveHex(), ar_pos[1]);
     // remove leading 0
-    return common.hextoAscii(signedHashH.replace(/^[0]+/g, ''));
+    return hextoAscii(signedHashH.replace(/^[0]+/g, ''));
   }
 
   validArchiveHash() {
@@ -88,7 +84,7 @@ class ConservancyRecord {
     ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[0]);
     ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[0]);
     const date = jsrsasign.ASN1HEX.getHexOfV_AtObj(this.timestampHex(), ts_pos[4]);
-    return common.parseDate(common.hextoAscii(date));
+    return parseDate(hextoAscii(date));
   }
 
   equalTimestamps() {
@@ -115,6 +111,3 @@ class ConservancyRecord {
     if (this.caCertificate) { return this.caCertificate.isCa(caPemCert); }
   }
 }
-
-
-module.exports = ConservancyRecord;

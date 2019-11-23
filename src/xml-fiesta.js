@@ -1,9 +1,31 @@
-module.exports = {
-  Certificate: require('./certificate'),
-  Document: require('./document'),
-  Signature: require('./signature'),
-  ConservancyRecord: require('./conservancyRecord'),
-  ConservancyRecordNom2016: require('./conservancyRecordNom2016'),
-  XML: require('./xml'),
-  errors: require('./errors')
+import Certificate from './certificate'
+import Document from './document'
+import Signature from './signature'
+import ConservancyRecord from './conservancyRecord'
+import ConservancyRecordNom2016 from './conservancyRecordNom2016'
+import XML from './xml'
+import {
+  InvalidSignerError,
+  DuplicateSignersError,
+  CertificateError,
+  ArgumentError,
+  InvalidRecordError,
+} from './errors'
+
+const errors = {
+  InvalidSignerError,
+  DuplicateSignersError,
+  CertificateError,
+  ArgumentError,
+  InvalidRecordError,
 };
+
+export {
+  Certificate,
+  Document,
+  Signature,
+  ConservancyRecord,
+  ConservancyRecordNom2016,
+  XML,
+  errors,
+}

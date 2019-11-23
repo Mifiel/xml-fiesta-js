@@ -1,11 +1,12 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-const errors    = require('./errors');
-const common    = require('./common');
+import { CertificateError } from './errors';
+import { hextoAscii } from './common';
+
+const parseDate = function(certDate) {
+  const parsed = certDate.match(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z/);
+  parsed.shift(1);
+  return new Date(Date.UTC(2000 + parseInt(parsed[0]), parsed[1], parsed[2], parsed[3], parsed[4], parsed[5]));
+};
+
 const jsrsasign = require('jsrsasign');
 
 jsrsasign.X509.hex2dnobj = function(e) {
@@ -61,111 +62,141 @@ jsrsasign.X509.DN_ATTRHEX = {
   '06092a864886f70d010902': 'unstructuredName'
 };
 
-var Certificate = function(binaryString, hexString) {
-  let pem;
-  let hex = binaryString ? jsrsasign.rstrtohex(binaryString) : hexString;
-  const certificate = new jsrsasign.X509();
-  let pubKey = null;
-  let subject = null;
+const certFirstBytes = '2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d49494';
 
-  if ((binaryString.length === 0) || (!jsrsasign.ASN1HEX.isASN1HEX(hex) && !hex.startsWith('2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d49494'))) {
-    throw new errors.CertificateError('The certificate is not valid.');
-    return this;
+export default class Certificate {
+  constructor(binaryString, hexString) {
+    let hex = binaryString ? jsrsasign.rstrtohex(binaryString) : hexString;
+
+    this.binaryString = binaryString;
+
+    if ((binaryString.length === 0) || (!jsrsasign.ASN1HEX.isASN1HEX(hex) && !hex.startsWith(certFirstBytes))) {
+      throw new CertificateError('The certificate is not valid.');
+    }
+
+    if (hex.startsWith(certFirstBytes)) {
+      this.pem = jsrsasign.hextorstr(hex);
+    } else {
+      this.pem = jsrsasign.asn1.ASN1Util.getPEMStringFromHex(hex, 'CERTIFICATE');
+    }
+
+    this.certificate = new jsrsasign.X509();
+    this.certificate.readCertPEM(this.pem);
+    this.hex = this.certificate.hex;
+    this.subject = this.certificate.getSubjectObject();
   }
 
-  if (hex.startsWith('2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d49494')) {
-    pem = jsrsasign.hextorstr(hex);
-  } else {
-    pem = jsrsasign.asn1.ASN1Util.getPEMStringFromHex(hex, 'CERTIFICATE');
+  toBinaryString() {
+    return this.binaryString;
   }
 
-  certificate.readCertPEM(pem);
-  ({
-    hex
-  } = certificate);
-  subject = certificate.getSubjectObject();
+  toHex() {
+    return this.certificate.hex;
+  }
 
-  this.toBinaryString = () => binaryString;
+  toPem() {
+    return this.pem;
+  }
 
-  this.toHex = () => certificate.hex;
-  this.toPem = () => pem;
+  getX509() {
+    return this.certificate;
+  }
 
-  this.getX509 = () => certificate;
+  getSerialNumberHex() {
+    return this.certificate.getSerialNumberHex();
+  }
 
-  this.getSerialNumberHex = () => certificate.getSerialNumberHex();
-  this.getSerialNumber = function() {
-    return common.hextoAscii(this.getSerialNumberHex());
-  };
+  getSerialNumber() {
+    return hextoAscii(this.getSerialNumberHex());
+  }
 
-  this.getSubject = () => subject;
-  this.email = () => subject.emailAddress;
-  this.owner = () => subject.name;
-  this.owner_id = function() {
+  getSubject() {
+    return this.subject;
+  }
+
+  email() {
+    return this.subject.emailAddress;
+  }
+
+  owner() {
+    return this.subject.name;
+  }
+
+  owner_id() {
     const identifier = this.getUniqueIdentifier();
     return identifier[0];
-  };
+  }
 
-  this.getUniqueIdentifier = function() {
-    if (subject.UI) { return subject.UI.split(' / '); } else { return null; }
-  };
+  getUniqueIdentifier() {
+    if (this.subject.UI) {
+      return this.subject.UI.split(' / ');
+    } else {
+      return null;
+    }
+  }
 
-  this.getRSAPublicKey = () => pubKey = pubKey === null ? certificate.subjectPublicKeyRSA : pubKey;
+  getRSAPublicKey() {
+    if (this.pubKey) {
+      return this.pubKey;
+    }
+    return this.pubKey = this.certificate.subjectPublicKeyRSA;
+  }
 
-  this.verifyString = function(string, signedHexString, alg) {
+  verifyString(string, signedHexString, alg) {
     try {
       if (alg == null) { alg = 'SHA256withRSA'; }
-      const sig = new jsrsasign.crypto.Signature({alg});
-      sig.init(pem);
+      const sig = new jsrsasign.crypto.Signature({ alg });
+      sig.init(this.pem);
       sig.updateString(string);
       return sig.verify(signedHexString);
     } catch (error) {
       return false;
     }
-  };
+  }
 
-  this.verifyHexString = function(hexString, signedHexString, alg) {
+  verifyHexString(hexString, signedHexString, alg) {
     try {
       if (alg == null) { alg = 'SHA256withRSA'; }
-      const sig = new jsrsasign.crypto.Signature({alg});
-      sig.init(pem);
+      const sig = new jsrsasign.crypto.Signature({ alg });
+      sig.init(this.pem);
       sig.updateHex(hexString);
       return sig.verify(signedHexString);
     } catch (error) {
       return false;
     }
-  };
+  }
 
-  this.getUniqueIdentifierString = function(joinVal) {
+  getUniqueIdentifierString(joinVal) {
     joinVal = joinVal ? joinVal : ', ';
     const identifiers = this.getUniqueIdentifier();
     return identifiers.join(joinVal);
-  };
+  }
 
-  const parseDate = function(certDate) {
-    const parsed = certDate.match(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z/);
-    parsed.shift(1);
-    return new Date(Date.UTC(2000 + parseInt(parsed[0]), parsed[1], parsed[2], parsed[3], parsed[4], parsed[5]));
-  };
-
-  this.hasExpired = function() {
-    const notAfter = parseDate(certificate.getNotAfter());
+  hasExpired() {
+    const notAfter = parseDate(this.certificate.getNotAfter());
     return notAfter.getTime() < new Date().getTime();
-  };
+  }
 
-  this.isValidOn = function(date){
-    const notAfter = parseDate(certificate.getNotAfter());
-    const notBefore = parseDate(certificate.getNotBefore());
+  isValidOn(date) {
+    const notAfter = parseDate(this.certificate.getNotAfter());
+    const notBefore = parseDate(this.certificate.getNotBefore());
     return (notAfter.getTime() >= date.getTime()) && (date.getTime() >= notBefore.getTime());
-  };
+  }
 
-  this.algorithm = () => certificate.getSignatureAlgorithmField();
+  algorithm() {
+    return this.certificate.getSignatureAlgorithmField();
+  }
 
-  this.tbsCertificate = () => // 1st child of SEQ is tbsCert
-  jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0]);
+  tbsCertificate() {
+    // 1st child of SEQ is tbsCert
+    return jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(this.hex, 0, [0]);
+  }
 
-  this.signature = () => jsrsasign.X509.getSignatureValueHex(hex);
+  signature() {
+    return jsrsasign.X509.getSignatureValueHex(this.hex);
+  }
 
-  this.isCa = function(rootCa) {
+  isCa(rootCa) {
     try {
       let rootCaCert = new jsrsasign.X509();
       rootCaCert.readCertPEM(rootCa);
@@ -178,7 +209,5 @@ var Certificate = function(binaryString, hexString) {
     } catch (err) {
       return false;
     }
-  };
+  }
 };
-
-module.exports = Certificate;

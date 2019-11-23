@@ -1,50 +1,42 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS104: Avoid inline assignments
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const jsrsasign = require('jsrsasign');
-const common = require('./common');
-const Certificate = require('./certificate');
-const errors = require('./errors');
 
-class ConservancyRecordNom2016 {
+import {
+  b64toHex,
+  parseDate,
+  hextoAscii,
+  sha256hex,
+} from './common';
+import Certificate from './certificate';
+import { ArgumentError, InvalidRecordError } from './errors';
 
+export default class ConservancyRecordNom2016 {
   constructor(caCert, record, timestamp, signedHash) {
     let error;
+
     this.caCert = caCert;
     this.record = record;
     this.timestamp = timestamp;
     this.signedHash = signedHash;
-    if (!this.record) { throw new errors.ArgumentError(
-      'Conservancy must have record'
-    ); }
+    if (!this.record) { throw new ArgumentError('Conservancy must have record'); }
 
-    this.recordHex = common.b64toHex(this.record);
-
+    this.recordHex = b64toHex(this.record);
     if (!jsrsasign.ASN1HEX.isASN1HEX(this.recordHex)) {
-      throw new errors.InvalidRecordError('The record provided is invalid');
+      throw new InvalidRecordError('The record provided is invalid');
     }
 
     this.positions = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.recordHex, 0);
 
     try {
       this.rootCertificate = new Certificate(false,  this.rootCertificateHex());
-    } catch (error1) {
-      error = error1;
+    } catch (err) {
       this.rootCertificate = null;
     }
 
-    try {
-      this.tsaCertificate = new Certificate(false, common.b64toHex(this.caCert));
-      const inCert = new Certificate(false,  this.caCertificateHex());
-      if  (this.tsaCertificate.toHex() !== inCert.toHex()) { throw new errors.ArgumentError('Tsa certificates are not equals' ); }
-    } catch (error2) {
-      error = error2;
-      throw error;
+    this.tsaCertificate = new Certificate(false, b64toHex(this.caCert));
+    const inCert = new Certificate(false,  this.caCertificateHex());
+    if  (this.tsaCertificate.toHex() !== inCert.toHex()) {
+      throw new ArgumentError('Tsa certificates are not equals' );
     }
-
   }
 
   rootCertificateHex() {
@@ -86,7 +78,7 @@ class ConservancyRecordNom2016 {
     ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(pkcs9, ar_pos[1]);
     ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(pkcs9, ar_pos[1]);
     const date = jsrsasign.ASN1HEX.getHexOfV_AtObj(pkcs9, ar_pos[0]);
-    return common.parseDate(common.hextoAscii(date));
+    return parseDate(hextoAscii(date));
   }
 
   signingCertificateV2() {
@@ -149,7 +141,7 @@ class ConservancyRecordNom2016 {
   validArchiveHash() {
     if (this.signedHash !== this.archiveSignedHash()) { return false; }
     if (!this.tsaCertificate.isValidOn(this.signedTimeStamp())) { return false; }
-    if (this.messageDigest() !== common.sha256hex(this.tSTInfoHex())) { return false; }
+    if (this.messageDigest() !== sha256hex(this.tSTInfoHex())) { return false; }
     if (!this.equalTimestamps()) { return false; }
     if (!this.signingCertificateV2()) { return false; }
     return this.tsaCertificate.verifyHexString(this.signedAttributesHex(), this.archiveSignature());
@@ -158,7 +150,7 @@ class ConservancyRecordNom2016 {
   recordTimestamp() {
     const ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.tSTInfoHex(), 0);
     const date = jsrsasign.ASN1HEX.getHexOfV_AtObj(this.tSTInfoHex(), ts_pos[4]);
-    return common.parseDate(common.hextoAscii(date));
+    return parseDate(hextoAscii(date));
   }
 
   equalTimestamps() {
@@ -175,5 +167,3 @@ class ConservancyRecordNom2016 {
     if (this.rootCertificate) { return this.rootCertificate.isCa(caPemCert); }
   }
 }
-
-module.exports = ConservancyRecordNom2016;

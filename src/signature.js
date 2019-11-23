@@ -1,22 +1,16 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-const Certificate = require('./certificate');
-const errors = require('./errors');
-const common = require('./common');
+import Certificate from './certificate';
+import { ArgumentError } from './errors';
+import { hextoB64 } from './common';
 
-class Signature {
+export default class Signature {
   constructor(cer, signature, signedAt, email) {
     this.signature = signature;
     this.signedAt = signedAt;
     this.email = email;
-    if (!this.signedAt) { throw new errors.ArgumentError(
+    if (!this.signedAt) { throw new ArgumentError(
       'Signature must have signedAt'
     ); }
-    if (!cer) { throw new errors.ArgumentError(
+    if (!cer) { throw new ArgumentError(
       'Signature must have cer'
     ); }
 
@@ -32,14 +26,12 @@ class Signature {
 
   sig(format) {
     if ((format === 'hex') || !format) { return this.signature; }
-    if (format === 'base64') { return common.hextoB64(this.signature); }
-    throw new errors.ArgumentError(`unknown format ${format}`);
+    if (format === 'base64') { return hextoB64(this.signature); }
+    throw new ArgumentError(`unknown format ${format}`);
   }
 
   valid(hash) {
-    if (!hash) { throw new errors.ArgumentError('hash is required'); }
+    if (!hash) { throw new ArgumentError('hash is required'); }
     return this.certificate.verifyString(hash, this.signature);
   }
 }
-
-module.exports = Signature;

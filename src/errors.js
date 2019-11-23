@@ -1,46 +1,17 @@
-const InvalidSignerError = function(message) {
-  this.message = message;
-  this.stack = (new Error()).stack;
-  this.name = 'InvalidSignerError';
-};
+class CustomError extends Error {
+  constructor(...args) {
+    super(...args);
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
 
-InvalidSignerError.prototype = Object.create(Error.prototype);
+export class InvalidSignerError extends CustomError {};
 
-const DuplicateSignersError = function(message) {
-  this.message = message;
-  this.stack = (new Error()).stack;
-  this.name = 'DuplicateSignersError';
-};
+export class DuplicateSignersError extends CustomError {};
 
-DuplicateSignersError.prototype = Object.create(Error.prototype);
+export class CertificateError extends CustomError {};
 
-const CertificateError = function(message) {
-  this.message = message;
-  this.stack = (new Error()).stack;
-  this.name = 'CertificateError';
-};
+export class ArgumentError extends CustomError {};
 
-CertificateError.prototype = Object.create(Error.prototype);
-
-const ArgumentError = function(message) {
-  this.message = message;
-  this.stack = (new Error()).stack;
-  this.name = 'ArgumentError';
-};
-
-ArgumentError.prototype = Object.create(Error.prototype);
-
-const InvalidRecordError = function(message) {
-  this.message = message;
-  this.stack = (new Error()).stack;
-  this.name = 'InvalidRecordError';
-};
-
-InvalidRecordError.prototype = Object.create(Error.prototype);
-
-module.exports = {
-  InvalidSignerError,
-  DuplicateSignersError,
-  CertificateError,
-  ArgumentError
-};
+export class InvalidRecordError extends CustomError {};

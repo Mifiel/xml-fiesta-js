@@ -1,18 +1,13 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-const Document = require('../src/document');
-const Signature = require('../src/signature');
-const errors = require('../src/errors');
-const common = require('../src/common');
-const fs = require('fs');
+import Signature from '../src/signature';
+import Document from '../src/document';
+import { InvalidSignerError, DuplicateSignersError, ArgumenError } from '../src/errors';
+import { b64toHex } from '../src/common';
 
+const fs = require('fs');
 const expect = require('expect.js');
 
 describe('Document', function() {
-  const sig = common.b64toHex(
+  const sig = b64toHex(
     'Ia+HMpJt1SGe0fZ1PQmxUO96slPPnbilb94vB/' +
     'FDZl1iJ/68yeHa4ooftn/HuYqGbAHzCxnCGEYo' +
     'E16yyLMB2U9TKKBpGzEipHkD1AyRF8L07ykH+e' +
@@ -32,7 +27,7 @@ describe('Document', function() {
     if (err) { throw err; }
     signers[0].cer = data.toString('hex');
     const doneCer = true;
-    return done();
+    done();
   }));
 
   describe('initialize', function() {
@@ -40,7 +35,7 @@ describe('Document', function() {
 
     describe('without signers', () => it('should be OK', function() {
       const doc = new Document('cGRmLWJhc2U2NC1jb250ZW50');
-      return expect(doc.signers).to.be.empty();
+      expect(doc.signers).to.be.empty();
     }));
 
     describe('without cer', () => it('should raise error', done => expect(() => new Document(
@@ -51,14 +46,14 @@ describe('Document', function() {
       }]
     }
     )).to.throwException(function(e) {
-      expect(e).to.be.a(errors.InvalidSignerError);
-      return done();
+      expect(e).to.be.a(InvalidSignerError);
+      done();
     })));
 
-    return describe('with duplicated signers', () => it('should raise error', () => expect(() => new Document(
+    describe('with duplicated signers', () => it('should raise error', () => expect(() => new Document(
       'cGRmLWJhc2U2NC1jb250ZW50',
       {signers: [signers[0], signers[0]]}
-    )).to.throwException(e => expect(e).to.be.a(errors.DuplicateSignersError))));
+    )).to.throwException(e => expect(e).to.be.a(DuplicateSignersError))));
   });
 
   describe('methods', function() {
@@ -73,18 +68,18 @@ describe('Document', function() {
 
       it('should be an ascci string', function() {
         const pdf = doc.pdf();
-        return expect(pdf).to.be('pdf-base64-content');
+        expect(pdf).to.be('pdf-base64-content');
       });
 
-      describe('with unkown format', () => it('should throw Exception', () => expect(() => doc.pdf('blah')).to.throwException(errors.ArgumenError)));
+      describe('with unkown format', () => it('should throw Exception', () => expect(() => doc.pdf('blah')).to.throwException(ArgumenError)));
 
-      return describe('with base64 format', () => it('should throw Exception', () => expect(doc.pdf('base64')).to.be('cGRmLWJhc2U2NC1jb250ZW50')));
+      describe('with base64 format', () => it('should throw Exception', () => expect(doc.pdf('base64')).to.be('cGRmLWJhc2U2NC1jb250ZW50')));
     });
 
     describe('.signers', function() {
       it('should be defined', () => expect(doc.signers).to.be.an('array'));
 
-      return it('should have signers', () => expect(doc.signers[0].email).to.be(signers[0].email));
+      it('should have signers', () => expect(doc.signers[0].email).to.be(signers[0].email));
     });
 
     describe('.signatures', function() {
@@ -92,10 +87,10 @@ describe('Document', function() {
 
       it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.a(Signature));
 
-      return it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
+      it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
     });
 
-    return describe('.validSignatures', () => it('should be defined', () => expect(doc.validSignatures).to.be.a('function')));
+    describe('.validSignatures', () => it('should be defined', () => expect(doc.validSignatures).to.be.a('function')));
   });
 
   describe('fromXml v0.0.1+', function() {
@@ -108,14 +103,14 @@ describe('Document', function() {
         const xmlExample = `${__dirname}/fixtures/example_signed_cr.xml`;
         const xml = fs.readFileSync(xmlExample);
         const parsedP = Document.fromXml(xml);
-        return parsedP.then(function(parsed) {
+        parsedP.then(function(parsed) {
           doc = parsed.document;
           parsedOHash = parsed.xmlOriginalHash;
-          return done();
+          done();
         }
         , function(err) {
           console.log('Error', err.stack);
-          return done();
+          done();
         });
       });
 
@@ -129,21 +124,21 @@ describe('Document', function() {
         expect(doc.originalHash).to.be(originalHash);
         expect(parsedOHash).to.be(originalHash);
         expect(xmlSigners).not.to.be.empty();
-        return expect(signer.email).to.be('genmadrid@gmail.com');
+        expect(signer.email).to.be('genmadrid@gmail.com');
       });
 
       describe('.signatures', function() {
         it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.a(Signature));
 
-        return it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
+        it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
       });
 
       describe('.validSignatures', () => it('should be true', () => expect(doc.validSignatures()).to.be(true)));
 
-      return describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
+      describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
     });
 
-    return describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
+    describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
   });
 
   describe('fromXml v1.0.0+', function() {
@@ -156,14 +151,14 @@ describe('Document', function() {
         const xmlExample = `${__dirname}/fixtures/example_signed_cr-v1.0.0.xml`;
         const xml = fs.readFileSync(xmlExample);
         const parsedP = Document.fromXml(xml);
-        return parsedP.then(function(parsed) {
+        parsedP.then(function(parsed) {
           doc = parsed.document;
           parsedOHash = parsed.xmlOriginalHash;
-          return done();
+          done();
         }
         , function(err) {
           console.log('Error', err.stack);
-          return done();
+          done();
         });
       });
 
@@ -177,24 +172,24 @@ describe('Document', function() {
         expect(doc.originalHash).to.be(originalHash);
         expect(parsedOHash).to.be(originalHash);
         expect(xmlSigners).not.to.be.empty();
-        return expect(signer.email).to.be('genmadrid@gmail.com');
+        expect(signer.email).to.be('genmadrid@gmail.com');
       });
 
       describe('.signatures', function() {
         it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.a(Signature));
 
-        return it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
+        it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
       });
 
       describe('.validSignatures', () => it('should be true', () => expect(doc.validSignatures()).to.be(true)));
 
-      return describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
+      describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
     });
 
-    return describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
+    describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
   });
 
-  return describe('fromXml NOM151-2016', function() {
+  describe('fromXml NOM151-2016', function() {
     describe('with valid xml', function() {
       const originalHash = 'e1899493f5cea98b4aadece50fb0e' +
                      '08f5523a342cb2925dc50ef604c6d9d7357';
@@ -204,14 +199,14 @@ describe('Document', function() {
         const xmlExample = `${__dirname}/fixtures/NOM151-2016.xml`;
         const xml = fs.readFileSync(xmlExample);
         const parsedP = Document.fromXml(xml);
-        return parsedP.then(function(parsed) {
+        parsedP.then(function(parsed) {
           doc = parsed.document;
           parsedOHash = parsed.xmlOriginalHash;
-          return done();
+          done();
         }
         , function(err) {
           console.log('Error', err.stack);
-          return done();
+          done();
         });
       });
 
@@ -225,20 +220,26 @@ describe('Document', function() {
         expect(doc.originalHash).to.be(originalHash);
         expect(parsedOHash).to.be(originalHash);
         expect(xmlSigners).not.to.be.empty();
-        return expect(signer.email).to.be('genmadrid@gmail.com');
+        expect(signer.email).to.be('genmadrid@gmail.com');
       });
 
       describe('.signatures', function() {
         it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.a(Signature));
 
-        return it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
+        it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
       });
 
-      describe('.validSignatures', () => it('should be true', () => expect(doc.validSignatures()).to.be(true)));
+      describe('.validSignatures', () => {
+        it('should be true', () => expect(doc.validSignatures()).to.be(true))
+      });
 
-      return describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
+      describe('.conservancyRecord.validArchiveHash', () => {
+        it('should be true', () => {
+          expect(doc.conservancyRecord.validArchiveHash()).to.be(true);
+        });
+      });
     });
 
-    return describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
+    describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
   });
 });

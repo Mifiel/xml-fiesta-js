@@ -1,11 +1,7 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-const crData = require('./fixtures/conservancy_record.js');
-const ConservancyRecord = require('../src/conservancyRecord');
-const errors = require('../src/errors');
+import crData from './fixtures/conservancy_record.js';
+import ConservancyRecord from '../src/conservancyRecord';
+import { ArgumentError, InvalidRecordError } from '../src/errors';
+
 const expect = require('expect.js');
 const fs = require('fs');
 
@@ -30,18 +26,18 @@ describe('ConservancyRecord', function() {
         crData.timestamp,
         crData.hash
       );
-      return expect(conservancyRecord.valid()).to.be(false);
+      expect(conservancyRecord.valid()).to.be(false);
     });
 
     describe('recordTimestamp', () => it('should be a date', function() {
       const date = conservancyRecord.recordTimestamp();
-      return expect(date instanceof Date).to.be(true);
+      expect(date instanceof Date).to.be(true);
     }));
 
     describe('validArchiveHash', function() {
       it('should be true', () => expect(conservancyRecord.validArchiveHash()).to.be(true));
 
-      return describe('when the passed hash is incorrect', () => it('should be false', function() {
+      describe('when the passed hash is incorrect', () => it('should be false', function() {
         conservancyRecord = new ConservancyRecord(
           crData.caCert,
           crData.userCert,
@@ -49,32 +45,51 @@ describe('ConservancyRecord', function() {
           crData.timestamp,
           'crData.hash' // bad hash
         );
-        return expect(conservancyRecord.validArchiveHash()).to.be(false);
+        expect(conservancyRecord.validArchiveHash()).to.be(false);
       }));
     });
 
     describe('archiveSignedHash', () => it('should be the same as the hash', function() {
       const hash = conservancyRecord.archiveSignedHash();
-      return expect(hash).to.be(crData.hash);
+      expect(hash).to.be(crData.hash);
     }));
 
     describe('equalTimestamps', function() {
       it('should be true when valid', () => expect(conservancyRecord.equalTimestamps()).to.be(true));
 
-      return it('should be true when invalid', function() {
+      it('should be true when invalid', function() {
         conservancyRecord.timestamp = Date.now();
-        return expect(conservancyRecord.equalTimestamps()).to.be(false);
+        expect(conservancyRecord.equalTimestamps()).to.be(false);
       });
     });
 
     describe('caName', () => it('should be valid', () => expect(conservancyRecord.caName()).to.be('Advantage Security, S. de R.L. de C.V.')));
 
-    return describe('userName', () => it('should be valid', () => expect(conservancyRecord.userName()).to.be('prueba')));
+    describe('userName', () => it('should be valid', () => expect(conservancyRecord.userName()).to.be('prueba')));
   });
 
-  describe('when caCert is invalid', () => it('should throw an error', () => expect(() => new ConservancyRecord('InvalidCaData', crData.userCert)).to.throwError(errors.ArgumentError)));
+  describe('when caCert is invalid', () => {
+    it('should be invalid', () => {
+      const cr = new ConservancyRecord('InvalidCaData', crData.userCert, crData.record);
+      expect(cr.valid()).to.be(false);
+    });
+  });
 
-  describe('when userCert is invalid', () => it('should throw an error', () => expect(() => new ConservancyRecord(crData.caCert, 'InvalidUserData')).to.throwError(errors.ArgumentError)));
+  describe.skip('when userCert is invalid', () => {
+    it('should be invalid', () => {
+      const cr = new ConservancyRecord(crData.caCert, 'InvalidUserData', crData.record);
+      expect(cr.valid()).to.be(false);
+    });
+  });
 
-  return describe('when record is invalid', () => it('should throw an error', () => expect(() => new ConservancyRecord(crData.caCert, crData.userCert, 'InvaldRecord')).to.throwError(errors.InvalidRecordError)));
+  describe('when record is invalid', () => {
+    it('should throw an error', () => {
+      try {
+        new ConservancyRecord(crData.caCert, crData.userCert, 'InvaldRecord');
+        expect.fail();
+      } catch (err) {
+        expect(err.name).to.be('InvalidRecordError');
+      }
+    });
+  });
 });

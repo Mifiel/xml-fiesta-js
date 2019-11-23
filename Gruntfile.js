@@ -1,4 +1,5 @@
 module.exports = function(grunt) {
+  require('load-grunt-tasks')(grunt);
   const pkg = grunt.file.readJSON('package.json');
 
   grunt.initConfig({
@@ -27,12 +28,12 @@ module.exports = function(grunt) {
 
     watch: {
       clear: {
-        files: ['**/**/*.js']
+        files: ['src/*.js', 'spec/*js']
       },
         // tasks: ['clear']
       scripts: {
-        files: ['**/**/*.js'],
-        tasks: ['clear', 'mochaTest', 'run:coverage'],
+        files: ['src/*.js', 'spec/*js'],
+        tasks: ['clear', 'mochaTest'],
         options: {}
       }
     },
@@ -44,17 +45,22 @@ module.exports = function(grunt) {
             standalone: 'XMLFiesta'
           }
         },
-        src: 'src/xml-fiesta.js',
+        src: 'lib/xml-fiesta.js',
         dest: 'dist/xml-fiesta.js'
+      }
+    },
+
+    babel: {
+      options: {
+        sourceMap: false
       },
-      builds: {
-        options: {
-          browserifyOptions: {
-            standalone: 'XMLFiesta'
-          }
-        },
-        src: 'src/xml-fiesta.js',
-        dest: `builds/xml-fiesta-${pkg['version']}.js`
+      lib: {
+        files: [{
+          expand: true,
+          cwd: 'src/',
+          src: ['*.js'],
+          dest: 'lib/'
+        }]
       }
     },
 
@@ -87,15 +93,7 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-clear');
-  grunt.loadNpmTasks('grunt-browserify');
-  grunt.loadNpmTasks('grunt-bump');
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-mocha-test');
-  grunt.loadNpmTasks('grunt-coveralls');
-
   grunt.registerTask('default', ['watch']);
-  grunt.registerTask('build', ['clean', 'browserify']);
+  grunt.registerTask('build', ['clean', 'babel', 'browserify']);
   grunt.registerTask('test', ['mochaTest']);
 };

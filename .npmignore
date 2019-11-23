@@ -1,7 +1,11 @@
-builds
 docs
 spec
-dist
+.nvmrc
+.travis.yml
 *.sublime-project
 *.sublime-workspace
 bower.json
+CHANGELOG.md
+Gruntfile.js
+yarn.lock
+.gitignore
