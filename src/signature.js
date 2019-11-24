@@ -3,16 +3,16 @@ import { ArgumentError } from './errors';
 import { hextoB64 } from './common';
 
 export default class Signature {
-  constructor(cer, signature, signedAt, email) {
+  constructor(cer, signature, signedAt, email, ePassInfo) {
     this.signature = signature;
+    if (!ePassInfo) { ePassInfo = {} }
+    { content, algorithm, iterations, keySize } = ePassInfo;
+    this.ePassInfo = { algorithm, iterations, keySize };
+    this.ePassContent = content;
     this.signedAt = signedAt;
     this.email = email;
-    if (!this.signedAt) { throw new ArgumentError(
-      'Signature must have signedAt'
-    ); }
-    if (!cer) { throw new ArgumentError(
-      'Signature must have cer'
-    ); }
+    if (!this.signedAt) { throw new ArgumentError('Signature must have signedAt'); }
+    if (!cer) { throw new ArgumentError('Signature must have cer'); }
 
     this.certificate = new Certificate(false, cer);
     if (this.email == null) { this.email = this.certificate.email(); }
@@ -20,8 +20,14 @@ export default class Signature {
     this.signer = {
       id: this.certificate.owner_id(),
       name: this.certificate.owner(),
-      email: this.email
+      email: this.email,
     };
+  }
+
+  ePass(format) {
+    if ((format === 'hex') || !format) { return this.ePassContent; }
+    if (format === 'base64') { return hextoB64(this.ePassContent); }
+    throw new ArgumentError(`unknown format ${format}`);
   }
 
   sig(format) {

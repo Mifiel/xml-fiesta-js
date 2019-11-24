@@ -4,6 +4,7 @@ const xmlCrypto = require('xml-crypto');
 const select = require('xpath.js');
 const Dom = require('xmldom').DOMParser;
 
+import Document from './document'
 import { b64toHex, sha256 } from './common';
 
 const ExclusiveCanonicalization = xmlCrypto.
@@ -11,6 +12,11 @@ const ExclusiveCanonicalization = xmlCrypto.
                             CanonicalizationAlgorithms['http://www.w3.org/2001/10/xml-exc-c14n#'];
 
 export default class XML {
+  static parse(string) {
+    const xml = new XML();
+    return xml.parse(string);
+  }
+
   parse(xml) {
     const el = this;
     return new Promise((resolve, reject) => xml2js.parseString(xml, function(err, result) {
@@ -29,6 +35,7 @@ export default class XML {
       }
 
       const pdfAttrs = el.eDocument[el.fileElementName][0].$;
+      el.encrypted = pdfAttrs.encrypted;
       el.name = pdfAttrs.name;
       el.contentType = pdfAttrs.contentType;
       el.originalHash = pdfAttrs.originalHash;
@@ -38,9 +45,8 @@ export default class XML {
 
   canonical() {
     const edoc = JSON.parse(JSON.stringify(this.eDocument));
-    if (edoc.conservancyRecord) {
-      delete edoc.conservancyRecord;
-    }
+    delete edoc.conservancyRecord;
+    delete edoc.encrypted;
     if (this.version_int >= 100) {
       edoc[this.fileElementName][0]._ = '';
     }
@@ -67,17 +73,23 @@ export default class XML {
 
   xmlSigners() {
     const parsedSigners = [];
-    const {
-      signers
-    } = this.eDocument;
-    signers[0].signer.forEach(function(signer) {
+    this.eDocument.signers[0].signer.forEach(function(signer) {
       const attrs = signer.$;
-      return parsedSigners.push({
+      const xmlSigner = {
         email: attrs.email,
         cer: b64toHex(signer.certificate[0]._),
         signature: b64toHex(signer.signature[0]._),
-        signedAt: signer.signature[0].$.signedAt
-      });
+        signedAt: signer.signature[0].$.signedAt,
+      };
+      if (signer.ePass){
+        xmlSigner.ePass = {
+          content: b64toHex(signer.ePass[0]._),
+          algorithm: signer.ePass[0].$.algorithm,
+          iterations: signer.ePass[0].$.iterations,
+          keySize: signer.ePass[0].$.keySize,
+        }
+      }
+      return parsedSigners.push(xmlSigner);
     });
     return parsedSigners;
   }

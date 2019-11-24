@@ -1,6 +1,5 @@
 import Signature from '../src/signature';
 import Document from '../src/document';
-import { InvalidSignerError, ArgumenError } from '../src/errors';
 import { b64toHex } from '../src/common';
 
 const fs = require('fs');
@@ -38,17 +37,21 @@ describe('Document', function() {
       expect(doc.signers).to.be.empty();
     }));
 
-    describe('without cer', () => it('should raise error', done => expect(() => new Document(
-      'cGRmLWJhc2U2NC1jb250ZW50', {
-      signers: [{
-        email: signers[0].email,
-        signature: signers[0].signature
-      }]
-    }
-    )).to.throwException(function(e) {
-      expect(e).to.be.a(InvalidSignerError);
-      done();
-    })));
+    describe('without cer', () => {
+      it('should raise error', () => {
+        try {
+          new Document(
+            'cGRmLWJhc2U2NC1jb250ZW50', {
+            signers: [{
+              email: signers[0].email,
+              signature: signers[0].signature
+            }]
+          })
+        } catch (err) {
+          expect(err.name).to.be('InvalidSignerError');
+        }
+      });
+    });
   });
 
   describe('methods', function() {
@@ -66,9 +69,21 @@ describe('Document', function() {
         expect(pdf).to.be('pdf-base64-content');
       });
 
-      describe('with unkown format', () => it('should throw Exception', () => expect(() => doc.pdf('blah')).to.throwException(ArgumenError)));
+      describe('with unkown format', () => {
+        it('should throw Exception', () => {
+          try {
+            doc.pdf('blah')
+          } catch (err) {
+            expect(err.name).to.be('ArgumentError');
+          }
+        });
+      });
 
-      describe('with base64 format', () => it('should throw Exception', () => expect(doc.pdf('base64')).to.be('cGRmLWJhc2U2NC1jb250ZW50')));
+      describe('with base64 format', () => {
+        it('should throw Exception', () => {
+          expect(doc.pdf('base64')).to.be('cGRmLWJhc2U2NC1jb250ZW50');
+        });
+      });
     });
 
     describe('.signers', function() {
@@ -132,8 +147,6 @@ describe('Document', function() {
 
       describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
     });
-
-    describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
   });
 
   describe('fromXml v1.0.0+', function() {
@@ -180,8 +193,6 @@ describe('Document', function() {
 
       describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
     });
-
-    describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
   });
 
   describe('fromXml NOM151-2016', function() {
@@ -234,7 +245,5 @@ describe('Document', function() {
         });
       });
     });
-
-    describe('without xml', () => it('should throw an error', () => expect(() => Document.fromXml()).to.throwError()));
   });
 });

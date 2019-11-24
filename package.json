@@ -48,6 +48,7 @@
     "uglify-js": "^2.6.0"
   },
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "jsrsasign": "^5.0.10",
     "promise": "^7.1.1",
     "xml-crypto": "^0.8.4",

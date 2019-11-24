@@ -15,12 +15,13 @@ import XML from './xml';
 const VERSION = '0.0.1';
 export default class Document {
   constructor(file, options) {
-    if (!file) { throw new Error('file is required'); }
+    if (!file) { throw new ArgumentError('file is required'); }
     this.pdf_content = file;
     this.signers = [];
     const defaultOpts = {
       version: VERSION,
-      signers: []
+      signers: [],
+      encrypted: false,
     };
 
     this.errors = {};
@@ -34,6 +35,7 @@ export default class Document {
     this.contentType = options.contentType;
     this.name = options.name;
     this.version = options.version;
+    this.encrypted = options.encrypted === 'true' || options.encrypted === true;
     const digest = new jsrsasign.crypto.MessageDigest({
       alg: 'sha256',
       prov: 'cryptojs'
@@ -41,7 +43,7 @@ export default class Document {
     this.originalHash = digest.digestHex(this.file('hex'));
 
     if (options.signers.length > 0) {
-      options.signers.forEach(el => this.add_signer(el));
+      options.signers.forEach(el => this.addSigner(el));
     }
   }
 
@@ -73,7 +75,7 @@ export default class Document {
 
   fileBuffer() {
     if (!this.pdf_content) { return null; }
-    return new Buffer(this.pdf_content, 'base64');
+    return new Buffer.from(this.pdf_content, 'base64');
   }
 
   // @deprecated
@@ -90,7 +92,7 @@ export default class Document {
   // @deprecated
   pdf(format) { return this.file(format); }
 
-  add_signer(signer) {
+  addSigner(signer) {
     if (!signer.cer || !signer.signature || !signer.signedAt) {
       throw new InvalidSignerError(
         'signer must contain cer, signature and signedAt'
@@ -103,7 +105,8 @@ export default class Document {
     return this.signers.map(signer => new Signature(
       signer.cer,
       signer.signature,
-      signer.signedAt
+      signer.signedAt,
+      signer.ePass,
     ));
   }
 
@@ -117,22 +120,21 @@ export default class Document {
     return valid;
   }
 
-  static fromXml(xmlString, validate) {
-    if (!xmlString) { throw new Error('xml is required'); }
-    const xml = new XML;
-    return new Promise((resolve, reject) => xml.parse(xmlString).then(function() {
+  static async fromXml(xmlString, validate) {
+    return new Promise((resolve, reject) => XML.parse(xmlString).then((xml) => {
       const opts = {
         signers: xml.xmlSigners(),
         version: xml.version,
         name: xml.name,
+        encrypted: xml.encrypted,
         contentType: xml.contentType,
-        conservancyRecord: xml.getConservancyRecord()
+        conservancyRecord: xml.getConservancyRecord(),
       };
       const doc = new Document(xml.file(), opts);
       resolve({
         document: doc,
         // hash as attribute in the xml
-        xmlOriginalHash: xml.originalHash
+        xmlOriginalHash: xml.originalHash,
       });
     }).catch(error => reject(error)));
   }
