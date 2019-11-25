@@ -1,5 +1,5 @@
 import Signature from '../src/signature';
-import ArgumentError from '../src/errors';
+import { ArgumentError } from '../src/errors';
 import { b64toHex } from '../src/common';
 
 const fs = require('fs');
@@ -31,26 +31,26 @@ describe('Signature', function() {
   describe('initialize', function() {
     describe('without cer', () => {
       it('should throw error', () => {
-        expect(() => new Signature(null, sig, new Date())).to.throwException(ArgumentError)
+        expect(() => new Signature(null, sig, new Date(), null, null)).to.throwException(ArgumentError)
       })
     });
 
     describe('without signedAt', () => {
       it('should throw error', () => {
-        expect(() => new Signature(cer, sig)).to.throwException(ArgumentError)
+        expect(() => new Signature(cer, sig, null, null, null)).to.throwException(ArgumentError)
       })
     });
   });
 
   describe('without email', () => describe('.email', () => it('should be the email of the certificate', function() {
-    const signature = new Signature(cer, sig, new Date());
+    const signature = new Signature(cer, sig, new Date(), null, null);
     expect(signature.email).to.be('pruebas@sat.gob.mx');
   })));
 
   describe('with everything OK', function() {
     let signature = null;
     const date = new Date();
-    beforeEach(() => signature = new Signature(cer, sig, date, 'other@email.com'));
+    beforeEach(() => signature = new Signature(cer, sig, date, 'other@email.com', null));
 
     describe('.sig', function() {
       describe('without params', () => it('should be the same as passed', () => expect(signature.sig()).to.be(sig)));
@@ -90,7 +90,6 @@ describe('Signature', function() {
 
       describe('without hash', () => {
         it('should throw exception', () => {
-          console.log(ArgumentError)
           expect(() => signature.valid()).to.throwException(ArgumentError)
         });
       });

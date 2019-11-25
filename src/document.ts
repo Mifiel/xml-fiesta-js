@@ -1,4 +1,4 @@
-const Promise = require('promise');
+// const Promise = require('promise');
 const jsrsasign = require('jsrsasign');
 
 import Signature from './signature';
@@ -12,8 +12,25 @@ import {
 } from './errors';
 import XML from './xml';
 
+interface FromXMLResponse {
+  document: Document
+  xmlOriginalHash: string
+}
+
 const VERSION = '0.0.1';
 export default class Document {
+  pdf_content: string;
+  signers: any;
+  errors: any;
+  conservancyRecord: ConservancyRecord | ConservancyRecordNom2016;
+  recordPresent: boolean;
+  contentType: string;
+  name: string;
+  version: string;
+  encrypted: boolean;
+  originalHash: string;
+  originalXmlHash: string;
+
   constructor(file, options) {
     if (!file) { throw new ArgumentError('file is required'); }
     this.pdf_content = file;
@@ -75,7 +92,7 @@ export default class Document {
 
   fileBuffer() {
     if (!this.pdf_content) { return null; }
-    return new Buffer.from(this.pdf_content, 'base64');
+    return Buffer.from(this.pdf_content, 'base64');
   }
 
   // @deprecated
@@ -106,6 +123,7 @@ export default class Document {
       signer.cer,
       signer.signature,
       signer.signedAt,
+      signer.email,
       signer.ePass,
     ));
   }
@@ -120,7 +138,7 @@ export default class Document {
     return valid;
   }
 
-  static async fromXml(xmlString, validate) {
+  static async fromXml(xmlString): Promise<FromXMLResponse> {
     return new Promise((resolve, reject) => XML.parse(xmlString).then((xml) => {
       const opts = {
         signers: xml.xmlSigners(),

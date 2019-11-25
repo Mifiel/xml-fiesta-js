@@ -10,9 +10,16 @@ import Certificate from './certificate';
 import { ArgumentError, InvalidRecordError } from './errors';
 
 export default class ConservancyRecordNom2016 {
-  constructor(caCert, record, timestamp, signedHash) {
-    let error;
+  caCert: string;
+  record: string;
+  timestamp: any;
+  signedHash: string;
+  recordHex: string;
+  rootCertificate: Certificate;
+  tsaCertificate: Certificate;
+  private positions: any;
 
+  constructor(caCert: string, record: string, timestamp?: any, signedHash?: string) {
     this.caCert = caCert;
     this.record = record;
     this.timestamp = timestamp;
@@ -27,13 +34,13 @@ export default class ConservancyRecordNom2016 {
     this.positions = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.recordHex, 0);
 
     try {
-      this.rootCertificate = new Certificate(false,  this.rootCertificateHex());
+      this.rootCertificate = new Certificate(null,  this.rootCertificateHex());
     } catch (err) {
       this.rootCertificate = null;
     }
 
-    this.tsaCertificate = new Certificate(false, b64toHex(this.caCert));
-    const inCert = new Certificate(false,  this.caCertificateHex());
+    this.tsaCertificate = new Certificate(null, b64toHex(this.caCert));
+    const inCert = new Certificate(null,  this.caCertificateHex());
     if  (this.tsaCertificate.toHex() !== inCert.toHex()) {
       throw new ArgumentError('Tsa certificates are not equals' );
     }

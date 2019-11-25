@@ -7,3 +7,4 @@ dist
 package-lock.json
 .nyc_output
 yarn-error.log
+.tscache

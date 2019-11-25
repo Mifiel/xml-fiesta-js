@@ -5,21 +5,30 @@ import { InvalidRecordError } from './errors';
 const jsrsasign = require('jsrsasign');
 
 export default class ConservancyRecord {
-  constructor(caCert, userCert, record, timestamp, signedHash) {
-    let error;
+  caCert: string;
+  userCert: string;
+  record: string;
+  timestamp: string;
+  signedHash: string;
+  caCertificate: Certificate;
+  userCertificate: Certificate
+  recordHex: string;
+  positions: any;
+
+  constructor(caCert: string, userCert: string, record: string, timestamp: string, signedHash: string) {
     this.caCert = caCert;
     this.userCert = userCert;
     this.record = record;
     this.timestamp = timestamp;
     this.signedHash = signedHash;
     try {
-      this.caCertificate = new Certificate(false, b64toHex(this.caCert));
+      this.caCertificate = new Certificate(null, b64toHex(this.caCert));
     } catch (err) {
       this.caCertificate = null;
     }
 
     try {
-      this.userCertificate = new Certificate(false, b64toHex(this.userCert));
+      this.userCertificate = new Certificate(null, b64toHex(this.userCert));
     } catch (err) {
       this.userCertificate = null;
     }

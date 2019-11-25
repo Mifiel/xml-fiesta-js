@@ -1,4 +1,4 @@
-import crData from './fixtures/conservancy_record.js';
+import crData from './fixtures/conservancy_record';
 import ConservancyRecord from '../src/conservancyRecord';
 import { ArgumentError, InvalidRecordError } from '../src/errors';
 
@@ -8,13 +8,15 @@ const fs = require('fs');
 describe('ConservancyRecord', function() {
   describe('when valid', function() {
     let conservancyRecord = null;
-    beforeEach(() => conservancyRecord = new ConservancyRecord(
-      crData.caCert,
-      crData.userCert,
-      crData.record,
-      crData.timestamp,
-      crData.hash
-    ));
+    beforeEach(() => {
+      conservancyRecord = new ConservancyRecord(
+        crData.caCert,
+        crData.userCert,
+        crData.record,
+        crData.timestamp,
+        crData.hash
+      );
+    });
 
     it('should be valid', () => expect(conservancyRecord.valid()).to.be(true));
 
@@ -70,26 +72,23 @@ describe('ConservancyRecord', function() {
 
   describe('when caCert is invalid', () => {
     it('should be invalid', () => {
-      const cr = new ConservancyRecord('InvalidCaData', crData.userCert, crData.record);
+      const cr = new ConservancyRecord('InvalidCaData', crData.userCert, crData.record, null, null);
       expect(cr.valid()).to.be(false);
     });
   });
 
   describe.skip('when userCert is invalid', () => {
     it('should be invalid', () => {
-      const cr = new ConservancyRecord(crData.caCert, 'InvalidUserData', crData.record);
+      const cr = new ConservancyRecord(crData.caCert, 'InvalidUserData', crData.record, null, null);
       expect(cr.valid()).to.be(false);
     });
   });
 
   describe('when record is invalid', () => {
     it('should throw an error', () => {
-      try {
-        new ConservancyRecord(crData.caCert, crData.userCert, 'InvaldRecord');
-        expect.fail();
-      } catch (err) {
-        expect(err.name).to.be('InvalidRecordError');
-      }
+      expect(() => {
+        new ConservancyRecord(crData.caCert, crData.userCert, 'InvaldRecord', null, null);
+      }).to.throwException(InvalidRecordError);
     });
   });
 });

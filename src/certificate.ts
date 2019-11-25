@@ -65,12 +65,23 @@ jsrsasign.X509.DN_ATTRHEX = {
 const certFirstBytes = '2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d49494';
 
 export default class Certificate {
-  constructor(binaryString, hexString) {
+  binaryString: string;
+  pem: string;
+  certificate: any; // jsrsasign.X509;
+  subject: any;
+  hex: string;
+  pubKey: any;
+
+  constructor(binaryString: string, hexString?: string) {
     let hex = binaryString ? jsrsasign.rstrtohex(binaryString) : hexString;
 
     this.binaryString = binaryString;
 
-    if ((binaryString.length === 0) || (!jsrsasign.ASN1HEX.isASN1HEX(hex) && !hex.startsWith(certFirstBytes))) {
+    if (
+      (!binaryString && !hex) ||
+      (binaryString && binaryString.length === 0) ||
+      (hex && !jsrsasign.ASN1HEX.isASN1HEX(hex) && !hex.startsWith(certFirstBytes))
+    ) {
       throw new CertificateError('The certificate is not valid.');
     }
 
@@ -142,7 +153,7 @@ export default class Certificate {
     return this.pubKey = this.certificate.subjectPublicKeyRSA;
   }
 
-  verifyString(string, signedHexString, alg) {
+  verifyString(string: string, signedHexString: string, alg?: string) {
     try {
       if (alg == null) { alg = 'SHA256withRSA'; }
       const sig = new jsrsasign.crypto.Signature({ alg });
@@ -154,7 +165,7 @@ export default class Certificate {
     }
   }
 
-  verifyHexString(hexString, signedHexString, alg) {
+  verifyHexString(hexString: string, signedHexString: string, alg?: string) {
     try {
       if (alg == null) { alg = 'SHA256withRSA'; }
       const sig = new jsrsasign.crypto.Signature({ alg });
@@ -203,7 +214,7 @@ export default class Certificate {
       const rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(rootCaCert.hex).cA;
       // root certificate provided is not CA
       if (!rootCaIsCa) { return false; }
-      rootCaCert = new Certificate(false, rootCaCert.hex);
+      rootCaCert = new Certificate(null, rootCaCert.hex);
 
       return rootCaCert.verifyHexString(this.tbsCertificate(), this.signature() , this.algorithm());
     } catch (err) {

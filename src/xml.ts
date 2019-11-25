@@ -4,7 +4,6 @@ const xmlCrypto = require('xml-crypto');
 const select = require('xpath.js');
 const Dom = require('xmldom').DOMParser;
 
-import Document from './document'
 import { b64toHex, sha256 } from './common';
 
 const ExclusiveCanonicalization = xmlCrypto.
@@ -12,6 +11,16 @@ const ExclusiveCanonicalization = xmlCrypto.
                             CanonicalizationAlgorithms['http://www.w3.org/2001/10/xml-exc-c14n#'];
 
 export default class XML {
+  eDocument: any;
+  signed: boolean;
+  version: any;
+  version_int: any;
+  fileElementName: any;
+  encrypted: any;
+  name: any;
+  contentType: any;
+  originalHash: any;
+
   static parse(string) {
     const xml = new XML();
     return xml.parse(string);
@@ -75,7 +84,7 @@ export default class XML {
     const parsedSigners = [];
     this.eDocument.signers[0].signer.forEach(function(signer) {
       const attrs = signer.$;
-      const xmlSigner = {
+      const xmlSigner: any = {
         email: attrs.email,
         cer: b64toHex(signer.certificate[0]._),
         signature: b64toHex(signer.signature[0]._),

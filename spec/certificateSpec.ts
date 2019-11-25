@@ -4,36 +4,27 @@ const expect = require('expect.js');
 const sinon = require('sinon');
 const certificatesAndKeys = require('./certificatesAndKeys');
 
+import { CertificateError } from '../src/errors'
 import Certificate from '../src/certificate';
 
 describe('Certificate', function() {
-  const fielCertificate = new Certificate(false, certificatesAndKeys.FIELCer);
-  const csdCertificate = new Certificate(false, certificatesAndKeys.CSDCer);
+  const fielCertificate = new Certificate(null, certificatesAndKeys.FIELCer);
+  const csdCertificate = new Certificate(null, certificatesAndKeys.CSDCer);
 
   describe('instance', function() {
     describe('when the provided string is not a certificate', function() {
       it('should have an error', () => {
-        try {
-          new Certificate('');
-          expect.fail();
-        } catch (err) {
-          expect(err.name).to.be('CertificateError');
-        }
+        expect(() => new Certificate('') ).to.throwException(CertificateError);
       });
 
       it('should have an error', () => {
-        try {
-          new Certificate('not a valid certificate string');
-          expect.fail();
-        } catch (err) {
-          expect(err.name).to.be('CertificateError');
-        }
+        expect(() => new Certificate('not a valid certificate string') ).to.throwException(CertificateError);
       });
     });
 
     describe('when provide a hex string', () => {
       it('should have no errors', () => {
-        expect(() => new Certificate(false, certificatesAndKeys.FIELCer)).not.to.throwError;
+        expect(() => new Certificate(null, certificatesAndKeys.FIELCer)).not.to.throwError;
       });
     });
 
@@ -41,7 +32,7 @@ describe('Certificate', function() {
       expect(csdCertificate.toBinaryString).to.be.a('function');
       // This is because the first parameter was a hex
       // TODO: Test with binary strings as a browser file
-      expect(csdCertificate.toBinaryString()).to.be(false);
+      expect(csdCertificate.toBinaryString()).to.be(null);
     }));
 
     describe('toHex', () => it('should be defined', function() {
@@ -98,7 +89,7 @@ describe('Certificate', function() {
       beforeEach(function() {
         intermediate = fs.readFileSync(`${__dirname}/../docs/AC2_Sat.crt`).toString();
         cert = fs.readFileSync(`${__dirname}/fixtures/production-certificate.cer`);
-        certificate = new Certificate(false, cert.toString('hex'));
+        certificate = new Certificate(null, cert.toString('hex'));
       });
 
       describe('when a CA', () => it('should be true', function() {

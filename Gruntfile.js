@@ -9,10 +9,10 @@ module.exports = function(grunt) {
       test: {
         options: {
           reporter: 'spec',
-          require: '@babel/register',
+          require: 'ts-node/register',
           exlude: ['spec']
         },
-        src: ['spec/*.js']
+        src: ['spec/*.ts']
       }
     },
 
@@ -28,11 +28,11 @@ module.exports = function(grunt) {
 
     watch: {
       clear: {
-        files: ['src/*.js', 'spec/*js']
+        files: ['src/*.ts', 'spec/*ts']
       },
         // tasks: ['clear']
       scripts: {
-        files: ['src/*.js', 'spec/*js'],
+        files: ['src/*.ts', 'spec/*ts'],
         tasks: ['clear', 'mochaTest'],
         options: {}
       }
@@ -50,17 +50,10 @@ module.exports = function(grunt) {
       }
     },
 
-    babel: {
-      options: {
-        sourceMap: false
-      },
-      lib: {
-        files: [{
-          expand: true,
-          cwd: 'src/',
-          src: ['*.js'],
-          dest: 'lib/'
-        }]
+    ts: {
+      default : {
+        tsconfig: './tsconfig.json',
+        src: ["src/**/*.ts", "!node_modules/**"]
       }
     },
 
@@ -89,11 +82,11 @@ module.exports = function(grunt) {
     },
 
     clean: {
-      dist: ['dist'],
+      dist: ['dist', 'lib'],
     }
   });
 
   grunt.registerTask('default', ['watch']);
-  grunt.registerTask('build', ['clean', 'babel', 'browserify']);
+  grunt.registerTask('build', ['clean', 'ts', 'browserify']);
   grunt.registerTask('test', ['mochaTest']);
 };

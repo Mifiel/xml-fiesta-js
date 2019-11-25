@@ -9,19 +9,19 @@ function extend(object, properties) {
 }
 
 function b64toHex(b64String) {
-  return new Buffer.from(b64String, 'base64').toString('hex');
+  return Buffer.from(b64String, 'base64').toString('hex');
 }
 
 function hextoB64(hexString) {
-  return new Buffer.from(hexString, 'hex').toString('base64');
+  return Buffer.from(hexString, 'hex').toString('base64');
 }
 
 function hextoAscii(hexString) {
-  return new Buffer.from(hexString, 'hex').toString('ascii');
+  return Buffer.from(hexString, 'hex').toString('ascii');
 }
 
 function b64toAscii(b64String) {
-  return new Buffer.from(b64String, 'base64').toString('ascii');
+  return Buffer.from(b64String, 'base64').toString('ascii');
 }
 
 function parseDate(date) {

@@ -3,7 +3,7 @@ const expect = require('expect.js');
 const fs = require('fs');
 
 import ConservancyRecordNom2016 from '../src/conservancyRecordNom2016';
-import { ArgumentError, CertificateError } from '../src/errors';
+import { ArgumentError, CertificateError, InvalidRecordError } from '../src/errors';
 
 describe('ConservancyRecordNom2016', function() {
   describe('when valid', function() {
@@ -57,35 +57,24 @@ describe('ConservancyRecordNom2016', function() {
 
   describe('when caCert is invalid', () => {
     it('should throw an error', () => {
-      try {
-        new ConservancyRecordNom2016('InvalidCaData', crData.record)
-        expect.fail();
-      } catch (err) {
-        expect(err.name).to.be('CertificateError');
-      }
+      expect(() => new ConservancyRecordNom2016('InvalidCaData', crData.record) ).to.throwException(CertificateError);
     })
   });
 
   describe('when caCert is not equal', () => {
     it('should throw an error', () => {
-      try {
-        new ConservancyRecordNom2016(crData.badCaCert, crData.record)
-        expect.fail();
-      } catch (err) {
-        expect(err.name).to.be('ArgumentError');
-      }
+      expect(() => {
+        new ConservancyRecordNom2016(crData.badCaCert, crData.record);
+      }).to.throwException(ArgumentError);
     })
   });
 
   describe('when record is invalid', () => {
     it('should throw an error', () => {
-      try {
-        new ConservancyRecordNom2016(crData.caCert, 'InvaldRecord')
-        expect.fail();
-      } catch (err) {
-        expect(err.name).to.be('InvalidRecordError');
-      }
-    })
+      expect(() => {
+        new ConservancyRecordNom2016(crData.caCert, 'InvaldRecord');
+      }).to.throwException(InvalidRecordError);
+    });
   });
 });
 

@@ -30,10 +30,8 @@ describe('Document', function() {
   }));
 
   describe('initialize', function() {
-    describe('without pdf', () => it('should throw and error', () => expect(() => new Document()).to.throwError()));
-
     describe('without signers', () => it('should be OK', function() {
-      const doc = new Document('cGRmLWJhc2U2NC1jb250ZW50');
+      const doc = new Document('cGRmLWJhc2U2NC1jb250ZW50', {});
       expect(doc.signers).to.be.empty();
     }));
 
@@ -61,18 +59,18 @@ describe('Document', function() {
       {signers}
     ));
 
-    describe('.pdf', function() {
-      it('should be defined', () => expect(doc.pdf).to.be.a('function'));
+    describe('.file', function() {
+      it('should be defined', () => expect(doc.file).to.be.a('function'));
 
       it('should be an ascci string', function() {
-        const pdf = doc.pdf();
-        expect(pdf).to.be('pdf-base64-content');
+        const file = doc.file();
+        expect(file).to.be('pdf-base64-content');
       });
 
       describe('with unkown format', () => {
         it('should throw Exception', () => {
           try {
-            doc.pdf('blah')
+            doc.file('blah')
           } catch (err) {
             expect(err.name).to.be('ArgumentError');
           }
@@ -81,7 +79,7 @@ describe('Document', function() {
 
       describe('with base64 format', () => {
         it('should throw Exception', () => {
-          expect(doc.pdf('base64')).to.be('cGRmLWJhc2U2NC1jb250ZW50');
+          expect(doc.file('base64')).to.be('cGRmLWJhc2U2NC1jb250ZW50');
         });
       });
     });
