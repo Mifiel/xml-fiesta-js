@@ -12,9 +12,10 @@ import {
 } from './errors';
 import XML from './xml';
 
-interface FromXMLResponse {
+export interface FromXMLResponse {
   document: Document
-  xmlOriginalHash: string
+  xmljs: any,
+  xmlOriginalHash: string,
 }
 
 const VERSION = '0.0.1';
@@ -106,6 +107,15 @@ export default class Document {
     throw new ArgumentError(`unknown format ${format}`);
   }
 
+  setFile(file: string) {
+    this.pdf_content = file;
+  }
+
+  toXML(eDocument) {
+    if (!eDocument) throw new ArgumentError('eDocument is required')
+    return XML.toXML(eDocument, this.file('base64'));
+  }
+
   // @deprecated
   pdf(format) { return this.file(format); }
 
@@ -151,6 +161,7 @@ export default class Document {
       const doc = new Document(xml.file(), opts);
       resolve({
         document: doc,
+        xmljs: xml.eDocument,
         // hash as attribute in the xml
         xmlOriginalHash: xml.originalHash,
       });

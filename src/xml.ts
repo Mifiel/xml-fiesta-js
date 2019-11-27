@@ -1,9 +1,9 @@
 const Promise = require('promise');
-const xml2js = require('xml2js');
 const xmlCrypto = require('xml-crypto');
 const select = require('xpath.js');
 const Dom = require('xmldom').DOMParser;
 
+import { parseString, Builder } from 'xml2js';
 import { b64toHex, sha256 } from './common';
 
 const ExclusiveCanonicalization = xmlCrypto.
@@ -26,9 +26,32 @@ export default class XML {
     return xml.parse(string);
   }
 
+  static toXML(eDocument: any, file: string) {
+    const edoc = JSON.parse(JSON.stringify(eDocument));
+    this.removeEncrypedData(edoc)
+    edoc.file[0]._ = file;
+
+    const builder = new Builder({
+      rootName: 'electronicDocument',
+      renderOpts: {
+        pretty: false
+      }
+    });
+    return builder.buildObject(edoc);
+  }
+
+  static removeEncrypedData(xmljs: any) {
+    if (xmljs.file && xmljs.file[0]) {
+      delete xmljs.file[0].$.encrypted;
+    }
+    xmljs.signers[0].signer.forEach(function(signer) {
+      delete signer.ePass;
+    });
+  }
+
   parse(xml) {
     const el = this;
-    return new Promise((resolve, reject) => xml2js.parseString(xml, function(err, result) {
+    return new Promise((resolve, reject) => parseString(xml, function(err, result) {
       if (err) { return reject(err); }
       el.eDocument = result.electronicDocument;
       const eDocumentAttrs = el.eDocument.$;
@@ -55,12 +78,13 @@ export default class XML {
   canonical() {
     const edoc = JSON.parse(JSON.stringify(this.eDocument));
     delete edoc.conservancyRecord;
-    delete edoc.encrypted;
+    XML.removeEncrypedData(edoc);
+
     if (this.version_int >= 100) {
       edoc[this.fileElementName][0]._ = '';
     }
 
-    const builder = new xml2js.Builder({
+    const builder = new Builder({
       rootName: 'electronicDocument',
       renderOpts: {
         pretty: false

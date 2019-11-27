@@ -42,5 +42,13 @@ describe('Encrypted Document', () => {
         }).to.throw('unknown format bad format');
       });
     });
+
+    describe('toXML', () => {
+      it('should be fine', () => {
+        doc.setFile(hextoB64('1234567890ABCDF'));
+        const xml = doc.toXML(result.xmljs);
+        expect(xml).not.to.include('encrypted');
+      })
+    })
   });
 })
