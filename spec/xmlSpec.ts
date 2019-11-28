@@ -1,5 +1,5 @@
+import { expect } from 'chai';
 const fs = require('fs');
-const expect = require('expect.js');
 
 import XML from '../src/xml';
 import { sha256 } from '../src/common';
@@ -18,7 +18,7 @@ describe('XML', () => {
 
       it('should be the sha256 of the XML', () => {
         const calculated = sha256(this.xml.canonical());
-        expect(calculated).to.be(originalXmlHash);
+        expect(calculated).to.eq(originalXmlHash);
       });
     });
   });
@@ -38,7 +38,7 @@ describe('XML', () => {
 
       it('should be the sha256 of the XML', () => {
         const calculated = sha256(xml.canonical());
-        expect(calculated).to.be(originalXmlHash);
+        expect(calculated).to.eq(originalXmlHash);
       });
     });
   });

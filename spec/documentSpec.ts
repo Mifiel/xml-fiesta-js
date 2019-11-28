@@ -1,9 +1,9 @@
-import Signature from '../src/signature';
+import { expect } from 'chai';
+const fs = require('fs');
+
+import Signature from '../src/signature'
 import Document from '../src/document';
 import { b64toHex } from '../src/common';
-
-const fs = require('fs');
-const expect = require('expect.js');
 
 describe('Document', function() {
   const sig = b64toHex(
@@ -25,14 +25,13 @@ describe('Document', function() {
   beforeEach(done => fs.readFile(`${__dirname}/fixtures/FIEL_AAA010101AAA.cer`, function(err, data) {
     if (err) { throw err; }
     signers[0].cer = data.toString('hex');
-    const doneCer = true;
     done();
   }));
 
   describe('initialize', function() {
     describe('without signers', () => it('should be OK', function() {
       const doc = new Document('cGRmLWJhc2U2NC1jb250ZW50', {});
-      expect(doc.signers).to.be.empty();
+      expect(doc.signers).to.be.empty;
     }));
 
     describe('without cer', () => {
@@ -46,7 +45,7 @@ describe('Document', function() {
             }]
           })
         } catch (err) {
-          expect(err.name).to.be('InvalidSignerError');
+          expect(err.name).to.equal('InvalidSignerError');
         }
       });
     });
@@ -64,7 +63,7 @@ describe('Document', function() {
 
       it('should be an ascci string', function() {
         const file = doc.file();
-        expect(file).to.be('pdf-base64-content');
+        expect(file).to.equal('pdf-base64-content');
       });
 
       describe('with unkown format', () => {
@@ -72,14 +71,14 @@ describe('Document', function() {
           try {
             doc.file('blah')
           } catch (err) {
-            expect(err.name).to.be('ArgumentError');
+            expect(err.name).to.equal('ArgumentError');
           }
         });
       });
 
       describe('with base64 format', () => {
         it('should throw Exception', () => {
-          expect(doc.file('base64')).to.be('cGRmLWJhc2U2NC1jb250ZW50');
+          expect(doc.file('base64')).to.equal('cGRmLWJhc2U2NC1jb250ZW50');
         });
       });
     });
@@ -87,15 +86,17 @@ describe('Document', function() {
     describe('.signers', function() {
       it('should be defined', () => expect(doc.signers).to.be.an('array'));
 
-      it('should have signers', () => expect(doc.signers[0].email).to.be(signers[0].email));
+      it('should have signers', () => expect(doc.signers[0].email).to.equal(signers[0].email));
     });
 
     describe('.signatures', function() {
       it('should be defined', () => expect(doc.signatures).to.be.a('function'));
 
-      it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.a(Signature));
+      it('should have Signature objects', () => {
+        expect(doc.signatures()[0]).to.be.an.instanceof(Signature)
+      });
 
-      it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
+      it('should have 1 Signature', () => expect(doc.signatures().length).to.eq(1));
     });
 
     describe('.validSignatures', () => it('should be defined', () => expect(doc.validSignatures).to.be.a('function')));
@@ -126,24 +127,24 @@ describe('Document', function() {
         const xmlSigners = doc.signers;
         const signer = xmlSigners[0];
 
-        expect(doc).to.be.a(Document);
-        expect(doc.pdfBuffer()).not.to.be(null);
-        expect(doc.pdf()).not.to.be(null);
-        expect(doc.originalHash).to.be(originalHash);
-        expect(parsedOHash).to.be(originalHash);
-        expect(xmlSigners).not.to.be.empty();
-        expect(signer.email).to.be('genmadrid@gmail.com');
+        expect(doc).to.be.an.instanceof(Document);
+        expect(doc.pdfBuffer()).not.to.be.null;
+        expect(doc.pdf()).not.to.be.null;
+        expect(doc.originalHash).to.equal(originalHash);
+        expect(parsedOHash).to.equal(originalHash);
+        expect(xmlSigners).not.to.be.empty;
+        expect(signer.email).to.equal('genmadrid@gmail.com');
       });
 
       describe('.signatures', function() {
-        it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.a(Signature));
+        it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.an.instanceof(Signature));
 
-        it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
+        it('should have 1 Signature', () => expect(doc.signatures().length).to.equal(1));
       });
 
-      describe('.validSignatures', () => it('should be true', () => expect(doc.validSignatures()).to.be(true)));
+      describe('.validSignatures', () => it('should be true', () => expect(doc.validSignatures()).to.be.true));
 
-      describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
+      describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be.true));
     });
   });
 
@@ -172,24 +173,24 @@ describe('Document', function() {
         const xmlSigners = doc.signers;
         const signer = xmlSigners[0];
 
-        expect(doc).to.be.a(Document);
-        expect(doc.pdfBuffer()).not.to.be(null);
-        expect(doc.pdf()).not.to.be(null);
-        expect(doc.originalHash).to.be(originalHash);
-        expect(parsedOHash).to.be(originalHash);
-        expect(xmlSigners).not.to.be.empty();
-        expect(signer.email).to.be('genmadrid@gmail.com');
+        expect(doc).to.be.an.instanceof(Document);
+        expect(doc.pdfBuffer()).not.to.be.null;
+        expect(doc.pdf()).not.to.be.null;
+        expect(doc.originalHash).to.equal(originalHash);
+        expect(parsedOHash).to.equal(originalHash);
+        expect(xmlSigners).not.to.be.empty;
+        expect(signer.email).to.equal('genmadrid@gmail.com');
       });
 
       describe('.signatures', function() {
-        it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.a(Signature));
+        it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.an.instanceof(Signature));
 
-        it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
+        it('should have 1 Signature', () => expect(doc.signatures().length).to.eq(1));
       });
 
-      describe('.validSignatures', () => it('should be true', () => expect(doc.validSignatures()).to.be(true)));
+      describe('.validSignatures', () => it('should be true', () => expect(doc.validSignatures()).to.be.true));
 
-      describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be(true)));
+      describe('.conservancyRecord.validArchiveHash', () => it('should be true', () => expect(doc.conservancyRecord.validArchiveHash()).to.be.true));
     });
   });
 
@@ -218,28 +219,28 @@ describe('Document', function() {
         const xmlSigners = doc.signers;
         const signer = xmlSigners[0];
 
-        expect(doc).to.be.a(Document);
-        expect(doc.pdfBuffer()).not.to.be(null);
-        expect(doc.pdf()).not.to.be(null);
-        expect(doc.originalHash).to.be(originalHash);
-        expect(parsedOHash).to.be(originalHash);
-        expect(xmlSigners).not.to.be.empty();
-        expect(signer.email).to.be('genmadrid@gmail.com');
+        expect(doc).to.be.an.instanceof(Document);
+        expect(doc.pdfBuffer()).not.to.be.null;
+        expect(doc.pdf()).not.to.be.null;
+        expect(doc.originalHash).to.equal(originalHash);
+        expect(parsedOHash).to.equal(originalHash);
+        expect(xmlSigners).not.to.be.empty;
+        expect(signer.email).to.equal('genmadrid@gmail.com');
       });
 
       describe('.signatures', function() {
-        it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.a(Signature));
+        it('should have Signature objects', () => expect(doc.signatures()[0]).to.be.an.instanceof(Signature));
 
-        it('should have 1 Signature', () => expect(doc.signatures().length).to.be(1));
+        it('should have 1 Signature', () => expect(doc.signatures().length).to.equal(1));
       });
 
       describe('.validSignatures', () => {
-        it('should be true', () => expect(doc.validSignatures()).to.be(true))
+        it('should be true', () => expect(doc.validSignatures()).to.be.true)
       });
 
       describe('.conservancyRecord.validArchiveHash', () => {
         it('should be true', () => {
-          expect(doc.conservancyRecord.validArchiveHash()).to.be(true);
+          expect(doc.conservancyRecord.validArchiveHash()).to.be.true;
         });
       });
     });
