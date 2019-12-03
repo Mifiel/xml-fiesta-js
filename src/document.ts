@@ -16,6 +16,7 @@ export interface FromXMLResponse {
   document: Document
   xmljs: any,
   xmlOriginalHash: string,
+  xmlHash: string,
 }
 
 const VERSION = '0.0.1';
@@ -162,6 +163,7 @@ export default class Document {
       resolve({
         document: doc,
         xmljs: xml.eDocument,
+        xmlHash: xml.getConservancyRecord() && xml.getConservancyRecord().originalXmlHash,
         // hash as attribute in the xml
         xmlOriginalHash: xml.originalHash,
       });

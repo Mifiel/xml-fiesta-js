@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<electronicDocument version="2.1.0" signed="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="https://www.mifiel.com/XMLFiesta"><file name="example.pdf" originalHash="73c818b60eea60e6c1a1e5688a373c6b8376ca4ea2ff269695fe6eeef134b3c8" contentType="application/pdf" encrypted="true">
+<electronicDocument version="2.1.0" signed="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="https://www.mifiel.com/XMLFiesta"><file name="example.pdf.enc" originalHash="73c818b60eea60e6c1a1e5688a373c6b8376ca4ea2ff269695fe6eeef134b3c8" contentType="application/pdf" encrypted="true">
 JVBERi0xLjQNJeLjz9MNCjUyIDAgb2JqIDw8L0xpbmVhcml6ZWQgMS9MIDcy
 NjgyL08gNTUvRSA1OTM2NC9OIDIvVCA3MTU5NS9IIFsgNTc2IDIyOF0+Pg1l
 bmRvYmoNICAgICAgICAgICAgICAgICAgDQp4cmVmDQo1MiAxNA0KMDAwMDAw

@@ -43,6 +43,7 @@ export default class XML {
   static removeEncrypedData(xmljs: any) {
     if (xmljs.file && xmljs.file[0]) {
       delete xmljs.file[0].$.encrypted;
+      xmljs.file[0].$.name = xmljs.file[0].$.name.replace('.enc', '');
     }
     xmljs.signers[0].signer.forEach(function(signer) {
       delete signer.ePass;

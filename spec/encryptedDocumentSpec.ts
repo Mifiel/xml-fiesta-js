@@ -47,6 +47,7 @@ describe('Encrypted Document', () => {
       it('should be fine', () => {
         doc.setFile(hextoB64('1234567890ABCDF'));
         const xml = doc.toXML(result.xmljs);
+        expect(xml).not.to.include('.enc');
         expect(xml).not.to.include('encrypted');
       })
     })
