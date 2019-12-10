@@ -2,7 +2,8 @@
   "name": "xml-fiesta",
   "version": "1.2.0",
   "description": "Electronic signed document XML Protocol for Node & Browser",
-  "main": "src",
+  "main": "./lib/xml-fiesta.js",
+  "types": "./lib/xml-fiesta.d.ts",
   "scripts": {
     "test": "grunt test",
     "coverage": "nyc npm test",
