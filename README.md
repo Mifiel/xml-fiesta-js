@@ -5,7 +5,7 @@
 [![Build Status][travis-image]][travis-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
-Version: 1.2.0
+Version: 1.3.1
 
 Electronic signed document XML Protocol **reader** and validator for Node & Browser.
 
@@ -55,7 +55,7 @@ fs.readFile(xml, function(err, data) {
 
     doc.record // -> XMLFiesta::ConservancyRecord
     // validates that the record is valid
-    doc.record.valid() 
+    doc.record.valid()
     // validates that the record timestamp is the same as the xml
     doc.record.equalTimestamps()
     // validates that the archive of the record was signed with the user certificate
