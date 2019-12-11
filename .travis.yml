@@ -1,16 +1,17 @@
 language: node_js
+
+cache: yarn
+
 node_js:
-  - "7"
-  - "8"
-  - "9"
+  - '8'
+  - '10'
 
 before_install:
-  - npm install -qg npm
-  - npm install -qg grunt-cli
+  - yarn global add grunt-cli
 
 script:
-  - grunt mochaTest
-  - grunt run:coverage
+  - yarn test
+  - yarn coverage
 
 after_script:
   - grunt coveralls

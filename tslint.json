@@ -1,0 +1,22 @@
+{
+  "extends": ["tslint-config-prettier"],
+  "rulesDirectory": [
+    "tslint-lines-between-class-members",
+    "tslint-plugin-prettier"
+  ],
+  "rules": {
+    // plugin-rules
+    "lines-between-class-members": true,
+    // typescript
+    "newline-before-return": true,
+    "typedef": [true, "parameter"],
+    "ordered-imports": [
+      true,
+      {
+        "grouped-imports": true
+      }
+    ],
+    // prettier
+    "prettier": [true, "prettier.config.js"]
+  }
+}
