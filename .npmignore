@@ -1,5 +1,10 @@
 docs
+coverage
 spec
+.nyc_output
+.deploy
+src
+.tscache
 .nvmrc
 .travis.yml
 *.sublime-project
@@ -8,4 +13,7 @@ bower.json
 CHANGELOG.md
 Gruntfile.js
 yarn.lock
+tsconfig.json
+tslint.json
+yarn-error.log
 .gitignore
