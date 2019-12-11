@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.0
+- Remove coffeescript in favor of typescript
+- Allow to pass encrypted XMLs
+- Allow an XML to have multiple signers with the same email / rfc
+- Add encrypted documents validations
+
 ## v1.2.0
 - Add support for NOM2016
 
@@ -10,7 +16,7 @@
 
 TODO: change every method or property that implies that a PDF is always signing. In XMLFiesta protocol version 1 you can sign any document (image, pdf, video, etc.)
 
-## v1.0.0 
+## v1.0.0
 - Breaking change: Document.fromXml now returns a promise
 - Move xml reader to XMLFiesta::XML
 - Archive validations on Conservancy Record
@@ -23,7 +29,7 @@ TODO: change every method or property that implies that a PDF is always signing.
 ## v0.0.5
 - Add conservancy record parser and validator
     + Validates record timestamp against given timestamp
-    + validates record signature against CA certificate 
+    + validates record signature against CA certificate
 - Bug Fixes
 
 ## v0.0.4
