@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.3.2
+- Upgrade xml-crypto to fix a bug that didnt create the canonical xml correctly
+
 ## v1.3.0
 - Remove coffeescript in favor of typescript
 - Allow to pass encrypted XMLs
