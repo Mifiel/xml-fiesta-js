@@ -96,7 +96,10 @@ export default class XML {
     const doc = new Dom().parseFromString(originalXml);
     const elem = select(doc, "//*")[0];
     const can = new ExclusiveCanonicalization();
-    return can.process(elem).toString();
+    const canonicalString = can.process(elem).toString();
+    // remove windows line-endings
+    // fixes an issue when users save the XML in windows
+    return canonicalString.replace(/&#xD;/g, '');
   }
 
   file() {
