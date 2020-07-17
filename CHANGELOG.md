@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.3.3
+- Remove window lineendings on canonical string
+
 ## v1.3.2
 - Upgrade xml-crypto to fix a bug that didnt create the canonical xml correctly
 
