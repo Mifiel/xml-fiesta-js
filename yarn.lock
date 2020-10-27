@@ -4507,10 +4507,10 @@ write-file-atomic@^2.4.2:
     imurmurhash "^0.1.4"
     signal-exit "^3.0.2"
 
-xml-crypto@^1.4.1:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/xml-crypto/-/xml-crypto-1.4.1.tgz#4b4e179aff7a26060d7dd00c05a661c9499ea138"
-  integrity sha512-Q1S0v/txfWBtgCilON/ALqvNSJ4MY5qkGQgyqmed39zN+B4hfQDnlM6elm34PvbexDXk8ldXp7AI4jkahy5DVg==
+xml-crypto@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/xml-crypto/-/xml-crypto-2.0.0.tgz#54cd268ad9d31930afcf7092cbb664258ca9e826"
+  integrity sha512-/a04qr7RpONRZHOxROZ6iIHItdsQQjN3sj8lJkYDDss8tAkEaAs0VrFjb3tlhmS5snQru5lTs9/5ISSMdPDHlg==
   dependencies:
     xmldom "0.1.27"
     xpath "0.0.27"
