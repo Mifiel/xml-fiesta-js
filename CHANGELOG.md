@@ -1,7 +1,10 @@
 # Changelog
 
+## v1.3.4
+- Remove geolocation on canonical xml
+
 ## v1.3.3
-- Remove window lineendings on canonical string
+- Remove window line-endings on canonical string
 
 ## v1.3.2
 - Upgrade xml-crypto to fix a bug that didnt create the canonical xml correctly

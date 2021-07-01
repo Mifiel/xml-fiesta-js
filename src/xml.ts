@@ -50,6 +50,18 @@ export default class XML {
     });
   }
 
+  static removeGeolocation(xmljs: any) {
+    xmljs.signers[0].signer.forEach(function(signer) {
+      if(signer.auditTrail) {
+        signer.auditTrail[0].event.forEach(function(event, index) {
+          if (event.$.name === 'geolocation') {
+            delete signer.auditTrail[0].event[index];
+          }
+        });
+      }
+    });
+  }
+
   parse(xml) {
     const el = this;
     return new Promise((resolve, reject) => parseString(xml, function(err, result) {
@@ -80,6 +92,7 @@ export default class XML {
     const edoc = JSON.parse(JSON.stringify(this.eDocument));
     delete edoc.conservancyRecord;
     XML.removeEncrypedData(edoc);
+    XML.removeGeolocation(edoc);
 
     if (this.version_int >= 100) {
       edoc[this.fileElementName][0]._ = '';
