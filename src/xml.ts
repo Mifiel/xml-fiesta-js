@@ -28,14 +28,14 @@ export default class XML {
 
   static toXML(eDocument: any, file: string) {
     const edoc = JSON.parse(JSON.stringify(eDocument));
-    this.removeEncrypedData(edoc)
+    this.removeEncrypedData(edoc);
     edoc.file[0]._ = file;
 
     const builder = new Builder({
-      rootName: 'electronicDocument',
+      rootName: "electronicDocument",
       renderOpts: {
-        pretty: false
-      }
+        pretty: false,
+      },
     });
     return builder.buildObject(edoc);
   }
@@ -43,18 +43,18 @@ export default class XML {
   static removeEncrypedData(xmljs: any) {
     if (xmljs.file && xmljs.file[0]) {
       delete xmljs.file[0].$.encrypted;
-      xmljs.file[0].$.name = xmljs.file[0].$.name.replace('.enc', '');
+      xmljs.file[0].$.name = xmljs.file[0].$.name.replace(".enc", "");
     }
-    xmljs.signers[0].signer.forEach(function(signer) {
+    xmljs.signers[0].signer.forEach(function (signer) {
       delete signer.ePass;
     });
   }
 
   static removeGeolocation(xmljs: any) {
-    xmljs.signers[0].signer.forEach(function(signer) {
-      if(signer.auditTrail) {
-        signer.auditTrail[0].event.forEach(function(event, index) {
-          if (event.$.name === 'geolocation') {
+    xmljs.signers[0].signer.forEach(function (signer) {
+      if (signer.auditTrail) {
+        signer.auditTrail[0].event.forEach(function (event, index) {
+          if (event.$.name === "geolocation") {
             delete signer.auditTrail[0].event[index];
           }
         });
@@ -62,30 +62,42 @@ export default class XML {
     });
   }
 
+  static removeBlockchain(xmljs: any) {
+    delete xmljs.blockchain;
+  }
+
+  static removeTransfer(xmljs: any) {
+    delete xmljs.transfers;
+  }
+
   parse(xml) {
     const el = this;
-    return new Promise((resolve, reject) => parseString(xml, function(err, result) {
-      if (err) { return reject(err); }
-      el.eDocument = result.electronicDocument;
-      const eDocumentAttrs = el.eDocument.$;
-      el.version = eDocumentAttrs.version;
-      el.signed = eDocumentAttrs.signed;
-      const v = el.version.split(/\./).map(v => parseInt(v));
-      el.version_int = (v[0] * 100) + (v[1] * 10) + v[2];
+    return new Promise((resolve, reject) =>
+      parseString(xml, function (err, result) {
+        if (err) {
+          return reject(err);
+        }
+        el.eDocument = result.electronicDocument;
+        const eDocumentAttrs = el.eDocument.$;
+        el.version = eDocumentAttrs.version;
+        el.signed = eDocumentAttrs.signed;
+        const v = el.version.split(/\./).map((v) => parseInt(v));
+        el.version_int = v[0] * 100 + v[1] * 10 + v[2];
 
-      if (el.version_int < 100) {
-        el.fileElementName = 'pdf';
-      } else {
-        el.fileElementName = 'file';
-      }
+        if (el.version_int < 100) {
+          el.fileElementName = "pdf";
+        } else {
+          el.fileElementName = "file";
+        }
 
-      const pdfAttrs = el.eDocument[el.fileElementName][0].$;
-      el.encrypted = pdfAttrs.encrypted;
-      el.name = pdfAttrs.name;
-      el.contentType = pdfAttrs.contentType;
-      el.originalHash = pdfAttrs.originalHash;
-      return resolve(el);
-    }));
+        const pdfAttrs = el.eDocument[el.fileElementName][0].$;
+        el.encrypted = pdfAttrs.encrypted;
+        el.name = pdfAttrs.name;
+        el.contentType = pdfAttrs.contentType;
+        el.originalHash = pdfAttrs.originalHash;
+        return resolve(el);
+      })
+    );
   }
 
   canonical() {
@@ -93,16 +105,18 @@ export default class XML {
     delete edoc.conservancyRecord;
     XML.removeEncrypedData(edoc);
     XML.removeGeolocation(edoc);
+    XML.removeBlockchain(edoc);
+    XML.removeTransfer(edoc);
 
     if (this.version_int >= 100) {
-      edoc[this.fileElementName][0]._ = '';
+      edoc[this.fileElementName][0]._ = "";
     }
 
     const builder = new Builder({
-      rootName: 'electronicDocument',
+      rootName: "electronicDocument",
       renderOpts: {
-        pretty: false
-      }
+        pretty: false,
+      },
     });
     const originalXml = builder.buildObject(edoc);
 
@@ -112,18 +126,24 @@ export default class XML {
     const canonicalString = can.process(elem).toString();
     // remove windows line-endings
     // fixes an issue when users save the XML in windows
-    return canonicalString.replace(/&#xD;/g, '');
+    return canonicalString.replace(/&#xD;/g, "");
+  }
+
+  getCanonicalBuffer() {
+    return Buffer.from(this.canonical(), "utf-8");
   }
 
   file() {
     return this.eDocument[this.fileElementName][0]._;
   }
 
-  pdf() { return this.file(); }
+  pdf() {
+    return this.file();
+  }
 
   xmlSigners() {
     const parsedSigners = [];
-    this.eDocument.signers[0].signer.forEach(function(signer) {
+    this.eDocument.signers[0].signer.forEach(function (signer) {
       const attrs = signer.$;
       const xmlSigner: any = {
         email: attrs.email,
@@ -131,13 +151,13 @@ export default class XML {
         signature: b64toHex(signer.signature[0]._),
         signedAt: signer.signature[0].$.signedAt,
       };
-      if (signer.ePass){
+      if (signer.ePass) {
         xmlSigner.ePass = {
           content: b64toHex(signer.ePass[0]._),
           algorithm: signer.ePass[0].$.algorithm,
           iterations: signer.ePass[0].$.iterations,
           keySize: signer.ePass[0].$.keySize,
-        }
+        };
       }
       return parsedSigners.push(xmlSigner);
     });
@@ -146,7 +166,9 @@ export default class XML {
 
   getConservancyRecord() {
     let crVersion, userCertificate;
-    if (!this.eDocument.conservancyRecord) { return null; }
+    if (!this.eDocument.conservancyRecord) {
+      return null;
+    }
     const cr = this.eDocument.conservancyRecord[0];
     if (!cr.$.version) {
       userCertificate = cr.userCertificate[0]._;
@@ -160,7 +182,7 @@ export default class XML {
       record: cr.record[0],
       timestamp: cr.$.timestamp,
       originalXmlHash: sha256(this.canonical()),
-      version: crVersion
+      version: crVersion,
     };
   }
 }
