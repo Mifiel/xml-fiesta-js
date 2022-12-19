@@ -4,6 +4,7 @@ const fs = require('fs');
 import Signature from '../src/signature'
 import Document from '../src/document';
 import { b64toHex } from '../src/common';
+import { XML } from 'xml-fiesta';
 
 describe('Document', function() {
   const sig = b64toHex(
@@ -108,11 +109,13 @@ describe('Document', function() {
                      '3c6b8376ca4ea2ff269695fe6eeef134b3c8';
       let doc = null;
       let parsedOHash = null;
+      let xmlInstance:XML = null;
       beforeEach(function(done) {
         const xmlExample = `${__dirname}/fixtures/example_signed_cr.xml`;
         const xml = fs.readFileSync(xmlExample);
         const parsedP = Document.fromXml(xml);
-        parsedP.then(function(parsed) {
+        parsedP.then(function (parsed) {
+          xmlInstance = parsed.xml;
           doc = parsed.document;
           parsedOHash = parsed.xmlOriginalHash;
           done();
@@ -123,10 +126,11 @@ describe('Document', function() {
         });
       });
 
-      it('should parse the xml', function() {
+      it('should parse the xml', function () {
         const xmlSigners = doc.signers;
         const signer = xmlSigners[0];
-
+        
+        expect(xmlInstance).not.to.be.empty;
         expect(doc).to.be.an.instanceof(Document);
         expect(doc.pdfBuffer()).not.to.be.null;
         expect(doc.pdf()).not.to.be.null;

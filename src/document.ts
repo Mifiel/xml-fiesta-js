@@ -13,10 +13,11 @@ import {
 import XML from './xml';
 
 export interface FromXMLResponse {
-  document: Document
-  xmljs: any,
-  xmlOriginalHash: string,
-  xmlHash: string,
+  document: Document;
+  xmljs: any;
+  xmlOriginalHash: string;
+  xmlHash: string;
+  xml: XML;
 }
 
 const VERSION = '0.0.1';
@@ -161,6 +162,7 @@ export default class Document {
       };
       const doc = new Document(xml.file(), opts);
       resolve({
+        xml,
         document: doc,
         xmljs: xml.eDocument,
         xmlHash: xml.getConservancyRecord() && xml.getConservancyRecord().originalXmlHash,
