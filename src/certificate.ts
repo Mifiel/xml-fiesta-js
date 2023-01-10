@@ -80,15 +80,20 @@ export default class Certificate {
     if (
       (!binaryString && !hex) ||
       (binaryString && binaryString.length === 0) ||
-      (hex && !jsrsasign.ASN1HEX.isASN1HEX(hex) && !hex.startsWith(certFirstBytes))
+      (hex &&
+        !jsrsasign.ASN1HEX.isASN1HEX(hex) &&
+        !hex.startsWith(certFirstBytes))
     ) {
-      throw new CertificateError('The certificate is not valid.');
+      throw new CertificateError("The certificate is not valid.");
     }
 
     if (hex.startsWith(certFirstBytes)) {
       this.pem = jsrsasign.hextorstr(hex);
     } else {
-      this.pem = jsrsasign.asn1.ASN1Util.getPEMStringFromHex(hex, 'CERTIFICATE');
+      this.pem = jsrsasign.asn1.ASN1Util.getPEMStringFromHex(
+        hex,
+        "CERTIFICATE"
+      );
     }
 
     this.certificate = new jsrsasign.X509();
@@ -140,7 +145,7 @@ export default class Certificate {
 
   getUniqueIdentifier() {
     if (this.subject.UI) {
-      return this.subject.UI.split(' / ');
+      return this.subject.UI.split(" / ");
     } else {
       return null;
     }
@@ -150,12 +155,14 @@ export default class Certificate {
     if (this.pubKey) {
       return this.pubKey;
     }
-    return this.pubKey = this.certificate.subjectPublicKeyRSA;
+    return (this.pubKey = this.certificate.subjectPublicKeyRSA);
   }
 
   verifyString(string: string, signedHexString: string, alg?: string) {
     try {
-      if (alg == null) { alg = 'SHA256withRSA'; }
+      if (alg == null) {
+        alg = "SHA256withRSA";
+      }
       const sig = new jsrsasign.crypto.Signature({ alg });
       sig.init(this.pem);
       sig.updateString(string);
@@ -167,7 +174,9 @@ export default class Certificate {
 
   verifyHexString(hexString: string, signedHexString: string, alg?: string) {
     try {
-      if (alg == null) { alg = 'SHA256withRSA'; }
+      if (alg == null) {
+        alg = "SHA256withRSA";
+      }
       const sig = new jsrsasign.crypto.Signature({ alg });
       sig.init(this.pem);
       sig.updateHex(hexString);
@@ -178,7 +187,7 @@ export default class Certificate {
   }
 
   getUniqueIdentifierString(joinVal) {
-    joinVal = joinVal ? joinVal : ', ';
+    joinVal = joinVal ? joinVal : ", ";
     const identifiers = this.getUniqueIdentifier();
     return identifiers.join(joinVal);
   }
@@ -191,7 +200,10 @@ export default class Certificate {
   isValidOn(date) {
     const notAfter = parseDate(this.certificate.getNotAfter());
     const notBefore = parseDate(this.certificate.getNotBefore());
-    return (notAfter.getTime() >= date.getTime()) && (date.getTime() >= notBefore.getTime());
+    return (
+      notAfter.getTime() >= date.getTime() &&
+      date.getTime() >= notBefore.getTime()
+    );
   }
 
   algorithm() {
@@ -207,16 +219,29 @@ export default class Certificate {
     return jsrsasign.X509.getSignatureValueHex(this.hex);
   }
 
-  isCa(rootCa) {
+  isCa(rootCaPem, rootCaHex = null) {
     try {
-      let rootCaCert = new jsrsasign.X509();
-      rootCaCert.readCertPEM(rootCa);
-      const rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(rootCaCert.hex).cA;
-      // root certificate provided is not CA
-      if (!rootCaIsCa) { return false; }
-      rootCaCert = new Certificate(null, rootCaCert.hex);
+      let rootCaCert;
+      if (rootCaHex) {
+        rootCaCert = new Certificate(null, rootCaHex);
+      } else {
+         rootCaCert = new jsrsasign.X509();
+        rootCaCert.readCertPEM(rootCaPem);
+        const rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(
+          rootCaCert.hex
+        ).cA;
+        // root certificate provided is not CA
+        if (!rootCaIsCa) {
+          return false;
+        }
+        rootCaCert = new Certificate(null, rootCaCert.hex);
+      }
 
-      return rootCaCert.verifyHexString(this.tbsCertificate(), this.signature() , this.algorithm());
+      return rootCaCert.verifyHexString(
+        this.tbsCertificate(),
+        this.signature(),
+        this.algorithm()
+      );
     } catch (err) {
       return false;
     }

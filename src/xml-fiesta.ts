@@ -11,6 +11,8 @@ import {
   InvalidRecordError,
 } from './errors'
 
+const version = require('../package.json').version;
+
 const errors = {
   InvalidSignerError,
   CertificateError,
@@ -26,4 +28,5 @@ export {
   ConservancyRecordNom2016,
   XML,
   errors,
+  version
 }

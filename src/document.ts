@@ -13,10 +13,11 @@ import {
 import XML from './xml';
 
 export interface FromXMLResponse {
-  document: Document
-  xmljs: any,
-  xmlOriginalHash: string,
-  xmlHash: string,
+  document: Document;
+  xmljs: any;
+  xmlOriginalHash: string;
+  xmlHash: string;
+  xml: XML;
 }
 
 const VERSION = '0.0.1';
@@ -30,6 +31,7 @@ export default class Document {
   name: string;
   version: string;
   encrypted: boolean;
+  transfer: boolean;
   originalHash: string;
   originalXmlHash: string;
 
@@ -41,6 +43,7 @@ export default class Document {
       version: VERSION,
       signers: [],
       encrypted: false,
+      transfer: false,
     };
 
     this.errors = {};
@@ -55,6 +58,7 @@ export default class Document {
     this.name = options.name;
     this.version = options.version;
     this.encrypted = options.encrypted === 'true' || options.encrypted === true;
+    this.transfer = options.transfer === "true" || options.transfer === true;
     const digest = new jsrsasign.crypto.MessageDigest({
       alg: 'sha256',
       prov: 'cryptojs'
@@ -151,16 +155,31 @@ export default class Document {
 
   static async fromXml(xmlString): Promise<FromXMLResponse> {
     return new Promise((resolve, reject) => XML.parse(xmlString).then((xml) => {
-      const opts = {
-        signers: xml.xmlSigners(),
-        version: xml.version,
-        name: xml.name,
-        encrypted: xml.encrypted,
-        contentType: xml.contentType,
-        conservancyRecord: xml.getConservancyRecord(),
-      };
+      let isTransfer = false;
+      if (xml.eDocument.transfers) {
+        isTransfer = true;
+        const lastNodeTransfer = xml.eDocument.transfers[
+          xml.eDocument.transfers.length - 1
+        ];
+        xml.originalEDocument = xml.eDocument;
+        xml.eDocument =
+          lastNodeTransfer.electronicDocument[
+            lastNodeTransfer.electronicDocument.length-1
+          ];
+      }
+
+        const opts = {
+          signers: xml.xmlSigners(),
+          version: xml.version,
+          name: xml.name,
+          encrypted: xml.encrypted,
+          contentType: xml.contentType,
+          conservancyRecord: xml.getConservancyRecord(),
+          transfer: isTransfer,
+        };
       const doc = new Document(xml.file(), opts);
       resolve({
+        xml,
         document: doc,
         xmljs: xml.eDocument,
         xmlHash: xml.getConservancyRecord() && xml.getConservancyRecord().originalXmlHash,
