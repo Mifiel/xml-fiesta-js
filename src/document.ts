@@ -155,19 +155,6 @@ export default class Document {
 
   static async fromXml(xmlString): Promise<FromXMLResponse> {
     return new Promise((resolve, reject) => XML.parse(xmlString).then((xml) => {
-      let isTransfer = false;
-      if (xml.eDocument.transfers) {
-        isTransfer = true;
-        const lastNodeTransfer = xml.eDocument.transfers[
-          xml.eDocument.transfers.length - 1
-        ];
-        xml.originalEDocument = xml.eDocument;
-        xml.eDocument =
-          lastNodeTransfer.electronicDocument[
-            lastNodeTransfer.electronicDocument.length-1
-          ];
-      }
-
         const opts = {
           signers: xml.xmlSigners(),
           version: xml.version,
@@ -175,7 +162,7 @@ export default class Document {
           encrypted: xml.encrypted,
           contentType: xml.contentType,
           conservancyRecord: xml.getConservancyRecord(),
-          transfer: isTransfer,
+          transfer: xml.isTransfer,
         };
       const doc = new Document(xml.file(), opts);
       resolve({
