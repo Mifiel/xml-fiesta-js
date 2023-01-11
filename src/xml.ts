@@ -20,6 +20,7 @@ export default class XML {
   name: any;
   contentType: any;
   originalHash: any;
+  isTransfer: boolean;
 
   static parse(string) {
     const xml = new XML();
@@ -74,6 +75,18 @@ export default class XML {
     const el = this;
     return new Promise((resolve, reject) =>
       parseString(xml, function (err, result) {
+        let isTransfer = false;
+        if (result.electronicDocument.transfers) {
+          isTransfer = true;
+          const lastNodeTransfer = result.electronicDocument.transfers[
+            result.electronicDocument.transfers.length - 1
+          ];
+          result.originalElectronicDocument = result.electronicDocument;
+          result.electronicDocument =
+            lastNodeTransfer.electronicDocument[
+              lastNodeTransfer.electronicDocument.length-1
+            ];
+        }
         if (err) {
           return reject(err);
         }
@@ -95,6 +108,7 @@ export default class XML {
         el.name = pdfAttrs.name;
         el.contentType = pdfAttrs.contentType;
         el.originalHash = pdfAttrs.originalHash;
+        el.isTransfer = isTransfer;
         return resolve(el);
       })
     );
