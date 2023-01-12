@@ -83,11 +83,14 @@ export default class XML {
             result.electronicDocument.transfers[
               result.electronicDocument.transfers.length - 1
             ];
-          result.originalElectronicDocument = result.electronicDocument;
-          result.electronicDocument =
-            lastNodeTransfer.electronicDocument[
-              lastNodeTransfer.electronicDocument.length - 1
-            ];
+          if (lastNodeTransfer?.electronicDocument) {
+            result.originalElectronicDocument = result.electronicDocument;
+            result.electronicDocument =
+              lastNodeTransfer.electronicDocument[
+                lastNodeTransfer.electronicDocument.length - 1
+              ];
+            el.originalElectronicDocument = result.originalElectronicDocument;
+          }
         }
         if (err) {
           return reject(err);
@@ -111,7 +114,6 @@ export default class XML {
         el.contentType = pdfAttrs.contentType;
         el.originalHash = pdfAttrs.originalHash;
         el.isTransfer = isTransfer;
-        el.originalElectronicDocument = result.originalElectronicDocument;
         return resolve(el);
       })
     );
@@ -119,7 +121,7 @@ export default class XML {
 
   canonical() {
     const edoc = JSON.parse(JSON.stringify(this.eDocument));
-    if (this.isTransfer) {
+    if (this.isTransfer && this.originalElectronicDocument) {
       Object.entries(
         this.originalElectronicDocument.$
       ).map(([key, value]) => {
@@ -127,7 +129,6 @@ export default class XML {
           edoc.$[key] = value;
         }
       });
-      // edoc.$ = this.originalElectronicDocument.$;
     }
 
     delete edoc.conservancyRecord;
