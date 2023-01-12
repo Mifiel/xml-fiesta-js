@@ -78,12 +78,12 @@ export default class XML {
       parseString(xml, function (err, result) {
         let isTransfer = false;
         if (result.electronicDocument.transfers) {
-          isTransfer = true;
           const lastNodeTransfer =
             result.electronicDocument.transfers[
               result.electronicDocument.transfers.length - 1
             ];
           if (lastNodeTransfer?.electronicDocument) {
+            isTransfer = true;
             result.originalElectronicDocument = result.electronicDocument;
             result.electronicDocument =
               lastNodeTransfer.electronicDocument[
