@@ -10,6 +10,18 @@ const ExclusiveCanonicalization = xmlCrypto.
                             SignedXml.
                             CanonicalizationAlgorithms['http://www.w3.org/2001/10/xml-exc-c14n#'];
 
+const versionToNumber = (version: string) => {
+  // splits the version string using the dots in an array of 3 numbers
+  // example: '2.4.1' -> [2, 4, 1]
+  const [firstNumber, secondNumber, thirdNumber] = 
+    version.split(/\./).map((v) => parseInt(v));
+  // converts the previous in a number
+  // example: [2, 4, 1] -> 241
+  return firstNumber * 100 + secondNumber * 10 + thirdNumber;
+}
+
+const START_VERSION_WITHOUT_SINGERS_CER = versionToNumber('2.5.0');
+
 export default class XML {
   eDocument: any;
   signed: boolean;
@@ -72,6 +84,12 @@ export default class XML {
     delete xmljs.transfers;
   }
 
+  static removeSignersCertificate(xmljs: any) {
+    xmljs.signers.forEach(element => {
+      delete element.signer[0].certificate
+    })
+  }
+
   parse(xml) {
     const el = this;
     return new Promise((resolve, reject) =>
@@ -99,8 +117,7 @@ export default class XML {
         const eDocumentAttrs = el.eDocument.$;
         el.version = eDocumentAttrs.version;
         el.signed = eDocumentAttrs.signed;
-        const v = el.version.split(/\./).map((v) => parseInt(v));
-        el.version_int = v[0] * 100 + v[1] * 10 + v[2];
+        el.version_int = versionToNumber(el.version);
 
         if (el.version_int < 100) {
           el.fileElementName = "pdf";
@@ -136,6 +153,10 @@ export default class XML {
     XML.removeGeolocation(edoc);
     XML.removeBlockchain(edoc);
     XML.removeTransfer(edoc);
+    
+    if(this.version_int >= START_VERSION_WITHOUT_SINGERS_CER) {
+      XML.removeSignersCertificate(edoc)
+    }
 
     if (this.version_int >= 100) {
       edoc[this.fileElementName][0]._ = "";
