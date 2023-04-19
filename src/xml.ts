@@ -196,6 +196,7 @@ export default class XML {
     this.eDocument.signers[0].signer.forEach(function (signer) {
       const attrs = signer.$;
       const xmlSigner: any = {
+        taxId: attrs.id,
         email: attrs.email,
         cer: b64toHex(signer.certificate[0]._),
         signature: b64toHex(signer.signature[0]._),
