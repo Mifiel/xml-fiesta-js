@@ -86,7 +86,7 @@ export default class XML {
 
   static removeSignersCertificate(xmljs: any) {
     xmljs.signers[0].signer.forEach(signer => {
-      delete signer.name;
+      delete signer.$.name;
       delete signer.certificate[0]._;
     });
   }
