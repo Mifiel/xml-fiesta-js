@@ -1,6 +1,6 @@
 {
   "name": "xml-fiesta",
-  "version": "1.5.0-rc.1",
+  "version": "1.5.0-rc.2",
   "description": "Electronic signed document XML Protocol for Node & Browser",
   "main": "./lib/xml-fiesta.js",
   "types": "./lib/xml-fiesta.d.ts",
