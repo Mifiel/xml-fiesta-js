@@ -85,9 +85,10 @@ export default class XML {
   }
 
   static removeSignersCertificate(xmljs: any) {
-    xmljs.signers.forEach(element => {
-      delete element.signer[0].certificate
-    })
+    xmljs.signers[0].signer.forEach(signer => {
+      delete signer.name;
+      delete signer.certificate[0]._;
+    });
   }
 
   parse(xml) {
@@ -154,7 +155,7 @@ export default class XML {
     XML.removeBlockchain(edoc);
     XML.removeTransfer(edoc);
     
-    if(this.version_int >= START_VERSION_WITHOUT_SINGERS_CER) {
+    if (this.version_int >= START_VERSION_WITHOUT_SINGERS_CER) {
       XML.removeSignersCertificate(edoc)
     }
 
