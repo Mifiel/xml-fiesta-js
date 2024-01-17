@@ -72,7 +72,7 @@ export default class Certificate {
   hex: string;
   pubKey: any;
 
-  constructor(binaryString: string, hexString?: string) {
+  constructor(binaryString: string | null, hexString?: string) {
     let hex = binaryString ? jsrsasign.rstrtohex(binaryString) : hexString;
 
     this.binaryString = binaryString;
@@ -140,7 +140,7 @@ export default class Certificate {
 
   owner_id() {
     const identifier = this.getUniqueIdentifier();
-    return identifier[0];
+    return identifier?.[0];
   }
 
   getUniqueIdentifier() {
@@ -219,19 +219,23 @@ export default class Certificate {
     return jsrsasign.X509.getSignatureValueHex(this.hex);
   }
 
-  isCa(rootCaPem, rootCaHex = null) {
+  isCa(rootCaHex) {
+    return this.hex === rootCaHex;
+  }
+
+  validParent(rootCaPem, rootCaHex = null) {
     try {
       let rootCaCert;
       if (rootCaHex) {
         rootCaCert = new Certificate(null, rootCaHex);
       } else {
-         rootCaCert = new jsrsasign.X509();
+        rootCaCert = new jsrsasign.X509();
         rootCaCert.readCertPEM(rootCaPem);
-        const rootCaIsCa = jsrsasign.X509.getExtBasicConstraints(
+        const rootCa = jsrsasign.X509.getExtBasicConstraints(
           rootCaCert.hex
         ).cA;
         // root certificate provided is not CA
-        if (!rootCaIsCa) {
+        if (!rootCa) {
           return false;
         }
         rootCaCert = new Certificate(null, rootCaCert.hex);

@@ -167,10 +167,10 @@ export default class ConservancyRecordNom2016 {
 
   valid() {
     if (!this.rootCertificate) { return false; }
-    return this.tsaCertificate.isCa(this.rootCertificate.toPem());
+    return this.tsaCertificate.validParent(this.rootCertificate.toPem());
   }
 
-  isCa(caPemCert) {
-    if (this.rootCertificate) { return this.rootCertificate.isCa(caPemCert); }
+  validParent(caPemCert) {
+    if (this.rootCertificate) { return this.rootCertificate.validParent(caPemCert); }
   }
 }

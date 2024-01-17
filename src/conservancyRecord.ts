@@ -11,11 +11,17 @@ export default class ConservancyRecord {
   timestamp: string;
   signedHash: string;
   caCertificate: Certificate;
-  userCertificate: Certificate
+  userCertificate: Certificate;
   recordHex: string;
   positions: any;
 
-  constructor(caCert: string, userCert: string, record: string, timestamp: string, signedHash: string) {
+  constructor(
+    caCert: string,
+    userCert: string,
+    record: string,
+    timestamp: string,
+    signedHash: string
+  ) {
     this.caCert = caCert;
     this.userCert = userCert;
     this.record = record;
@@ -35,10 +41,13 @@ export default class ConservancyRecord {
 
     this.recordHex = b64toHex(this.record);
     if (!jsrsasign.ASN1HEX.isASN1HEX(this.recordHex)) {
-      throw new InvalidRecordError('The record provided is invalid');
+      throw new InvalidRecordError("The record provided is invalid");
     }
 
-    this.positions = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.recordHex, 0);
+    this.positions = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.recordHex,
+      0
+    );
   }
 
   caName() {
@@ -54,45 +63,107 @@ export default class ConservancyRecord {
   }
 
   timestampHex() {
-    return jsrsasign.ASN1HEX.getHexOfTLV_AtObj(this.recordHex, this.positions[2]);
+    return jsrsasign.ASN1HEX.getHexOfTLV_AtObj(
+      this.recordHex,
+      this.positions[2]
+    );
   }
 
   archiveHex() {
-    return jsrsasign.ASN1HEX.getHexOfTLV_AtObj(this.recordHex, this.positions[1]);
+    return jsrsasign.ASN1HEX.getHexOfTLV_AtObj(
+      this.recordHex,
+      this.positions[1]
+    );
   }
 
   archiveSignature() {
-    let ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), 0);
-    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[3]);
+    let ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.archiveHex(),
+      0
+    );
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.archiveHex(),
+      ar_pos[3]
+    );
     return jsrsasign.ASN1HEX.getHexOfV_AtObj(this.archiveHex(), ar_pos[1]);
   }
 
   archiveSignedHash() {
-    let ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), 0);
-    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[1]);
-    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[0]);
-    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[1]);
-    const signedHashH = jsrsasign.ASN1HEX.getHexOfV_AtObj(this.archiveHex(), ar_pos[1]);
+    let ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.archiveHex(),
+      0
+    );
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.archiveHex(),
+      ar_pos[1]
+    );
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.archiveHex(),
+      ar_pos[0]
+    );
+    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.archiveHex(),
+      ar_pos[1]
+    );
+    const signedHashH = jsrsasign.ASN1HEX.getHexOfV_AtObj(
+      this.archiveHex(),
+      ar_pos[1]
+    );
     // remove leading 0
-    return hextoAscii(signedHashH.replace(/^[0]+/g, ''));
+    return hextoAscii(signedHashH.replace(/^[0]+/g, ""));
   }
 
   validArchiveHash() {
-    if (this.signedHash !== this.archiveSignedHash()) { return false; }
-    return this.userCertificate.verifyString(this.signedHash, this.archiveSignature());
+    if (this.signedHash !== this.archiveSignedHash()) {
+      return false;
+    }
+    return this.userCertificate.verifyString(
+      this.signedHash,
+      this.archiveSignature()
+    );
   }
 
   recordTimestamp() {
-    let ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), 0);
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[0]);
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[1]);
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[1]);
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[0]);
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[2]);
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[1]);
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[0]);
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), ts_pos[0]);
-    const date = jsrsasign.ASN1HEX.getHexOfV_AtObj(this.timestampHex(), ts_pos[4]);
+    let ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      0
+    );
+    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      ts_pos[0]
+    );
+    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      ts_pos[1]
+    );
+    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      ts_pos[1]
+    );
+    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      ts_pos[0]
+    );
+    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      ts_pos[2]
+    );
+    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      ts_pos[1]
+    );
+    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      ts_pos[0]
+    );
+    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.timestampHex(),
+      ts_pos[0]
+    );
+    const date = jsrsasign.ASN1HEX.getHexOfV_AtObj(
+      this.timestampHex(),
+      ts_pos[4]
+    );
     return parseDate(hextoAscii(date));
   }
 
@@ -101,22 +172,35 @@ export default class ConservancyRecord {
   }
 
   signedData() {
-    const nameHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(this.recordHex, this.positions[0]);
+    const nameHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(
+      this.recordHex,
+      this.positions[0]
+    );
 
     return nameHex + this.archiveHex() + this.timestampHex();
   }
 
   signature() {
-    const signature_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(this.recordHex, this.positions[3]);
+    const signature_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+      this.recordHex,
+      this.positions[3]
+    );
     return jsrsasign.ASN1HEX.getHexOfV_AtObj(this.recordHex, signature_pos[1]);
   }
 
   valid() {
-    if (!this.caCertificate) { return false; }
-    return this.caCertificate.verifyHexString(this.signedData(), this.signature());
+    if (!this.caCertificate) {
+      return false;
+    }
+    return this.caCertificate.verifyHexString(
+      this.signedData(),
+      this.signature()
+    );
   }
 
-  isCa(caPemCert) {
-    if (this.caCertificate) { return this.caCertificate.isCa(caPemCert); }
+  validParent(caPemCert) {
+    if (this.caCertificate) {
+      return this.caCertificate.validParent(caPemCert);
+    }
   }
 }
