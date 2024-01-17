@@ -1,0 +1,8 @@
+deploy:
+  type: cdn
+  env:
+    by_stage:
+      qa:
+        LIQUID_API_URL: https://blockstream.info/liquidtestnet/api
+      staging:
+        LIQUID_API_URL: https://blockstream.info/liquidtestnet/api
