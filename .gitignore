@@ -12,3 +12,5 @@ yarn-error.log
 # VS Code settings
 .vscode/*.json
 !.vscode/extensions.json
+
+.env

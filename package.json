@@ -43,6 +43,7 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-coveralls": "^1.0.1",
     "grunt-mocha-test": "^0.12.7",
+    "grunt-replace": "^2.0.2",
     "grunt-ts": "^6.0.0-beta.22",
     "load-grunt-tasks": "^5.1.0",
     "mocha": "^2.4.5",
@@ -53,6 +54,7 @@
     "uglify-js": "^2.6.0"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "jsrsasign": "^5.0.10",
     "promise": "^7.1.1",
     "xml-crypto": "^1.4.1",
