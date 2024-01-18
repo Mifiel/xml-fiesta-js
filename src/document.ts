@@ -44,6 +44,7 @@ export default class Document {
   currentHolder: any;
   prevHolder: any;
   assetId: string;
+  network: string;
 
   constructor(file, options) {
     if (!file) {
@@ -77,6 +78,7 @@ export default class Document {
     this.currentHolder = options.currentHolder;
     this.prevHolder = options.prevHolder;
     this.assetId = options.assetId;
+    this.network = options.network;
     const digest = new jsrsasign.crypto.MessageDigest({
       alg: "sha256",
       prov: "cryptojs",
@@ -203,10 +205,10 @@ export default class Document {
             ? this.currentHolder
             : xml.eDocument?.blockchain?.[0]?.holder?.[index - 1];
 
-        const opts = await Document.getOptsToInitializeDocument(
+        const opts = await Document.getOptsToInitializeDocument({
           xml,
           prevHolder
-        );
+        });
 
         const prevAddress = this.currentHolder.$.address;
         const currentAddress =
@@ -245,10 +247,7 @@ export default class Document {
     const originalHashPlaintext = plaintext.split("|")[0];
 
     const originalHashInBlockchainBindingIsValid =
-      this.validHashInBlockchainBinding(
-        rootCertificates,
-        plaintext
-      );
+      this.validHashInBlockchainBinding(rootCertificates, plaintext);
 
     if (
       !originalHashInBlockchainBindingIsValid ||
@@ -280,12 +279,12 @@ export default class Document {
     if (!trackedDocumentIsSimple) {
       const certificate = new Certificate(null, cerHex);
       const certificateNumberIsValid = rootCertificates.some((rootCer) =>
-      certificate.validParent(null, rootCer.cer_hex)
+        certificate.validParent(null, rootCer.cer_hex)
       );
 
       const certificateIsFromSigner = this.signers.some(
         (signer) => signer.cer === cerHex
-        );
+      );
 
       if (!certificateNumberIsValid || !certificateIsFromSigner) return false;
     }
@@ -308,7 +307,7 @@ export default class Document {
 
   getStatusTrackedDocument(rootCertificates) {
     if (!this.tracked) throw new Error("Document is not tracked");
-    if (!this.isValidAssetId(rootCertificates).isValid) return 'error'
+    if (!this.isValidAssetId(rootCertificates).isValid) return "error";
 
     const transfersLengthXml = this.transfersXml.length;
     const transfersLengthBlockchain = this.blockchainTrack.transfers.length;
@@ -346,7 +345,11 @@ export default class Document {
     };
   }
 
-  static getOptsToInitializeDocument = async (xml, prevHolder = null) => {
+  static getOptsToInitializeDocument = async (
+   { xml,
+    prevHolder = null,
+    useTestnet = false}
+  ) => {
     const parseStringToBoolean = (string) => string === "true";
 
     const opts = {
@@ -364,33 +367,38 @@ export default class Document {
       currentHolder: xml.eDocument?.blockchain?.[0]?.holder?.[0],
       prevHolder: prevHolder,
       assetId: null,
+      network: null,
     };
 
     if (xml.eDocument.transfers?.length > 0) {
       const assetId = xml.eDocument.blockchain[0].asset[0].$.id;
-      const blockchainName = xml.eDocument.blockchain[0].$.name;
+      const network = xml.eDocument.blockchain[0].$.name;
 
       opts.assetId = assetId;
+      opts.network = network;
       try {
-        const blockchainInstance = Blockchain.init(blockchainName);
+        const blockchainInstance = Blockchain.init(network);
+        if (useTestnet) blockchainInstance.useTestnet();
         const blockchainTrack = await blockchainInstance.getBlockchainTrack(
           assetId
         );
         opts.blockchainTrack = blockchainTrack;
-
       } catch (error) {
         console.error(error);
-     }
+      }
     }
 
     return opts;
   };
 
-  static async fromXml(xmlString): Promise<FromXMLResponse> {
+  static async fromXml(
+    xmlString,
+    useTestnet = false
+  ): Promise<FromXMLResponse> {
     return new Promise((resolve, reject) =>
       XML.parse(xmlString)
         .then(async (xml) => {
-          const opts = await this.getOptsToInitializeDocument(xml);
+          const opts = await this.getOptsToInitializeDocument({xml, useTestnet});
           const doc = new Document(xml.file(), opts);
           resolve({
             xml,

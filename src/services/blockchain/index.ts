@@ -1,10 +1,10 @@
 import Liquid from "./liquid";
 
-type BlockchainName = 'LBTC'
+type Network = 'LBTC'
 
 export class Blockchain {
-  static init = (blockchainName: BlockchainName) => {
-    switch (blockchainName) {
+  static init = (network: Network) => {
+    switch (network) {
       case "LBTC":
         return new Liquid();
 

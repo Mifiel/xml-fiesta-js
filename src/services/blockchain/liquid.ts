@@ -9,6 +9,8 @@ type GetTxOutspentsResult = {
 };
 
 export type GetTransfersByTxIdResult = {
+  prevTxid: string;
+  txid: string;
   prevAddress: string;
   currentAddress: string;
 };
@@ -19,8 +21,11 @@ export type GetBlockchainTrackResult = {
 };
 
 export default class Liquid {
-  // In the build this is replaced by the correct value
-  private BASE_URL = "LIQUID_API_URL";
+  private BASE_URL = "https://blockstream.info/liquid/api";
+
+  useTestnet() {
+    this.BASE_URL = "https://blockstream.info/liquidtestnet/api";
+  }
 
   getTxData = async (txid: string, asset: string): Promise<GetTxDataResult> => {
     const { vout } = await fetch(`${this.BASE_URL}/tx/${txid}`).then(
@@ -46,7 +51,8 @@ export default class Liquid {
   getTransfersByTxId = async (
     asset: string,
     txid: string,
-    prevAddress?: string
+    prevAddress?: string,
+    prevTxid?: string,
   ): Promise<GetTransfersByTxIdResult[]> => {
     const { index: indexTx, address: currentAddress } = await this.getTxData(
       txid,
@@ -56,14 +62,15 @@ export default class Liquid {
     const currentOutspends = outspends[indexTx];
 
     if (!currentOutspends.spent) {
-      return [{ currentAddress, prevAddress }];
+      return [{ currentAddress, prevAddress, txid, prevTxid }];
     } else {
       const transfers = await this.getTransfersByTxId(
         asset,
         currentOutspends.txid,
-        currentAddress
+        currentAddress,
+        txid
       );
-      return [{ currentAddress, prevAddress }, ...transfers];
+      return [{ currentAddress, prevAddress, txid, prevTxid }, ...transfers];
     }
   };
 
