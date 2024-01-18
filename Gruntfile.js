@@ -1,7 +1,5 @@
 module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
-  require('dotenv').config()
-   grunt.loadNpmTasks("grunt-replace");
   const pkg = grunt.file.readJSON('package.json');
 
   grunt.initConfig({
@@ -79,30 +77,9 @@ module.exports = function(grunt) {
     clean: {
       dist: ["dist", "lib"],
     },
-
-    replace: {
-      target: {
-        options: {
-          patterns: [
-            {
-              match: /LIQUID_API_URL/g,
-              replacement: process.env.LIQUID_API_URL,
-            },
-          ],
-        },
-        files: [
-          {
-            expand: true,
-            flatten: true,
-            src: ["./dist/xml-fiesta.js"],
-            dest: "./dist",
-          },
-        ],
-      },
-    },
   });
 
   grunt.registerTask('default', ['watch']);
-  grunt.registerTask('build', ['clean', 'ts', 'browserify', 'replace']);
+  grunt.registerTask('build', ['clean', 'ts', 'browserify']);
   grunt.registerTask('test', ['mochaTest']);
 };
