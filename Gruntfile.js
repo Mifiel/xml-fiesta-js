@@ -8,78 +8,86 @@ module.exports = function(grunt) {
     mochaTest: {
       test: {
         options: {
-          reporter: "spec",
-          require: "ts-node/register",
-          exlude: ["spec"],
+          reporter: 'spec',
+          require: 'ts-node/register',
+          exlude: ['spec']
         },
-        src: ["spec/*.ts"],
-      },
+        src: ['spec/*.ts']
+      }
     },
 
     coveralls: {
       options: {
         // dont fail ci if coveralls.io is down
-        force: false,
+        force: false
       },
       test: {
-        src: "coverage/lcov.info",
-      },
+        src: 'coverage/lcov.info'
+      }
     },
 
     watch: {
       clear: {
-        files: ["src/*.ts", "spec/*ts"],
+        files: ['src/*.ts', 'spec/*ts']
       },
-      // tasks: ['clear']
+        // tasks: ['clear']
       scripts: {
-        files: ["src/*.ts", "spec/*ts"],
-        tasks: ["clear", "mochaTest"],
-        options: {},
-      },
+        files: ['src/*.ts', 'spec/*ts'],
+        tasks: ['clear', 'mochaTest'],
+        options: {}
+      }
     },
 
     browserify: {
       dist: {
         options: {
           browserifyOptions: {
-            standalone: "XMLFiesta",
-          },
+            standalone: 'XMLFiesta'
+          }
         },
-        src: "lib/xml-fiesta.js",
-        dest: "dist/xml-fiesta.js",
-      },
+        src: 'lib/xml-fiesta.js',
+        dest: 'dist/xml-fiesta.js'
+      }
     },
 
     ts: {
-      default: {
-        tsconfig: "./tsconfig.json",
-        src: ["src/**/*.ts", "!node_modules/**"],
-      },
+      default : {
+        tsconfig: './tsconfig.json',
+        src: ["src/**/*.ts", "!node_modules/**"]
+      }
     },
 
     bump: {
       options: {
-        files: ["package.json", "bower.json", "README.md"],
+        files: [
+          'package.json',
+          'bower.json',
+          'README.md'
+        ],
         updateConfigs: [],
         commit: true,
-        commitMessage: "Bump version v%VERSION%",
-        commitFiles: ["package.json", "bower.json", "README.md"],
+        commitMessage: 'Bump version v%VERSION%',
+        commitFiles: [
+          'package.json',
+          'bower.json',
+          'README.md'
+        ],
         createTag: false,
         push: false,
-        gitDescribeOptions: "--tags --always --abbrev=1",
+        gitDescribeOptions: '--tags --always --abbrev=1',
         regExp: new RegExp(
-          "(['|\"]?version['|\"]?[ ]*[:|=][ ]*['|\"]?)(\\d+\\.\\d+\\.\\d+(-\\.\\d+)?(-\\d+)?)[\\d||A-a|.|-]*(['|\"]?)",
-          "i"
-        ),
-      },
+          '([\'|\"]?version[\'|\"]?[ ]*[:|=][ ]*[\'|\"]?)(\\d+\\.\\d+\\.\\d+(-\\.\\d+)?(-\\d+)?)[\\d||A-a|.|-]*([\'|\"]?)', 'i'
+        )
+      }
     },
 
     clean: {
-      dist: ["dist", "lib"],
-    },
+      dist: ['dist', 'lib'],
+    }
   });
 
   grunt.registerTask('default', ['watch']);
   grunt.registerTask('build', ['clean', 'ts', 'browserify']);
   grunt.registerTask('test', ['mochaTest']);
 };
+
