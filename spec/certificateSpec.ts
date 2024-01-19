@@ -80,8 +80,8 @@ describe('Certificate', function() {
 
     describe('isCa', function() {
       let intermediate = null;
-      let cert = null;
-      let certificate = null;
+      let cert;
+      let certificate;
       beforeEach(function() {
         intermediate = fs.readFileSync(`${__dirname}/../docs/AC2_Sat.crt`).toString();
         cert = fs.readFileSync(`${__dirname}/fixtures/production-certificate.cer`);
@@ -89,21 +89,23 @@ describe('Certificate', function() {
       });
 
       describe('when a CA', () => it('should be true', function() {
-        const valid = certificate.isCa(intermediate);
+        const valid = certificate.validParent(intermediate);
         expect(valid).to.be.true;
       }));
 
       describe('when no a CA', () => it('should be false', function() {
         intermediate = fs.readFileSync(`${__dirname}/../docs/AC1_Sat.crt`).toString();
-        expect(certificate.isCa(intermediate)).to.be.false;
+        expect(certificate.validParent(intermediate)).to.be.false;
       }));
 
       describe('when CA is not CA', () => it('should be false', function() {
         cert = fs.readFileSync(`${__dirname}/fixtures/production-certificate.pem`);
-        expect(certificate.isCa(cert.toString())).to.be.false;
+        expect(certificate.validParent(cert.toString())).to.be.false;
       }));
 
-      describe('when CA is not even a certificate', () => it('should be false', () => expect(certificate.isCa('blahblahpem')).to.be.false));
+      describe("when CA is not even a certificate", () =>
+        it("should be false", () =>
+          expect(certificate.validParent("blahblahpem")).to.be.false));
     });
   });
 });

@@ -90,3 +90,4 @@ module.exports = function(grunt) {
   grunt.registerTask('build', ['clean', 'ts', 'browserify']);
   grunt.registerTask('test', ['mochaTest']);
 };
+

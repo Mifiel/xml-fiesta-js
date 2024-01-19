@@ -5,6 +5,7 @@ const Dom = require('xmldom').DOMParser;
 
 import { parseString, Builder } from 'xml2js';
 import { b64toHex, sha256 } from './common';
+import Certificate from './certificate';
 
 const ExclusiveCanonicalization = xmlCrypto.
                             SignedXml.
@@ -32,12 +33,17 @@ export default class XML {
   name: any;
   contentType: any;
   originalHash: any;
-  isTransfer: boolean;
-  originalElectronicDocument: any;
+  tracked = false;
+  destroyed = false;
 
   static parse(string) {
     const xml = new XML();
     return xml.parse(string);
+  }
+
+  static parseByElectronicDocument(electronicDocument) {
+    const xml = new XML();
+     return xml.parseByElectronicDocument(electronicDocument);
   }
 
   static toXML(eDocument: any, file: string) {
@@ -91,47 +97,43 @@ export default class XML {
     });
   }
 
+  parseByElectronicDocument(electronicDocument) {
+    const el = this;
+    if (electronicDocument.blockchain) {
+      el.tracked = true;
+    }
+
+    el.eDocument = Array.isArray(electronicDocument)
+      ? electronicDocument[0]
+      : electronicDocument;
+    const eDocumentAttrs = el.eDocument.$;
+    el.version = eDocumentAttrs.version;
+    el.signed = eDocumentAttrs.signed;
+    el.version_int = versionToNumber(el.version);
+    el.destroyed = eDocumentAttrs.cancel;
+
+    if (el.version_int < 100) {
+      el.fileElementName = "pdf";
+    } else {
+      el.fileElementName = "file";
+    }
+
+    const pdfAttrs = el.eDocument[el.fileElementName][0].$;
+    el.encrypted = pdfAttrs.encrypted;
+    el.name = pdfAttrs.name;
+    el.contentType = pdfAttrs.contentType;
+    el.originalHash = pdfAttrs.originalHash;
+    return el
+  }
+
   parse(xml) {
     const el = this;
     return new Promise((resolve, reject) =>
-      parseString(xml, function (err, result) {
-        let isTransfer = false;
-        if (result.electronicDocument.transfers) {
-          const lastNodeTransfer =
-            result.electronicDocument.transfers[
-              result.electronicDocument.transfers.length - 1
-            ];
-          if (lastNodeTransfer?.electronicDocument) {
-            isTransfer = true;
-            result.originalElectronicDocument = result.electronicDocument;
-            result.electronicDocument =
-              lastNodeTransfer.electronicDocument[
-                lastNodeTransfer.electronicDocument.length - 1
-              ];
-            el.originalElectronicDocument = result.originalElectronicDocument;
-          }
-        }
+      parseString(xml, function (err, { electronicDocument }) {
         if (err) {
           return reject(err);
         }
-        el.eDocument = result.electronicDocument;
-        const eDocumentAttrs = el.eDocument.$;
-        el.version = eDocumentAttrs.version;
-        el.signed = eDocumentAttrs.signed;
-        el.version_int = versionToNumber(el.version);
-
-        if (el.version_int < 100) {
-          el.fileElementName = "pdf";
-        } else {
-          el.fileElementName = "file";
-        }
-
-        const pdfAttrs = el.eDocument[el.fileElementName][0].$;
-        el.encrypted = pdfAttrs.encrypted;
-        el.name = pdfAttrs.name;
-        el.contentType = pdfAttrs.contentType;
-        el.originalHash = pdfAttrs.originalHash;
-        el.isTransfer = isTransfer;
+        el.parseByElectronicDocument(electronicDocument);
         return resolve(el);
       })
     );
@@ -139,24 +141,15 @@ export default class XML {
 
   canonical() {
     const edoc = JSON.parse(JSON.stringify(this.eDocument));
-    if (this.isTransfer && this.originalElectronicDocument) {
-      Object.entries(
-        this.originalElectronicDocument.$
-      ).map(([key, value]) => {
-        if (key.includes('xmlns')) {
-          edoc.$[key] = value;
-        }
-      });
-    }
 
     delete edoc.conservancyRecord;
     XML.removeEncrypedData(edoc);
     XML.removeGeolocation(edoc);
     XML.removeBlockchain(edoc);
     XML.removeTransfer(edoc);
-    
+
     if (this.version_int >= START_VERSION_WITHOUT_SINGERS_CER) {
-      XML.removeSignersCertificate(edoc)
+      XML.removeSignersCertificate(edoc);
     }
 
     if (this.version_int >= 100) {
@@ -196,12 +189,17 @@ export default class XML {
     const parsedSigners = [];
     this.eDocument.signers[0].signer.forEach(function (signer) {
       const attrs = signer.$;
+      const cerHex = b64toHex(signer.certificate[0]._);
+      const certificate = new Certificate(null, cerHex);
+
       const xmlSigner: any = {
+        name: attrs.name,
         taxId: attrs.id,
         email: attrs.email,
-        cer: b64toHex(signer.certificate[0]._),
+        cer: cerHex,
         signature: b64toHex(signer.signature[0]._),
         signedAt: signer.signature[0].$.signedAt,
+        legalEntity: certificate.getUniqueIdentifier().length > 1,
       };
       if (signer.ePass) {
         xmlSigner.ePass = {
