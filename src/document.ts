@@ -220,7 +220,8 @@ export default class Document {
           prevHolder,
         });
 
-        const prevAddress = this.currentHolder.$.address;
+
+        const prevAddress = index === 0 ? this.currentHolder.$.address : this.transfersXml[index - 1 ].blockchain[0].holder[0].$.address;
         const currentAddress =
           xml.eDocument.blockchain?.[0]?.holder?.[0]?.$.address;
 
