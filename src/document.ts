@@ -45,6 +45,7 @@ export default class Document {
   prevHolder: any;
   assetId: string;
   network: string;
+  electronicDocument: any;
 
   constructor(file, options) {
     if (!file) {
@@ -79,6 +80,7 @@ export default class Document {
     this.prevHolder = options.prevHolder;
     this.assetId = options.assetId;
     this.network = options.network;
+    this.electronicDocument = options.electronicDocument;
     const digest = new jsrsasign.crypto.MessageDigest({
       alg: "sha256",
       prov: "cryptojs",
@@ -198,8 +200,18 @@ export default class Document {
 
   async transfers() {
     return await Promise.all(
-      this.transfersXml.map(async (tranfer, index) => {
-        const xml = XML.parseByElectronicDocument(tranfer.electronicDocument);
+      this.transfersXml.map(async (transfer, index) => {
+        const transferElectronicDocument = transfer.electronicDocument[0];
+
+        Object.entries(this.electronicDocument.$).map(
+          ([key, value]) => {
+            if (key.includes("xmlns")) {
+              transferElectronicDocument.$[key] = value;
+            }
+          }
+        );
+
+        const xml = XML.parseByElectronicDocument(transferElectronicDocument);
         const prevHolder =
           index === 0
             ? this.currentHolder
@@ -207,7 +219,7 @@ export default class Document {
 
         const opts = await Document.getOptsToInitializeDocument({
           xml,
-          prevHolder
+          prevHolder,
         });
 
         const prevAddress = this.currentHolder.$.address;
@@ -309,8 +321,12 @@ export default class Document {
     if (!this.tracked) throw new Error("Document is not tracked");
     if (!this.isValidAssetId(rootCertificates).isValid) return "error";
 
-    const transfersLengthXml = this.transfersXml.length;
+    let transfersLengthXml = this.transfersXml.length;
     const transfersLengthBlockchain = this.blockchainTrack.transfers.length;
+
+    if (this.destroyed) {
+      transfersLengthXml += 1
+    }
 
     if (transfersLengthXml === transfersLengthBlockchain) return "updated";
     if (transfersLengthXml < transfersLengthBlockchain) return "not_updated";
@@ -345,14 +361,15 @@ export default class Document {
     };
   }
 
-  static getOptsToInitializeDocument = async (
-   { xml,
+  static getOptsToInitializeDocument = async ({
+    xml,
     prevHolder = null,
-    useTestnet = false}
-  ) => {
+    useTestnet = false,
+  }) => {
     const parseStringToBoolean = (string) => string === "true";
 
     const opts = {
+      electronicDocument: xml.eDocument,
       signers: xml.xmlSigners(),
       version: xml.version,
       name: xml.name,
@@ -398,7 +415,10 @@ export default class Document {
     return new Promise((resolve, reject) =>
       XML.parse(xmlString)
         .then(async (xml) => {
-          const opts = await this.getOptsToInitializeDocument({xml, useTestnet});
+          const opts = await this.getOptsToInitializeDocument({
+            xml,
+            useTestnet,
+          });
           const doc = new Document(xml.file(), opts);
           resolve({
             xml,

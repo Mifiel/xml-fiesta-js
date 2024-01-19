@@ -103,9 +103,7 @@ export default class XML {
       el.tracked = true;
     }
 
-    el.eDocument = Array.isArray(electronicDocument)
-      ? electronicDocument[0]
-      : electronicDocument;
+    el.eDocument = electronicDocument;
     const eDocumentAttrs = el.eDocument.$;
     el.version = eDocumentAttrs.version;
     el.signed = eDocumentAttrs.signed;
