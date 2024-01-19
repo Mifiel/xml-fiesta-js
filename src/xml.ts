@@ -185,7 +185,10 @@ export default class XML {
 
   xmlSigners() {
     const parsedSigners = [];
-    this.eDocument.signers[0].signer.forEach(function (signer) {
+    const signers = this.eDocument.signers;
+    if (!signers) return;
+
+    signers[0].signer.forEach(function (signer) {
       const attrs = signer.$;
       const cerHex = b64toHex(signer.certificate[0]._);
       const certificate = new Certificate(null, cerHex);

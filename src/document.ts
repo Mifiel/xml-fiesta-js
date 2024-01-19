@@ -87,7 +87,7 @@ export default class Document {
     });
     this.originalHash = digest.digestHex(this.file("hex"));
 
-    if (options.signers.length > 0) {
+    if (options.signers?.length > 0) {
       options.signers.forEach((el) => this.addSigner(el));
     }
   }
