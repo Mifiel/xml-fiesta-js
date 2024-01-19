@@ -201,17 +201,15 @@ export default class Document {
   async transfers() {
     return await Promise.all(
       this.transfersXml.map(async (transfer, index) => {
-        const transferElectronicDocument = transfer.electronicDocument[0];
-
         Object.entries(this.electronicDocument.$).map(
           ([key, value]) => {
             if (key.includes("xmlns")) {
-              transferElectronicDocument.$[key] = value;
+              transfer.$[key] = value;
             }
           }
         );
 
-        const xml = XML.parseByElectronicDocument(transferElectronicDocument);
+        const xml = XML.parseByElectronicDocument(transfer);
         const prevHolder =
           index === 0
             ? this.currentHolder
@@ -379,7 +377,7 @@ export default class Document {
       blockchainTrack: null,
       tracked: xml.tracked,
       destroyed: parseStringToBoolean(xml.destroyed),
-      transfersXml: xml.eDocument?.transfers || null,
+      transfersXml: xml.eDocument?.transfers?.[0]?.electronicDocument || null,
       blockchainBinding: xml.eDocument?.blockchain?.[0]?.binding?.[0],
       currentHolder: xml.eDocument?.blockchain?.[0]?.holder?.[0],
       prevHolder: prevHolder,
