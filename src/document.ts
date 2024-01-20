@@ -75,7 +75,7 @@ export default class Document {
     this.destroyed = options.destroyed;
     this.blockchainTrack = options.blockchainTrack;
     this.blockchainBinding = options.blockchainBinding;
-    this.transfersXml = options.transfersXml;
+    this.transfersXml = options.transfersXml || [];
     this.currentHolder = options.currentHolder;
     this.prevHolder = options.prevHolder;
     this.assetId = options.assetId;
@@ -320,7 +320,7 @@ export default class Document {
     if (!this.tracked) throw new Error("Document is not tracked");
     if (!this.isValidAssetId(rootCertificates).isValid) return "error";
 
-    let transfersLengthXml = this.transfersXml.length;
+    let transfersLengthXml = this.transfersXml?.length || 0;
     const transfersLengthBlockchain = this.blockchainTrack.transfers.length;
 
     if (this.destroyed) {
@@ -386,7 +386,7 @@ export default class Document {
       network: null,
     };
 
-    if (xml.eDocument.transfers?.length > 0) {
+    if (xml.tracked) {
       const assetId = xml.eDocument.blockchain[0].asset[0].$.id;
       const network = xml.eDocument.blockchain[0].$.name;
 
