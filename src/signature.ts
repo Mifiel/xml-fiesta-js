@@ -11,7 +11,7 @@ export default class Signature {
   certificate: Certificate;
   signer: any;
 
-  constructor(cer, signature, signedAt, email, ePassInfo) {
+  constructor(cer, signature, signedAt, email, ePassInfo, name?: string) {
     this.signature = signature;
     if (!ePassInfo) { ePassInfo = {} }
     const { content, algorithm, iterations, keySize } = ePassInfo;
@@ -27,7 +27,7 @@ export default class Signature {
 
     this.signer = {
       id: this.certificate.owner_id(),
-      name: this.certificate.owner(),
+      name: name || this.certificate.owner(),
       email: this.email,
     };
   }
