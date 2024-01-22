@@ -108,7 +108,8 @@ export default class XML {
     el.version = eDocumentAttrs.version;
     el.signed = eDocumentAttrs.signed;
     el.version_int = versionToNumber(el.version);
-    el.destroyed = eDocumentAttrs.cancel;
+
+    el.destroyed = eDocumentAttrs.cancel || false;
 
     if (el.version_int < 100) {
       el.fileElementName = "pdf";
@@ -139,7 +140,8 @@ export default class XML {
 
   canonical() {
     const edoc = JSON.parse(JSON.stringify(this.eDocument));
-
+    
+    delete edoc.$.cancel
     delete edoc.conservancyRecord;
     XML.removeEncrypedData(edoc);
     XML.removeGeolocation(edoc);
