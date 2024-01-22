@@ -179,7 +179,8 @@ export default class Document {
           signer.signature,
           signer.signedAt,
           signer.email,
-          signer.ePass
+          signer.ePass,
+          signer.name
         )
     );
   }
