@@ -365,6 +365,7 @@ export default class Document {
     xml,
     prevHolder = null,
     useTestnet = false,
+    isOriginalDocument = false,
   }) => {
     const parseStringToBoolean = (string) => string === "true";
 
@@ -387,7 +388,7 @@ export default class Document {
       network: null,
     };
 
-    if (xml.tracked) {
+    if (xml.tracked && isOriginalDocument) {
       const assetId = xml.eDocument.blockchain[0].asset[0].$.id;
       const network = xml.eDocument.blockchain[0].$.name;
 
@@ -418,6 +419,7 @@ export default class Document {
           const opts = await this.getOptsToInitializeDocument({
             xml,
             useTestnet,
+            isOriginalDocument: true
           });
           const doc = new Document(xml.file(), opts);
           resolve({
@@ -427,7 +429,6 @@ export default class Document {
             xmlHash:
               xml.getConservancyRecord() &&
               xml.getConservancyRecord().originalXmlHash,
-            // hash as attribute in the xml
             xmlOriginalHash: xml.originalHash,
           });
         })
