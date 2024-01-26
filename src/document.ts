@@ -389,16 +389,19 @@ export default class Document {
     };
 
     if (xml.tracked && isOriginalDocument) {
-      const assetId = xml.eDocument.blockchain[0].asset[0].$.id;
+      const assetIdPlaintext =
+        xml.eDocument.blockchain[0].binding[0].signature[0].$.plaintext
+          .split("|")[1];
+
       const network = xml.eDocument.blockchain[0].$.name;
 
-      opts.assetId = assetId;
+      opts.assetId = assetIdPlaintext;
       opts.network = network;
       try {
         const blockchainInstance = Blockchain.init(network);
         if (useTestnet) blockchainInstance.useTestnet();
         const blockchainTrack = await blockchainInstance.getBlockchainTrack(
-          assetId
+          assetIdPlaintext
         );
         opts.blockchainTrack = blockchainTrack;
       } catch (error) {

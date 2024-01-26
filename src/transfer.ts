@@ -23,9 +23,7 @@ export default class Transfer extends Document {
       rootCertificates
     );
 
-    const nameIsValid = this.validateName(this.prevHolder);
-
-    if (!isValidHolder || !nameIsValid)
+    if (!isValidHolder)
       return {
         isValid: false,
         error_code: "integrity",
@@ -47,9 +45,7 @@ export default class Transfer extends Document {
   validEndorsee(rootCertificates) {
     const isValidHolder = this.validateHolderBinding(this.currentHolder, rootCertificates);
 
-    const nameIsValid = this.validateName(this.currentHolder)
-
-    if (!isValidHolder || !nameIsValid)
+    if (!isValidHolder)
       return {
         isValid: false,
         error_code: "integrity",
@@ -66,17 +62,6 @@ export default class Transfer extends Document {
     return {
       isValid: true
     };
-  }
-
-  validateName(holder) {
-    const nameHolderNode = holder.$.name;
-    const nameHolderPlaintext =
-      holder.binding[0].signature[0].$.plaintext
-        .split("|")
-        .slice(-1)[0];
-
-    return nameHolderNode === nameHolderPlaintext;
-
   }
 
   validateHolderBinding(holder, rootCertificates) {
