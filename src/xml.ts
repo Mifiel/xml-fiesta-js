@@ -65,13 +65,13 @@ export default class XML {
       delete xmljs.file[0].$.encrypted;
       xmljs.file[0].$.name = xmljs.file[0].$.name.replace(".enc", "");
     }
-    xmljs.signers[0].signer.forEach(function (signer) {
+    xmljs.signers?.[0]?.signer?.forEach(function (signer) {
       delete signer.ePass;
     });
   }
 
   static removeGeolocation(xmljs: any) {
-    xmljs.signers[0].signer.forEach(function (signer) {
+    xmljs.signers?.[0]?.signer?.forEach(function (signer) {
       if (signer.auditTrail) {
         signer.auditTrail[0].event.forEach(function (event, index) {
           if (event.$.name === "geolocation") {
@@ -91,7 +91,7 @@ export default class XML {
   }
 
   static removeSignersCertificate(xmljs: any) {
-    xmljs.signers[0].signer.forEach(signer => {
+    xmljs.signers?.[0]?.signer?.forEach(signer => {
       delete signer.$.name;
       delete signer.certificate[0]._;
     });
@@ -140,7 +140,7 @@ export default class XML {
 
   canonical() {
     const edoc = JSON.parse(JSON.stringify(this.eDocument));
-    
+
     delete edoc.$.cancel
     delete edoc.conservancyRecord;
     XML.removeEncrypedData(edoc);
