@@ -202,13 +202,11 @@ export default class Document {
   async transfers() {
     return await Promise.all(
       this.transfersXml.map(async (transfer, index) => {
-        Object.entries(this.electronicDocument.$).map(
-          ([key, value]) => {
-            if (key.includes("xmlns")) {
-              transfer.$[key] = value;
-            }
+        Object.entries(this.electronicDocument.$).map(([key, value]) => {
+          if (key.includes("xmlns")) {
+            transfer.$[key] = value;
           }
-        );
+        });
 
         const xml = XML.parseByElectronicDocument(transfer);
         const prevHolder =
@@ -221,10 +219,21 @@ export default class Document {
           prevHolder,
         });
 
+        const prevAddress =
+          index === 0
+            ? this.currentHolder.binding[0].signature[0].$.plaintext
+                .split("|")
+                .slice(-1)[0]
+            : this.transfersXml[
+                index - 1
+              ].blockchain[0].holder[0].binding[0].signature[0].$.plaintext
+                .split("|")
+                .slice(-1)[0];
 
-        const prevAddress = index === 0 ? this.currentHolder.$.address : this.transfersXml[index - 1 ].blockchain[0].holder[0].$.address;
         const currentAddress =
-          xml.eDocument.blockchain?.[0]?.holder?.[0]?.$.address;
+          xml.eDocument.blockchain?.[0]?.holder?.[0]?.binding[0].signature[0].$.plaintext
+            .split("|")
+            .slice(-1)[0];
 
         const transferData = {
           dataBlockchain: this.blockchainTrack?.transfers?.[index] || {},
