@@ -138,10 +138,24 @@ export default class XML {
     );
   }
 
-  canonical() {
-    const edoc = JSON.parse(JSON.stringify(this.eDocument));
+  canonical(transfer = false) {
+    let edoc = JSON.parse(JSON.stringify(this.eDocument));
+    // when it is transfer the electronicDocument of the transfer node is used instead of the original electronicDocument
+    if (transfer) {
+      const electronicDocumentAttributes = edoc.$;
+      const lastTransfer =
+        edoc.transfers[edoc.transfers.length - 1].electronicDocument[0];
 
-    delete edoc.$.cancel
+      Object.entries(electronicDocumentAttributes).map(([key, value]) => {
+        if (key.includes("xmlns")) {
+          lastTransfer.$[key] = value;
+        }
+      });
+
+      edoc = lastTransfer;
+    }
+
+    delete edoc.$.cancel;
     delete edoc.conservancyRecord;
     XML.removeEncrypedData(edoc);
     XML.removeGeolocation(edoc);
@@ -174,7 +188,9 @@ export default class XML {
   }
 
   getCanonicalBuffer() {
-    return Buffer.from(this.canonical(), "utf-8");
+    let edoc = JSON.parse(JSON.stringify(this.eDocument));
+
+    return Buffer.from(this.canonical(edoc.transfers?.length > 0), "utf-8");
   }
 
   file() {
