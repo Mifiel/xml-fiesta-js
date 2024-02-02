@@ -222,18 +222,15 @@ export default class Document {
         const prevAddress =
           index === 0
             ? this.currentHolder.binding[0].signature[0].$.plaintext
-                .split("|")
-                .slice(-1)[0]
+                .split("|")[0]
             : this.transfersXml[
                 index - 1
               ].blockchain[0].holder[0].binding[0].signature[0].$.plaintext
-                .split("|")
-                .slice(-1)[0];
+                .split("|")[0];
 
         const currentAddress =
           xml.eDocument.blockchain?.[0]?.holder?.[0]?.binding[0].signature[0].$.plaintext
-            .split("|")
-            .slice(-1)[0];
+            .split("|")[0];
 
         const transferData = {
           dataBlockchain: this.blockchainTrack?.transfers?.[index] || {},
