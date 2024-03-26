@@ -212,7 +212,7 @@ export default class Document {
         const prevHolder =
           index === 0
             ? this.currentHolder
-            : xml.eDocument?.blockchain?.[0]?.holder?.[index - 1];
+            : this.electronicDocument?.transfers?.[0].electronicDocument?.[index - 1].blockchain?.[0]?.holder?.[0];
 
         const opts = await Document.getOptsToInitializeDocument({
           xml,
