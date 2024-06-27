@@ -93,3 +93,5 @@ Run `npm test` or `grunt test`. The coverage info is still pending.
 
 [coveralls-image]: https://coveralls.io/repos/github/Mifiel/xml-fiesta-js/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/Mifiel/xml-fiesta-js?branch=master
+
+This is a dummy change to test github repos on health
