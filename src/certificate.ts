@@ -4,7 +4,7 @@ import { hextoAscii } from './common';
 const parseDate = function(certDate) {
   const parsed = certDate.match(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z/);
   parsed.shift(1);
-  return new Date(Date.UTC(2000 + parseInt(parsed[0]), parsed[1], parsed[2], parsed[3], parsed[4], parsed[5]));
+  return new Date(Date.UTC(2000 + parseInt(parsed[0]), parseInt(parsed[1]) - 1, parsed[2], parsed[3], parsed[4], parsed[5]));
 };
 
 const jsrsasign = require('jsrsasign');
