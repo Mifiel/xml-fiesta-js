@@ -10,7 +10,7 @@ import {
   InvalidSignerError,
   InvalidRecordError
 } from './errors';
-import XML from './xml';
+import XML from './patches/xmlPatch';
 import { Blockchain } from './services/blockchain';
 import { GetBlockchainTrackResult } from './services/blockchain/liquid';
 import Certificate from './certificate';

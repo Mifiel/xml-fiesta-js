@@ -6,6 +6,7 @@ const Dom = require('xmldom').DOMParser;
 import { parseString, Builder } from 'xml2js';
 import { b64toHex, sha256 } from './common';
 import Certificate from './certificate';
+import PatchedXML from './patches/xmlPatch';
 
 const ExclusiveCanonicalization = xmlCrypto.
                             SignedXml.
@@ -37,13 +38,13 @@ export default class XML {
   destroyed = false;
 
   static parse(string) {
-    const xml = new XML();
+    const xml = new PatchedXML();
     return xml.parse(string);
   }
 
   static parseByElectronicDocument(electronicDocument) {
-    const xml = new XML();
-     return xml.parseByElectronicDocument(electronicDocument);
+    const xml = new PatchedXML();
+    return xml.parseByElectronicDocument(electronicDocument);
   }
 
   static toXML(eDocument: any, file: string) {
@@ -157,13 +158,15 @@ export default class XML {
 
     delete edoc.$.cancel;
     delete edoc.conservancyRecord;
-    XML.removeEncrypedData(edoc);
-    XML.removeGeolocation(edoc);
-    XML.removeBlockchain(edoc);
-    XML.removeTransfer(edoc);
+    
+    const xml = this.constructor as typeof XML;
+    xml.removeEncrypedData(edoc);
+    xml.removeGeolocation(edoc);
+    xml.removeBlockchain(edoc);
+    xml.removeTransfer(edoc);
 
     if (this.version_int >= START_VERSION_WITHOUT_SINGERS_CER) {
-      XML.removeSignersCertificate(edoc);
+      xml.removeSignersCertificate(edoc);
     }
 
     if (this.version_int >= 100) {

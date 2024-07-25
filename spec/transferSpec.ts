@@ -70,7 +70,25 @@ describe('Transfer', () => {
         { options: "options" },
         transferData
       );
-      transfer.prevHolder = { ...holder, $: { name: "some" } };
+
+      transfer.prevHolder = {
+        ...holder,
+        binding: [
+          {
+            ...holder.binding[0],
+            signature: [
+              {
+                ...holder.binding[0].signature[0],
+                $: {
+                  ...holder.binding[0].signature[0].$,
+                  plaintext:
+                    "8reEBQPpXpC9koGmHgzypHd8D22zHHMX9o|Modified",
+                }
+              },
+            ],
+          },
+        ],
+      };
 
       const result = transfer.validEndorser(rootCertificates);
       expect(result.isValid).to.be.false;
@@ -117,7 +135,25 @@ describe('Transfer', () => {
         { options: "options" },
         transferData
       );
-      transfer.currentHolder = { ...holder, $: { name: "some" } };
+
+      transfer.currentHolder = {
+        ...holder,
+        binding: [
+          {
+            ...holder.binding[0],
+            signature: [
+              {
+                ...holder.binding[0].signature[0],
+                $: {
+                  ...holder.binding[0].signature[0].$,
+                  plaintext:
+                    "8reEBQPpXpC9koGmHgzypHd8D22zHHMX9o|Modified",
+                }
+              },
+            ],
+          },
+        ],
+      };
 
       const result = transfer.validEndorsee(rootCertificates);
       expect(result.isValid).to.be.false;
