@@ -146,12 +146,43 @@ export default class ConservancyRecordNom2016 {
   }
 
   validArchiveHash() {
-    if (this.signedHash !== this.archiveSignedHash()) { return false; }
-    if (!this.tsaCertificate.isValidOn(this.signedTimeStamp())) { return false; }
-    if (this.messageDigest() !== sha256hex(this.tSTInfoHex())) { return false; }
-    if (!this.equalTimestamps()) { return false; }
-    if (!this.signingCertificateV2()) { return false; }
-    return this.tsaCertificate.verifyHexString(this.signedAttributesHex(), this.archiveSignature());
+    if (this.signedHash !== this.archiveSignedHash()) {
+      console.error("conservancyRecordNom2016: Signed hash mismatch", {
+        providedSignedHash: this.signedHash,
+        archiveSignedHash: this.archiveSignedHash(),
+      });
+      return false;
+    }
+    if (!this.tsaCertificate.isValidOn(this.signedTimeStamp())) {
+      return false;
+    }
+    if (this.messageDigest() !== sha256hex(this.tSTInfoHex())) {
+      console.error("conservancyRecordNom2016: Message digest mismatch", {
+        expected: sha256hex(this.tSTInfoHex()),
+        actual: this.messageDigest()
+      });
+      return false;
+    }
+    if (!this.equalTimestamps()) {
+      return false;
+    }
+    if (!this.signingCertificateV2()) {
+      console.error("conservancyRecordNom2016: Signing certificate V2 is not valid");
+      return false;
+    }
+
+    const isValid = this.tsaCertificate.verifyHexString(
+      this.signedAttributesHex(),
+      this.archiveSignature()
+    );
+
+    if (!isValid) {
+      console.error(
+        "conservancyRecordNom2016: TSA certificate failed to verify the signed attributes 'hex'"
+      );
+    }
+
+    return isValid;
   }
 
   recordTimestamp() {
@@ -161,16 +192,47 @@ export default class ConservancyRecordNom2016 {
   }
 
   equalTimestamps() {
-    let middle;
-    return Date.parse(this.timestamp) === (middle = this.recordTimestamp().getTime()) && middle ===  this.signedTimeStamp().getTime();
+    const recordTime = this.recordTimestamp().getTime();
+    const signedTime = this.signedTimeStamp().getTime();
+    const isEqualTime =
+      Date.parse(this.timestamp) === recordTime && recordTime === signedTime;
+
+    if (!isEqualTime) {
+      console.error("conservancyRecordNom2016: Timestamps don't match", {
+        providedTimestamp: this.timestamp,
+        recordTimestamp: this.recordTimestamp().toISOString(),
+        signedTimestamp: this.signedTimeStamp().toISOString()
+      });
+    }
+
+    return isEqualTime;
   }
 
   valid() {
-    if (!this.rootCertificate) { return false; }
-    return this.tsaCertificate.validParent(this.rootCertificate.toPem());
+    if (!this.rootCertificate) {
+      console.error("conservancyRecordNom2016: Root certificate is missing");
+      return false;
+    }
+
+    const isValid = this.tsaCertificate.validParent(
+      this.rootCertificate.toPem()
+    );
+
+    if (!isValid) {
+      console.error(
+        "conservancyRecordNom2016: Root certificate is not a valid parent of the TSA certificate"
+      );
+    }
+    return isValid;
   }
 
   validParent(caPemCert) {
-    if (this.rootCertificate) { return this.rootCertificate.validParent(caPemCert); }
+    if (this.rootCertificate) {
+      return this.rootCertificate.validParent(caPemCert);
+    } else {
+      console.error({
+        message: "conservancyRecordNom2016: Root certificate is missing",
+      });
+    }
   }
 }

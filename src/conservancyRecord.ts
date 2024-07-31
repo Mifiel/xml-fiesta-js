@@ -115,12 +115,22 @@ export default class ConservancyRecord {
 
   validArchiveHash() {
     if (this.signedHash !== this.archiveSignedHash()) {
+      console.error("conservancyRecord: Signed hash mismatch", {
+        providedSignedHash: this.signedHash,
+        archiveSignedHash: this.archiveSignedHash()
+      });
       return false;
     }
-    return this.userCertificate.verifyString(
+
+    const isValid = this.userCertificate.verifyString(
       this.signedHash,
       this.archiveSignature()
     );
+    if (!isValid) {
+      console.error("conservancyRecord: User certificate failed to verify the signed hash");
+    }
+
+    return isValid;
   }
 
   recordTimestamp() {
@@ -168,7 +178,16 @@ export default class ConservancyRecord {
   }
 
   equalTimestamps() {
-    return Date.parse(this.timestamp) === this.recordTimestamp().getTime();
+    const isEqualTime =
+      Date.parse(this.timestamp) === this.recordTimestamp().getTime();
+
+    if (!isEqualTime) {
+      console.error("conservancyRecord: Timestamps don't match", {
+        providedTimestamp: this.timestamp,
+        parsedRecordTimestamp: this.recordTimestamp().toISOString()
+      });
+    }
+    return isEqualTime;
   }
 
   signedData() {
@@ -190,17 +209,30 @@ export default class ConservancyRecord {
 
   valid() {
     if (!this.caCertificate) {
+      console.error("conservancyRecord: CA certificate is missing");
       return false;
     }
-    return this.caCertificate.verifyHexString(
+
+    const isValid = this.caCertificate.verifyHexString(
       this.signedData(),
       this.signature()
     );
+    if (!isValid) {
+      console.error(
+        "conservancyRecord: CA certificate failed to verify the signed data"
+      );
+    }
+
+    return isValid;
   }
 
   validParent(caPemCert) {
     if (this.caCertificate) {
       return this.caCertificate.validParent(caPemCert);
+    } else {
+      console.error({
+        message: "conservancyRecord: CA certificate is missing",
+      });
     }
   }
 }

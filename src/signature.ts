@@ -46,6 +46,14 @@ export default class Signature {
 
   valid(hash) {
     if (!hash) { throw new ArgumentError('hash is required'); }
-    return this.certificate.verifyString(hash, this.signature);
+    const isValid = this.certificate.verifyString(hash, this.signature);
+    if (!isValid) {
+      console.error('Signature validation failed', {
+        hash,
+        signature: this.signature,
+        certificate: this.certificate
+      });
+    }
+    return isValid;
   }
 }

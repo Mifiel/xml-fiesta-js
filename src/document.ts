@@ -65,7 +65,7 @@ export default class Document {
     this.recordPresent = false;
     if (options.conservancyRecord) {
       this.setConservancyRecord(options.conservancyRecord);
-    }
+    } else console.error("The conservancy record was not found");
 
     this.contentType = options.contentType;
     this.name = options.name;
@@ -270,11 +270,18 @@ export default class Document {
     if (
       !originalHashInBlockchainBindingIsValid ||
       this.originalHash !== originalHashPlaintext
-    )
+    ) {
+      console.error("Document(validate hash in tracked document): invalid hash", {
+        originalHashInBlockchainBindingIsValid:
+          originalHashInBlockchainBindingIsValid,
+        providedOriginalHash: this.originalHash,
+        originalHashInPlaintext: originalHashPlaintext
+      });
       return {
         isValid: false,
         error_code: "integrity",
       };
+    }
 
     return {
       isValid: true,
@@ -304,7 +311,13 @@ export default class Document {
         (signer) => signer.cer === cerHex
       );
 
-      if (!certificateNumberIsValid || !certificateIsFromSigner) return false;
+      if (!certificateNumberIsValid || !certificateIsFromSigner) {
+        console.error("Document(validate hash in blockchain binding): certificate validation failed", {
+          certificateNumberIsValid: certificateNumberIsValid,
+          certificateIsFromSigner: certificateIsFromSigner
+        });
+        return false;
+      }
     }
 
     // validate signature
@@ -318,7 +331,12 @@ export default class Document {
 
     const isValidSignature = signatureInstance.valid(hash);
 
-    if (!isValidSignature) return false;
+    if (!isValidSignature) {
+      console.error(
+        "Document(validate hash in blockchain binding): signature validation failed"
+      );
+      return false;
+    }
 
     return true;
   }
@@ -341,7 +359,7 @@ export default class Document {
   isValidAssetId(rootCertificates) {
     if (!this.tracked) throw new Error("Document is not tracked");
 
-    // platintext positions hash | asset | address
+    // plaintext positions hash | asset | address
     const plaintext = this.blockchainBinding.signature[0].$.plaintext;
     const assetPlaintext = plaintext.split("|")[1];
 
@@ -350,17 +368,25 @@ export default class Document {
       plaintext
     );
 
-    if (!assetInBlockchainBindingIsValid || this.assetId !== assetPlaintext)
+    if (!assetInBlockchainBindingIsValid || this.assetId !== assetPlaintext) {
+      console.error("Asset ID validation failed", {
+        assetInBlockchainBindingIsValid,
+        providedAssetId: this.assetId,
+        assetInPlaintext: assetPlaintext
+      });
       return {
         isValid: false,
         error_code: "integrity",
       };
+    }
 
-    if (!this.blockchainTrack)
+    if (!this.blockchainTrack) {
+      console.error("Blockchain track not found");
       return {
         isValid: false,
         error_code: "not_found",
       };
+    }
 
     return {
       isValid: true,

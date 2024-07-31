@@ -168,6 +168,7 @@ export default class Certificate {
       sig.updateString(string);
       return sig.verify(signedHexString);
     } catch (error) {
+      console.error(error);
       return false;
     }
   }
@@ -182,6 +183,7 @@ export default class Certificate {
       sig.updateHex(hexString);
       return sig.verify(signedHexString);
     } catch (error) {
+      console.error(error);
       return false;
     }
   }
@@ -194,16 +196,36 @@ export default class Certificate {
 
   hasExpired() {
     const notAfter = parseDate(this.certificate.getNotAfter());
-    return notAfter.getTime() < new Date().getTime();
+    const isExpired = notAfter.getTime() < new Date().getTime();
+
+    if (isExpired) {
+      console.error("Certificate: The certificate has expired", {
+        notAfter: notAfter.toISOString(),
+        currentTime: new Date().toISOString()
+      });
+    }
+
+    return isExpired;
   }
 
   isValidOn(date) {
     const notAfter = parseDate(this.certificate.getNotAfter());
     const notBefore = parseDate(this.certificate.getNotBefore());
-    return (
+
+    const isValid = (
       notAfter.getTime() >= date.getTime() &&
       date.getTime() >= notBefore.getTime()
     );
+
+    if (!isValid) {
+      console.error("Certificate: The certificate is not valid on the given date", {
+        notAfter: notAfter.toISOString(),
+        notBefore: notBefore.toISOString(),
+        givenDate: date.toISOString()
+      });
+    }
+
+    return isValid;
   }
 
   algorithm() {
@@ -220,7 +242,7 @@ export default class Certificate {
   }
 
   isCa(rootCaHex) {
-    return this.hex === rootCaHex;
+  return this.hex === rootCaHex;
   }
 
   validParent(rootCaPem, rootCaHex = null) {
@@ -234,10 +256,8 @@ export default class Certificate {
         const rootCa = jsrsasign.X509.getExtBasicConstraints(
           rootCaCert.hex
         ).cA;
-        // root certificate provided is not CA
-        if (!rootCa) {
-          return false;
-        }
+
+        if (!rootCa) return false;
         rootCaCert = new Certificate(null, rootCaCert.hex);
       }
 
@@ -246,7 +266,8 @@ export default class Certificate {
         this.signature(),
         this.algorithm()
       );
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       return false;
     }
   }

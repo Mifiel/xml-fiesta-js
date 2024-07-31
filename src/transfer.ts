@@ -23,19 +23,27 @@ export default class Transfer extends Document {
       rootCertificates
     );
 
-    if (!isValidHolder)
+    if (!isValidHolder) {
+      console.error("Transfer(validate endorser): holder is not valid");
       return {
         isValid: false,
         error_code: "integrity",
       };
+    }
 
     const isConsistentWithBlockchain =
       this.prevAddress === this.dataBlockchain.prevAddress;
 
-    if (!isConsistentWithBlockchain) return {
-      isValid: false,
-      error_code: "inconsistent_with_blockchain",
-    };
+    if (!isConsistentWithBlockchain) {
+      console.error("Transfer(validate endorser): Endorser address inconsistent with blockchain", {
+        prevAddress: this.prevAddress,
+        blockchainPrevAddress: this.dataBlockchain.prevAddress
+      });
+      return {
+        isValid: false,
+        error_code: "inconsistent_with_blockchain",
+      };
+    }
 
     return {
       isValid: true,
@@ -43,21 +51,32 @@ export default class Transfer extends Document {
   }
 
   validEndorsee(rootCertificates) {
-    const isValidHolder = this.validateHolderBinding(this.currentHolder, rootCertificates);
+    const isValidHolder = this.validateHolderBinding(
+      this.currentHolder,
+      rootCertificates
+    );
 
-    if (!isValidHolder)
+    if (!isValidHolder) {
+      console.error("Transfer(validate endorsee): holder is not valid");
       return {
         isValid: false,
         error_code: "integrity",
       };
+    }
 
     const isConsistentWithBlockchain =
       this.currentAddress === this.dataBlockchain.currentAddress;
 
-    if (!isConsistentWithBlockchain) return {
-      isValid: false,
-      error_code: "inconsistent_with_blockchain",
-    };
+    if (!isConsistentWithBlockchain) {
+      console.error("Transfer(validate endorsee): Endorsee address inconsistent with blockchain", {
+        currentAddress: this.currentAddress,
+        blockchainCurrentAddress: this.dataBlockchain.currentAddress
+      });
+      return {
+        isValid: false,
+        error_code: "inconsistent_with_blockchain",
+      };
+    }
 
     return {
       isValid: true
@@ -92,6 +111,14 @@ export default class Transfer extends Document {
 
     const isValidSignature = signatureInstance.valid(nodeSignature.$.plaintext);
 
-    return isCa && isValidSignature
+    if (!isCa) {
+      console.error("Transfer(validate holder binding): Certificate is not a CA");
+    }
+
+    if (!isValidSignature) {
+      console.error("Transfer(validate holder binding): Signature validation failed");
+    }
+
+    return isCa && isValidSignature;
   }
 }
