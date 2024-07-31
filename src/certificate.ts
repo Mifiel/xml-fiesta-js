@@ -166,8 +166,13 @@ export default class Certificate {
       const sig = new jsrsasign.crypto.Signature({ alg });
       sig.init(this.pem);
       sig.updateString(string);
-      return sig.verify(signedHexString);
+      const isValid = sig.verify(signedHexString);
+      if (!isValid) {
+        console.error("Certificate: String verification failed");
+      }
+      return isValid;
     } catch (error) {
+      console.error(error);
       return false;
     }
   }
@@ -180,8 +185,13 @@ export default class Certificate {
       const sig = new jsrsasign.crypto.Signature({ alg });
       sig.init(this.pem);
       sig.updateHex(hexString);
-      return sig.verify(signedHexString);
+      const isValid = sig.verify(signedHexString);
+      if (!isValid) {
+        console.error("Certificate: Hex string verification failed");
+      }
+      return isValid;
     } catch (error) {
+      console.error(error);
       return false;
     }
   }
@@ -194,16 +204,42 @@ export default class Certificate {
 
   hasExpired() {
     const notAfter = parseDate(this.certificate.getNotAfter());
-    return notAfter.getTime() < new Date().getTime();
+    const isExpired = notAfter.getTime() < new Date().getTime();
+
+    if (isExpired) {
+      console.error({
+        message: "Certificate: The certificate has expired",
+        details: {
+          notAfter: notAfter.toISOString(),
+          currentTime: new Date().toISOString()
+        }
+      });
+    }
+
+    return isExpired;
   }
 
   isValidOn(date) {
     const notAfter = parseDate(this.certificate.getNotAfter());
     const notBefore = parseDate(this.certificate.getNotBefore());
-    return (
+
+    const isValid = (
       notAfter.getTime() >= date.getTime() &&
       date.getTime() >= notBefore.getTime()
     );
+
+    if (!isValid) {
+      console.error({
+        message: "Certificate: The certificate is not valid on the given date",
+        details: {
+          notAfter: notAfter.toISOString(),
+          notBefore: notBefore.toISOString(),
+          givenDate: date.toISOString()
+        }
+      });
+    }
+
+    return isValid;
   }
 
   algorithm() {
@@ -220,7 +256,19 @@ export default class Certificate {
   }
 
   isCa(rootCaHex) {
-    return this.hex === rootCaHex;
+  const isCa = this.hex === rootCaHex;
+
+  if (!isCa) {
+    console.error({
+      message: "Certificate: The certificate is not a CA certificate",
+      details: {
+        certificateHex: this.hex,
+        rootCaHex: rootCaHex
+      }
+    });
+  }
+
+  return isCa;
   }
 
   validParent(rootCaPem, rootCaHex = null) {
@@ -234,19 +282,31 @@ export default class Certificate {
         const rootCa = jsrsasign.X509.getExtBasicConstraints(
           rootCaCert.hex
         ).cA;
-        // root certificate provided is not CA
+
         if (!rootCa) {
+          console.error(
+            "Certificate: The certificate is not a child of the provided CA certificate"
+          );
           return false;
         }
         rootCaCert = new Certificate(null, rootCaCert.hex);
       }
 
-      return rootCaCert.verifyHexString(
+      const isValid = rootCaCert.verifyHexString(
         this.tbsCertificate(),
         this.signature(),
         this.algorithm()
       );
-    } catch (err) {
+
+      if (!isValid) {
+        console.error(
+          "Certificate: The certificate is not a child of the provided CA certificate"
+        );
+      }
+
+      return isValid;
+    } catch (error) {
+      console.error(error);
       return false;
     }
   }
