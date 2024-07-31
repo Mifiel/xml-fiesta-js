@@ -115,12 +115,9 @@ export default class ConservancyRecord {
 
   validArchiveHash() {
     if (this.signedHash !== this.archiveSignedHash()) {
-      console.error({
-        message: "conservancyRecord: Signed hash mismatch",
-        details: {
-          providedSignedHash: this.signedHash,
-          archiveSignedHash: this.archiveSignedHash(),
-        },
+      console.error("conservancyRecord: Signed hash mismatch", {
+        providedSignedHash: this.signedHash,
+        archiveSignedHash: this.archiveSignedHash()
       });
       return false;
     }
@@ -185,12 +182,9 @@ export default class ConservancyRecord {
       Date.parse(this.timestamp) === this.recordTimestamp().getTime();
 
     if (!isEqualTime) {
-      console.error({
-        message: "conservancyRecord: Timestamps don't match",
-        details: {
-          providedTimestamp: this.timestamp,
-          parsedRecordTimestamp: this.recordTimestamp().toISOString(),
-        },
+      console.error("conservancyRecord: Timestamps don't match", {
+        providedTimestamp: this.timestamp,
+        parsedRecordTimestamp: this.recordTimestamp().toISOString()
       });
     }
     return isEqualTime;
@@ -234,13 +228,7 @@ export default class ConservancyRecord {
 
   validParent(caPemCert) {
     if (this.caCertificate) {
-      const isValid = this.caCertificate.validParent(caPemCert);
-      if (!isValid) {
-        console.error(
-          "conservancyRecord: Provided certificate is not a valid parent of the CA certificate"
-        );
-      }
-      return isValid;
+      return this.caCertificate.validParent(caPemCert);
     } else {
       console.error({
         message: "conservancyRecord: CA certificate is missing",

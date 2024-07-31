@@ -50,7 +50,8 @@ export default class Signature {
     if (!isValid) {
       console.error('Signature validation failed', {
         hash,
-        signature: this.signature
+        signature: this.signature,
+        certificate: this.certificate
       });
     }
     return isValid;

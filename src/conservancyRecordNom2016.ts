@@ -147,31 +147,19 @@ export default class ConservancyRecordNom2016 {
 
   validArchiveHash() {
     if (this.signedHash !== this.archiveSignedHash()) {
-      console.error({
-        message: "conservancyRecordNom2016: Signed hash mismatch",
-        details: {
-          providedSignedHash: this.signedHash,
-          archiveSignedHash: this.archiveSignedHash(),
-        },
+      console.error("conservancyRecordNom2016: Signed hash mismatch", {
+        providedSignedHash: this.signedHash,
+        archiveSignedHash: this.archiveSignedHash(),
       });
       return false;
     }
     if (!this.tsaCertificate.isValidOn(this.signedTimeStamp())) {
-      console.error({
-        message: "conservancyRecordNom2016: TSA certificate is not valid on the signed timestamp",
-        details: {
-          signedTimestamp: this.signedTimeStamp().toISOString(),
-        },
-      });
       return false;
     }
     if (this.messageDigest() !== sha256hex(this.tSTInfoHex())) {
-      console.error({
-        message: "conservancyRecordNom2016: Message digest mismatch",
-        details: {
-          expected: sha256hex(this.tSTInfoHex()),
-          actual: this.messageDigest(),
-        },
+      console.error("conservancyRecordNom2016: Message digest mismatch", {
+        expected: sha256hex(this.tSTInfoHex()),
+        actual: this.messageDigest()
       });
       return false;
     }
@@ -179,9 +167,7 @@ export default class ConservancyRecordNom2016 {
       return false;
     }
     if (!this.signingCertificateV2()) {
-      console.error({
-        message: "conservancyRecordNom2016: Signing certificate V2 is not valid",
-      });
+      console.error("conservancyRecordNom2016: Signing certificate V2 is not valid");
       return false;
     }
 
@@ -212,13 +198,10 @@ export default class ConservancyRecordNom2016 {
       Date.parse(this.timestamp) === recordTime && recordTime === signedTime;
 
     if (!isEqualTime) {
-      console.error({
-        message: "conservancyRecordNom2016: Timestamps don't match",
-        details: {
-          providedTimestamp: this.timestamp,
-          recordTimestamp: this.recordTimestamp().toISOString(),
-          signedTimestamp: this.signedTimeStamp().toISOString(),
-        },
+      console.error("conservancyRecordNom2016: Timestamps don't match", {
+        providedTimestamp: this.timestamp,
+        recordTimestamp: this.recordTimestamp().toISOString(),
+        signedTimestamp: this.signedTimeStamp().toISOString()
       });
     }
 
@@ -227,9 +210,7 @@ export default class ConservancyRecordNom2016 {
 
   valid() {
     if (!this.rootCertificate) {
-      console.error({
-        message: "conservancyRecordNom2016: Root certificate is missing",
-      });
+      console.error("conservancyRecordNom2016: Root certificate is missing");
       return false;
     }
 
@@ -247,13 +228,7 @@ export default class ConservancyRecordNom2016 {
 
   validParent(caPemCert) {
     if (this.rootCertificate) {
-      const isValid = this.rootCertificate.validParent(caPemCert);
-      if (!isValid) {
-        console.error(
-          "conservancyRecordNom2016: Provided certificate is not a valid parent of the root certificate"
-        );
-      }
-      return isValid;
+      return this.rootCertificate.validParent(caPemCert);
     } else {
       console.error({
         message: "conservancyRecordNom2016: Root certificate is missing",
