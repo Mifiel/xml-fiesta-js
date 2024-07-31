@@ -271,14 +271,11 @@ export default class Document {
       !originalHashInBlockchainBindingIsValid ||
       this.originalHash !== originalHashPlaintext
     ) {
-      console.error({
-        message: "Document(validate hash in tracked document): invalid hash",
-        details: {
-          originalHashInBlockchainBindingIsValid:
-            originalHashInBlockchainBindingIsValid,
-          providedOriginalHash: this.originalHash,
-          originalHashInPlaintext: originalHashPlaintext,
-        },
+      console.error("Document(validate hash in tracked document): invalid hash", {
+        originalHashInBlockchainBindingIsValid:
+          originalHashInBlockchainBindingIsValid,
+        providedOriginalHash: this.originalHash,
+        originalHashInPlaintext: originalHashPlaintext
       });
       return {
         isValid: false,
@@ -315,13 +312,9 @@ export default class Document {
       );
 
       if (!certificateNumberIsValid || !certificateIsFromSigner) {
-        console.error({
-          message:
-            "Document(validate hash in blockchain binding): certificate validation failed",
-          details: {
-            certificateNumberIsValid: certificateNumberIsValid,
-            certificateIsFromSigner: certificateIsFromSigner,
-          },
+        console.error("Document(validate hash in blockchain binding): certificate validation failed", {
+          certificateNumberIsValid: certificateNumberIsValid,
+          certificateIsFromSigner: certificateIsFromSigner
         });
         return false;
       }
@@ -376,13 +369,10 @@ export default class Document {
     );
 
     if (!assetInBlockchainBindingIsValid || this.assetId !== assetPlaintext) {
-      console.error({
-        message: "Asset ID validation failed",
-        details: {
-          assetInBlockchainBindingIsValid,
-          providedAssetId: this.assetId,
-          assetInPlaintext: assetPlaintext,
-        },
+      console.error("Asset ID validation failed", {
+        assetInBlockchainBindingIsValid,
+        providedAssetId: this.assetId,
+        assetInPlaintext: assetPlaintext
       });
       return {
         isValid: false,

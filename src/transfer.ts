@@ -35,13 +35,9 @@ export default class Transfer extends Document {
       this.prevAddress === this.dataBlockchain.prevAddress;
 
     if (!isConsistentWithBlockchain) {
-      console.error({
-        message:
-          "Transfer(validate endorser): Endorser address inconsistent with blockchain",
-        details: {
-          prevAddress: this.prevAddress,
-          blockchainPrevAddress: this.dataBlockchain.prevAddress,
-        },
+      console.error("Transfer(validate endorser): Endorser address inconsistent with blockchain", {
+        prevAddress: this.prevAddress,
+        blockchainPrevAddress: this.dataBlockchain.prevAddress
       });
       return {
         isValid: false,
@@ -72,13 +68,9 @@ export default class Transfer extends Document {
       this.currentAddress === this.dataBlockchain.currentAddress;
 
     if (!isConsistentWithBlockchain) {
-      console.error({
-        message:
-          "Transfer(validate endorsee): Endorsee address inconsistent with blockchain",
-        details: {
-          currentAddress: this.currentAddress,
-          blockchainCurrentAddress: this.dataBlockchain.currentAddress,
-        },
+      console.error("Transfer(validate endorsee): Endorsee address inconsistent with blockchain", {
+        currentAddress: this.currentAddress,
+        blockchainCurrentAddress: this.dataBlockchain.currentAddress
       });
       return {
         isValid: false,
