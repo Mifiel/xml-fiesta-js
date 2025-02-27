@@ -1,28 +1,30 @@
-const Promise = require('promise');
-const xmlCrypto = require('xml-crypto');
-const select = require('xpath.js');
-const Dom = require('xmldom').DOMParser;
+const Promise = require("promise");
+const xmlCrypto = require("xml-crypto");
+const select = require("xpath.js");
+const Dom = require("xmldom").DOMParser;
 
-import { parseString, Builder } from 'xml2js';
-import { b64toHex, sha256 } from './common';
-import Certificate from './certificate';
-import PatchedXML from './patches/xmlPatch';
+import { parseString, Builder } from "xml2js";
+import { b64toHex, sha256 } from "./common";
+import Certificate from "./certificate";
+import PatchedXML from "./patches/xmlPatch";
 
-const ExclusiveCanonicalization = xmlCrypto.
-                            SignedXml.
-                            CanonicalizationAlgorithms['http://www.w3.org/2001/10/xml-exc-c14n#'];
+const ExclusiveCanonicalization =
+  xmlCrypto.SignedXml.CanonicalizationAlgorithms[
+    "http://www.w3.org/2001/10/xml-exc-c14n#"
+  ];
 
 const versionToNumber = (version: string) => {
   // splits the version string using the dots in an array of 3 numbers
   // example: '2.4.1' -> [2, 4, 1]
-  const [firstNumber, secondNumber, thirdNumber] = 
-    version.split(/\./).map((v) => parseInt(v));
+  const [firstNumber, secondNumber, thirdNumber] = version
+    .split(/\./)
+    .map((v) => parseInt(v));
   // converts the previous in a number
   // example: [2, 4, 1] -> 241
   return firstNumber * 100 + secondNumber * 10 + thirdNumber;
-}
+};
 
-const START_VERSION_WITHOUT_SINGERS_CER = versionToNumber('2.5.0');
+const START_VERSION_WITHOUT_SINGERS_CER = versionToNumber("2.5.0");
 
 export default class XML {
   eDocument: any;
@@ -36,6 +38,7 @@ export default class XML {
   originalHash: any;
   tracked = false;
   destroyed = false;
+  nameSpaces = null;
 
   static parse(string) {
     const xml = new PatchedXML();
@@ -92,7 +95,7 @@ export default class XML {
   }
 
   static removeSignersCertificate(xmljs: any) {
-    xmljs.signers?.[0]?.signer?.forEach(signer => {
+    xmljs.signers?.[0]?.signer?.forEach((signer) => {
       delete signer.$.name;
       delete signer.certificate[0]._;
     });
@@ -123,7 +126,7 @@ export default class XML {
     el.name = pdfAttrs.name;
     el.contentType = pdfAttrs.contentType;
     el.originalHash = pdfAttrs.originalHash;
-    return el
+    return el;
   }
 
   parse(xml) {
@@ -139,26 +142,23 @@ export default class XML {
     );
   }
 
-  canonical(transfer = false) {
+  canonical(electronicDocumentAttributes = {}) {
     let edoc = JSON.parse(JSON.stringify(this.eDocument));
-    // when it is transfer the electronicDocument of the transfer node is used instead of the original electronicDocument
-    if (transfer) {
-      const electronicDocumentAttributes = edoc.$;
-      const lastTransfer =
-        edoc.transfers[edoc.transfers.length - 1].electronicDocument[0];
 
+    if (
+      electronicDocumentAttributes &&
+      Object.keys(electronicDocumentAttributes).length
+    ) {
       Object.entries(electronicDocumentAttributes).map(([key, value]) => {
         if (key.includes("xmlns")) {
-          lastTransfer.$[key] = value;
+          edoc.$[key] = value;
         }
       });
-
-      edoc = lastTransfer;
     }
 
     delete edoc.$.cancel;
     delete edoc.conservancyRecord;
-    
+
     const xml = this.constructor as typeof XML;
     xml.removeEncrypedData(edoc);
     xml.removeGeolocation(edoc);
@@ -190,10 +190,8 @@ export default class XML {
     return canonicalString.replace(/&#xD;/g, "");
   }
 
-  getCanonicalBuffer() {
-    let edoc = JSON.parse(JSON.stringify(this.eDocument));
-
-    return Buffer.from(this.canonical(edoc.transfers?.length > 0), "utf-8");
+  getCanonicalBuffer(electronicDocumentAttributes) {
+    return Buffer.from(this.canonical(electronicDocumentAttributes), "utf-8");
   }
 
   file() {

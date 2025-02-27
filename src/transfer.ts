@@ -3,18 +3,21 @@ import { b64toHex } from "./common";
 import Document from "./document";
 import { GetTransfersByTxIdResult } from "./services/blockchain/liquid";
 import Signature from "./signature";
+import XML from "./xml";
 
 export default class Transfer extends Document {
   prevAddress: string;
   currentAddress: string;
   dataBlockchain: GetTransfersByTxIdResult;
+  xml: XML;
 
-  constructor(file, options, transferData) {
-    super(file, options);
+  constructor(xml, options, transferData) {
+    super(xml.file(), options);
 
     this.prevAddress = transferData.prevAddress;
     this.currentAddress = transferData.currentAddress;
     this.dataBlockchain = transferData.dataBlockchain;
+    this.xml = xml;
   }
 
   validEndorser(rootCertificates) {
@@ -35,10 +38,13 @@ export default class Transfer extends Document {
       this.prevAddress === this.dataBlockchain.prevAddress;
 
     if (!isConsistentWithBlockchain) {
-      console.error("Transfer(validate endorser): Endorser address inconsistent with blockchain", {
-        prevAddress: this.prevAddress,
-        blockchainPrevAddress: this.dataBlockchain.prevAddress
-      });
+      console.error(
+        "Transfer(validate endorser): Endorser address inconsistent with blockchain",
+        {
+          prevAddress: this.prevAddress,
+          blockchainPrevAddress: this.dataBlockchain.prevAddress,
+        }
+      );
       return {
         isValid: false,
         error_code: "inconsistent_with_blockchain",
@@ -68,10 +74,13 @@ export default class Transfer extends Document {
       this.currentAddress === this.dataBlockchain.currentAddress;
 
     if (!isConsistentWithBlockchain) {
-      console.error("Transfer(validate endorsee): Endorsee address inconsistent with blockchain", {
-        currentAddress: this.currentAddress,
-        blockchainCurrentAddress: this.dataBlockchain.currentAddress
-      });
+      console.error(
+        "Transfer(validate endorsee): Endorsee address inconsistent with blockchain",
+        {
+          currentAddress: this.currentAddress,
+          blockchainCurrentAddress: this.dataBlockchain.currentAddress,
+        }
+      );
       return {
         isValid: false,
         error_code: "inconsistent_with_blockchain",
@@ -79,7 +88,7 @@ export default class Transfer extends Document {
     }
 
     return {
-      isValid: true
+      isValid: true,
     };
   }
 
@@ -112,11 +121,15 @@ export default class Transfer extends Document {
     const isValidSignature = signatureInstance.valid(nodeSignature.$.plaintext);
 
     if (!isCa) {
-      console.error("Transfer(validate holder binding): Certificate is not a CA");
+      console.error(
+        "Transfer(validate holder binding): Certificate is not a CA"
+      );
     }
 
     if (!isValidSignature) {
-      console.error("Transfer(validate holder binding): Signature validation failed");
+      console.error(
+        "Transfer(validate holder binding): Signature validation failed"
+      );
     }
 
     return isCa && isValidSignature;
