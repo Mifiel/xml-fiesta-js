@@ -1,19 +1,19 @@
 // const Promise = require('promise');
-const jsrsasign = require('jsrsasign');
+const jsrsasign = require("jsrsasign");
 
-import Signature from './signature';
-import ConservancyRecord from './conservancyRecord';
-import ConservancyRecordNom2016 from './conservancyRecordNom2016';
-import { extend, b64toAscii, b64toHex } from './common';
+import Signature from "./signature";
+import ConservancyRecord from "./conservancyRecord";
+import ConservancyRecordNom2016 from "./conservancyRecordNom2016";
+import { extend, b64toAscii, b64toHex } from "./common";
 import {
   ArgumentError,
   InvalidSignerError,
-  InvalidRecordError
-} from './errors';
-import XML from './patches/xmlPatch';
-import { Blockchain } from './services/blockchain';
-import { GetBlockchainTrackResult } from './services/blockchain/liquid';
-import Certificate from './certificate';
+  InvalidRecordError,
+} from "./errors";
+import XML from "./patches/xmlPatch";
+import { Blockchain } from "./services/blockchain";
+import { GetBlockchainTrackResult } from "./services/blockchain/liquid";
+import Certificate from "./certificate";
 
 export interface FromXMLResponse {
   document: Document;
@@ -23,7 +23,7 @@ export interface FromXMLResponse {
   xml: XML;
 }
 
-const VERSION = '0.0.1';
+const VERSION = "0.0.1";
 export default class Document {
   pdf_content: string;
   signers: any;
@@ -212,7 +212,9 @@ export default class Document {
         const prevHolder =
           index === 0
             ? this.currentHolder
-            : this.electronicDocument?.transfers?.[0].electronicDocument?.[index - 1].blockchain?.[0]?.holder?.[0];
+            : this.electronicDocument?.transfers?.[0].electronicDocument?.[
+                index - 1
+              ].blockchain?.[0]?.holder?.[0];
 
         const opts = await Document.getOptsToInitializeDocument({
           xml,
@@ -221,16 +223,19 @@ export default class Document {
 
         const prevAddress =
           index === 0
-            ? this.currentHolder.binding[0].signature[0].$.plaintext
-                .split("|")[0]
+            ? this.currentHolder.binding[0].signature[0].$.plaintext.split(
+                "|"
+              )[0]
             : this.transfersXml[
                 index - 1
-              ].blockchain[0].holder[0].binding[0].signature[0].$.plaintext
-                .split("|")[0];
+              ].blockchain[0].holder[0].binding[0].signature[0].$.plaintext.split(
+                "|"
+              )[0];
 
         const currentAddress =
-          xml.eDocument.blockchain?.[0]?.holder?.[0]?.binding[0].signature[0].$.plaintext
-            .split("|")[0];
+          xml.eDocument.blockchain?.[0]?.holder?.[0]?.binding[0].signature[0].$.plaintext.split(
+            "|"
+          )[0];
 
         const transferData = {
           dataBlockchain: this.blockchainTrack?.transfers?.[index] || {},
@@ -239,7 +244,7 @@ export default class Document {
         };
 
         const Transfer = require("./transfer").default;
-        return new Transfer(xml.file(), opts, transferData);
+        return new Transfer(xml, opts, transferData);
       })
     );
   }
@@ -271,12 +276,15 @@ export default class Document {
       !originalHashInBlockchainBindingIsValid ||
       this.originalHash !== originalHashPlaintext
     ) {
-      console.error("Document(validate hash in tracked document): invalid hash", {
-        originalHashInBlockchainBindingIsValid:
-          originalHashInBlockchainBindingIsValid,
-        providedOriginalHash: this.originalHash,
-        originalHashInPlaintext: originalHashPlaintext
-      });
+      console.error(
+        "Document(validate hash in tracked document): invalid hash",
+        {
+          originalHashInBlockchainBindingIsValid:
+            originalHashInBlockchainBindingIsValid,
+          providedOriginalHash: this.originalHash,
+          originalHashInPlaintext: originalHashPlaintext,
+        }
+      );
       return {
         isValid: false,
         error_code: "integrity",
@@ -312,10 +320,13 @@ export default class Document {
       );
 
       if (!certificateNumberIsValid || !certificateIsFromSigner) {
-        console.error("Document(validate hash in blockchain binding): certificate validation failed", {
-          certificateNumberIsValid: certificateNumberIsValid,
-          certificateIsFromSigner: certificateIsFromSigner
-        });
+        console.error(
+          "Document(validate hash in blockchain binding): certificate validation failed",
+          {
+            certificateNumberIsValid: certificateNumberIsValid,
+            certificateIsFromSigner: certificateIsFromSigner,
+          }
+        );
         return false;
       }
     }
@@ -349,7 +360,7 @@ export default class Document {
     const transfersLengthBlockchain = this.blockchainTrack.transfers.length;
 
     if (this.destroyed) {
-      transfersLengthXml += 1
+      transfersLengthXml += 1;
     }
 
     if (transfersLengthXml === transfersLengthBlockchain) return "updated";
@@ -372,7 +383,7 @@ export default class Document {
       console.error("Asset ID validation failed", {
         assetInBlockchainBindingIsValid,
         providedAssetId: this.assetId,
-        assetInPlaintext: assetPlaintext
+        assetInPlaintext: assetPlaintext,
       });
       return {
         isValid: false,
@@ -422,8 +433,9 @@ export default class Document {
 
     if (xml.tracked && isOriginalDocument) {
       const assetIdPlaintext =
-        xml.eDocument.blockchain[0].binding[0].signature[0].$.plaintext
-          .split("|")[1];
+        xml.eDocument.blockchain[0].binding[0].signature[0].$.plaintext.split(
+          "|"
+        )[1];
 
       const network = xml.eDocument.blockchain[0].$.name;
 
@@ -454,7 +466,7 @@ export default class Document {
           const opts = await this.getOptsToInitializeDocument({
             xml,
             useTestnet,
-            isOriginalDocument: true
+            isOriginalDocument: true,
           });
           const doc = new Document(xml.file(), opts);
           resolve({
@@ -470,4 +482,4 @@ export default class Document {
         .catch((error) => reject(error))
     );
   }
-};
+}
