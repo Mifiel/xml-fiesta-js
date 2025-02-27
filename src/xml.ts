@@ -1,28 +1,30 @@
-const Promise = require('promise');
-const xmlCrypto = require('xml-crypto');
-const select = require('xpath.js');
-const Dom = require('xmldom').DOMParser;
+const Promise = require("promise");
+const xmlCrypto = require("xml-crypto");
+const select = require("xpath.js");
+const Dom = require("xmldom").DOMParser;
 
-import { parseString, Builder } from 'xml2js';
-import { b64toHex, sha256 } from './common';
-import Certificate from './certificate';
-import PatchedXML from './patches/xmlPatch';
+import { parseString, Builder } from "xml2js";
+import { b64toHex, sha256 } from "./common";
+import Certificate from "./certificate";
+import PatchedXML from "./patches/xmlPatch";
 
-const ExclusiveCanonicalization = xmlCrypto.
-                            SignedXml.
-                            CanonicalizationAlgorithms['http://www.w3.org/2001/10/xml-exc-c14n#'];
+const ExclusiveCanonicalization =
+  xmlCrypto.SignedXml.CanonicalizationAlgorithms[
+    "http://www.w3.org/2001/10/xml-exc-c14n#"
+  ];
 
 const versionToNumber = (version: string) => {
   // splits the version string using the dots in an array of 3 numbers
   // example: '2.4.1' -> [2, 4, 1]
-  const [firstNumber, secondNumber, thirdNumber] = 
-    version.split(/\./).map((v) => parseInt(v));
+  const [firstNumber, secondNumber, thirdNumber] = version
+    .split(/\./)
+    .map((v) => parseInt(v));
   // converts the previous in a number
   // example: [2, 4, 1] -> 241
   return firstNumber * 100 + secondNumber * 10 + thirdNumber;
-}
+};
 
-const START_VERSION_WITHOUT_SINGERS_CER = versionToNumber('2.5.0');
+const START_VERSION_WITHOUT_SINGERS_CER = versionToNumber("2.5.0");
 
 export default class XML {
   eDocument: any;
@@ -92,7 +94,7 @@ export default class XML {
   }
 
   static removeSignersCertificate(xmljs: any) {
-    xmljs.signers?.[0]?.signer?.forEach(signer => {
+    xmljs.signers?.[0]?.signer?.forEach((signer) => {
       delete signer.$.name;
       delete signer.certificate[0]._;
     });
@@ -123,7 +125,7 @@ export default class XML {
     el.name = pdfAttrs.name;
     el.contentType = pdfAttrs.contentType;
     el.originalHash = pdfAttrs.originalHash;
-    return el
+    return el;
   }
 
   parse(xml) {
@@ -158,7 +160,7 @@ export default class XML {
 
     delete edoc.$.cancel;
     delete edoc.conservancyRecord;
-    
+
     const xml = this.constructor as typeof XML;
     xml.removeEncrypedData(edoc);
     xml.removeGeolocation(edoc);

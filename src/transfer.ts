@@ -35,10 +35,13 @@ export default class Transfer extends Document {
       this.prevAddress === this.dataBlockchain.prevAddress;
 
     if (!isConsistentWithBlockchain) {
-      console.error("Transfer(validate endorser): Endorser address inconsistent with blockchain", {
-        prevAddress: this.prevAddress,
-        blockchainPrevAddress: this.dataBlockchain.prevAddress
-      });
+      console.error(
+        "Transfer(validate endorser): Endorser address inconsistent with blockchain",
+        {
+          prevAddress: this.prevAddress,
+          blockchainPrevAddress: this.dataBlockchain.prevAddress,
+        }
+      );
       return {
         isValid: false,
         error_code: "inconsistent_with_blockchain",
@@ -68,10 +71,13 @@ export default class Transfer extends Document {
       this.currentAddress === this.dataBlockchain.currentAddress;
 
     if (!isConsistentWithBlockchain) {
-      console.error("Transfer(validate endorsee): Endorsee address inconsistent with blockchain", {
-        currentAddress: this.currentAddress,
-        blockchainCurrentAddress: this.dataBlockchain.currentAddress
-      });
+      console.error(
+        "Transfer(validate endorsee): Endorsee address inconsistent with blockchain",
+        {
+          currentAddress: this.currentAddress,
+          blockchainCurrentAddress: this.dataBlockchain.currentAddress,
+        }
+      );
       return {
         isValid: false,
         error_code: "inconsistent_with_blockchain",
@@ -79,7 +85,7 @@ export default class Transfer extends Document {
     }
 
     return {
-      isValid: true
+      isValid: true,
     };
   }
 
@@ -112,11 +118,15 @@ export default class Transfer extends Document {
     const isValidSignature = signatureInstance.valid(nodeSignature.$.plaintext);
 
     if (!isCa) {
-      console.error("Transfer(validate holder binding): Certificate is not a CA");
+      console.error(
+        "Transfer(validate holder binding): Certificate is not a CA"
+      );
     }
 
     if (!isValidSignature) {
-      console.error("Transfer(validate holder binding): Signature validation failed");
+      console.error(
+        "Transfer(validate holder binding): Signature validation failed"
+      );
     }
 
     return isCa && isValidSignature;
