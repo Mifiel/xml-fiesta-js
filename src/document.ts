@@ -244,7 +244,7 @@ export default class Document {
         };
 
         const Transfer = require("./transfer").default;
-        return new Transfer(xml.file(), opts, transferData);
+        return new Transfer(xml, opts, transferData);
       })
     );
   }

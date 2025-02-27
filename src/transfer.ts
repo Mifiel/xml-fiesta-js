@@ -3,18 +3,21 @@ import { b64toHex } from "./common";
 import Document from "./document";
 import { GetTransfersByTxIdResult } from "./services/blockchain/liquid";
 import Signature from "./signature";
+import XML from "./xml";
 
 export default class Transfer extends Document {
   prevAddress: string;
   currentAddress: string;
   dataBlockchain: GetTransfersByTxIdResult;
+  xml: XML;
 
-  constructor(file, options, transferData) {
-    super(file, options);
+  constructor(xml, options, transferData) {
+    super(xml.file(), options);
 
     this.prevAddress = transferData.prevAddress;
     this.currentAddress = transferData.currentAddress;
     this.dataBlockchain = transferData.dataBlockchain;
+    this.xml = xml;
   }
 
   validEndorser(rootCertificates) {

@@ -38,6 +38,7 @@ export default class XML {
   originalHash: any;
   tracked = false;
   destroyed = false;
+  nameSpaces = null;
 
   static parse(string) {
     const xml = new PatchedXML();
@@ -141,21 +142,18 @@ export default class XML {
     );
   }
 
-  canonical(transfer = false) {
+  canonical(electronicDocumentAttributes = {}) {
     let edoc = JSON.parse(JSON.stringify(this.eDocument));
-    // when it is transfer the electronicDocument of the transfer node is used instead of the original electronicDocument
-    if (transfer) {
-      const electronicDocumentAttributes = edoc.$;
-      const lastTransfer =
-        edoc.transfers[edoc.transfers.length - 1].electronicDocument[0];
 
+    if (
+      electronicDocumentAttributes &&
+      Object.keys(electronicDocumentAttributes).length
+    ) {
       Object.entries(electronicDocumentAttributes).map(([key, value]) => {
         if (key.includes("xmlns")) {
-          lastTransfer.$[key] = value;
+          edoc.$[key] = value;
         }
       });
-
-      edoc = lastTransfer;
     }
 
     delete edoc.$.cancel;
@@ -192,10 +190,8 @@ export default class XML {
     return canonicalString.replace(/&#xD;/g, "");
   }
 
-  getCanonicalBuffer() {
-    let edoc = JSON.parse(JSON.stringify(this.eDocument));
-
-    return Buffer.from(this.canonical(edoc.transfers?.length > 0), "utf-8");
+  getCanonicalBuffer(electronicDocumentAttributes) {
+    return Buffer.from(this.canonical(electronicDocumentAttributes), "utf-8");
   }
 
   file() {
