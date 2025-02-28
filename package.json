@@ -56,7 +56,7 @@
     "jsrsasign": "^5.0.10",
     "promise": "^7.1.1",
     "xml-crypto": "^1.4.1",
-    "xml2js": "^0.4.16",
+    "xml2js": "^0.5.0",
     "xmldom": "^0.1.22",
     "xpath.js": "^1.0.6"
   },
