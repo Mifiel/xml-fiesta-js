@@ -11,7 +11,7 @@ import {
   InvalidRecordError,
 } from "./errors";
 import XML from "./patches/xmlPatch";
-import { Blockchain } from "./services/blockchain";
+import { Blockchain, Network } from "./services/blockchain";
 import { GetBlockchainTrackResult } from "./services/blockchain/liquid";
 import Certificate from "./certificate";
 
@@ -44,7 +44,7 @@ export default class Document {
   currentHolder: any;
   prevHolder: any;
   assetId: string;
-  network: string;
+  network: Network;
   electronicDocument: any;
 
   constructor(file, options) {
@@ -299,6 +299,9 @@ export default class Document {
   validHashInBlockchainBinding(rootCertificates, hash: string) {
     if (!this.tracked) throw new Error("Document is not tracked");
 
+    // litecoin is not supported, we return true to omit the validation
+    if (this.network === "LTC") return true;
+
     const trackedDocumentIsSimple =
       this.isSimpleTrackedDocument(rootCertificates);
 
@@ -453,6 +456,14 @@ export default class Document {
       }
     }
 
+    // litecoin is not supported, we mock a blockchain track so it doesn't fail, this mock will be removed when we no longer support litecoin
+    if (opts.network === "LTC") {
+      opts.blockchainTrack = {
+        transfers: [],
+        asset: opts.assetId,
+      };
+    }
+
     return opts;
   };
 
@@ -468,6 +479,7 @@ export default class Document {
             useTestnet,
             isOriginalDocument: true,
           });
+
           const doc = new Document(xml.file(), opts);
           resolve({
             xml,
