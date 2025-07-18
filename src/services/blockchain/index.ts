@@ -1,6 +1,6 @@
 import Liquid from "./liquid";
 
-type Network = 'LBTC'
+export type Network = "LBTC" | "LTC";
 
 export class Blockchain {
   static init = (network: Network) => {
@@ -13,4 +13,3 @@ export class Blockchain {
     }
   };
 }
-
