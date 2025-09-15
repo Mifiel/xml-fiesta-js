@@ -3,7 +3,7 @@ const xmlCrypto = require("xml-crypto");
 const select = require("xpath.js");
 const Dom = require("xmldom").DOMParser;
 
-import { parseString, Builder, processors } from "xml2js";
+import { parseString, Builder } from "xml2js";
 import { b64toHex, sha256 } from "./common";
 import Certificate from "./certificate";
 import PatchedXML from "./patches/xmlPatch";
@@ -94,14 +94,6 @@ export default class XML {
     delete xmljs.transfers;
   }
 
-  static removeNamespaces(xmljs: any) {
-    debugger;
-    const val = xmljs.$.xmlns
-    console.log("val", val);
-    delete xmljs.$.xmlns;
-    xmljs.$.xmlns = val;
-  }
-
   static removeSignersCertificate(xmljs: any) {
     xmljs.signers?.[0]?.signer?.forEach((signer) => {
       delete signer.$.name;
@@ -139,8 +131,15 @@ export default class XML {
 
   parse(xml) {
     const el = this;
+
+    // Clean namespace prefixes from the XML string before parsing
+    let cleanedXml = xml;
+    if (typeof xml === "string") {
+      cleanedXml = xml.replace(/ns0:/g, "").replace(/:ns0/g, "");
+    }
+
     return new Promise((resolve, reject) =>
-      parseString(xml, { tagNameProcessors: [processors.stripPrefix] }, function (err, { electronicDocument }) {
+      parseString(cleanedXml, function (err, { electronicDocument }) {
         if (err) {
           return reject(err);
         }
@@ -172,7 +171,6 @@ export default class XML {
     xml.removeGeolocation(edoc);
     xml.removeBlockchain(edoc);
     xml.removeTransfer(edoc);
-    xml.removeNamespaces(edoc);
 
     if (this.version_int >= START_VERSION_WITHOUT_SINGERS_CER) {
       xml.removeSignersCertificate(edoc);
