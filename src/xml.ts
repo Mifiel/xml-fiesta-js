@@ -94,6 +94,21 @@ export default class XML {
     delete xmljs.transfers;
   }
 
+  static detectNamespacePrefix(xmlString: string): string | null {
+    // Find the prefix used in the electronicDocument element
+    const prefixMatch = xmlString.match(
+      /<\s*([A-Za-z_][\w.-]*):electronicDocument\b/
+    );
+    return prefixMatch ? prefixMatch[1] : null;
+  }
+
+  static removeNamespacePrefix(xmlString: string, prefix: string): string {
+    // Remove the namespace prefix from elements, attributes, and declarations
+    return xmlString
+      .replace(new RegExp(`${prefix}:`, "g"), "") // Remove prefix from elements/attributes
+      .replace(new RegExp(`:${prefix}`, "g"), ""); // Remove prefix from xmlns declarations
+  }
+
   static removeSignersCertificate(xmljs: any) {
     xmljs.signers?.[0]?.signer?.forEach((signer) => {
       delete signer.$.name;
@@ -132,10 +147,12 @@ export default class XML {
   parse(xml) {
     const el = this;
 
-    // Clean namespace prefixes from the XML string before parsing
     let cleanedXml = xml;
     if (typeof xml === "string") {
-      cleanedXml = xml.replace(/ns0:/g, "").replace(/:ns0/g, "");
+      const detectedPrefix = XML.detectNamespacePrefix(xml);
+      if (detectedPrefix) {
+        cleanedXml = XML.removeNamespacePrefix(xml, detectedPrefix);
+      }
     }
 
     return new Promise((resolve, reject) =>
