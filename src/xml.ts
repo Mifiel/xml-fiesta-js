@@ -131,8 +131,15 @@ export default class XML {
 
   parse(xml) {
     const el = this;
+
+    // Clean namespace prefixes from the XML string before parsing
+    let cleanedXml = xml;
+    if (typeof xml === "string") {
+      cleanedXml = xml.replace(/ns0:/g, "").replace(/:ns0/g, "");
+    }
+
     return new Promise((resolve, reject) =>
-      parseString(xml, function (err, { electronicDocument }) {
+      parseString(cleanedXml, function (err, { electronicDocument }) {
         if (err) {
           return reject(err);
         }
