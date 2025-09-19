@@ -3,7 +3,7 @@ const xmlCrypto = require("xml-crypto");
 const select = require("xpath.js");
 const Dom = require("xmldom").DOMParser;
 
-import { parseString, Builder } from "xml2js";
+import { parseString, Builder, processors } from "xml2js";
 import { b64toHex, sha256 } from "./common";
 import Certificate from "./certificate";
 import PatchedXML from "./patches/xmlPatch";
@@ -94,6 +94,27 @@ export default class XML {
     delete xmljs.transfers;
   }
 
+  static detectNamespacePrefix(xmlString: string): string | null {
+    // Find the prefix used in the electronicDocument element
+    const prefixMatch = xmlString.match(
+      /<\s*([A-Za-z_][\w.-]*):electronicDocument\b/
+    );
+    return prefixMatch ? prefixMatch[1] : null;
+  }
+
+  static createAttrNameStripper(xmlString: string) {
+    const detectedPrefix = XML.detectNamespacePrefix(xmlString);
+
+    return (name: string) => {
+      if (detectedPrefix && name) {
+        return name
+          .replace(new RegExp(`${detectedPrefix}:`, "g"), "")
+          .replace(new RegExp(`:${detectedPrefix}`, "g"), "");
+      }
+      return name;
+    };
+  }
+
   static removeSignersCertificate(xmljs: any) {
     xmljs.signers?.[0]?.signer?.forEach((signer) => {
       delete signer.$.name;
@@ -132,20 +153,22 @@ export default class XML {
   parse(xml) {
     const el = this;
 
-    // Clean namespace prefixes from the XML string before parsing
-    let cleanedXml = xml;
-    if (typeof xml === "string") {
-      cleanedXml = xml.replace(/ns0:/g, "").replace(/:ns0/g, "");
-    }
-
     return new Promise((resolve, reject) =>
-      parseString(cleanedXml, function (err, { electronicDocument }) {
-        if (err) {
-          return reject(err);
+      parseString(
+        xml,
+        {
+          tagNameProcessors: [processors.stripPrefix],
+          attrNameProcessors: [XML.createAttrNameStripper(xml)],
+        },
+        function (err, { electronicDocument }) {
+          if (err) {
+            return reject(err);
+          }
+          // Remove only the xmlns:<detectedPrefix> declarations after parsing
+          el.parseByElectronicDocument(electronicDocument);
+          return resolve(el);
         }
-        el.parseByElectronicDocument(electronicDocument);
-        return resolve(el);
-      })
+      )
     );
   }
 
