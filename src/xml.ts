@@ -40,12 +40,12 @@ export default class XML {
   destroyed = false;
   nameSpaces = null;
 
-  static parse(string) {
+  static parse(string): Promise<XML> {
     const xml = new PatchedXML();
     return xml.parse(string);
   }
 
-  static parseByElectronicDocument(electronicDocument) {
+  static parseByElectronicDocument(electronicDocument): XML {
     const xml = new PatchedXML();
     return xml.parseByElectronicDocument(electronicDocument);
   }
@@ -122,7 +122,7 @@ export default class XML {
     });
   }
 
-  parseByElectronicDocument(electronicDocument) {
+  parseByElectronicDocument(electronicDocument): XML {
     const el = this;
     if (electronicDocument.blockchain) {
       el.tracked = true;
@@ -150,7 +150,7 @@ export default class XML {
     return el;
   }
 
-  parse(xml) {
+  parse(xml): Promise<XML> {
     const el = this;
 
     return new Promise((resolve, reject) =>

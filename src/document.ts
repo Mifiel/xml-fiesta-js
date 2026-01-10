@@ -14,6 +14,14 @@ import XML from "./patches/xmlPatch";
 import { Blockchain, Network } from "./services/blockchain";
 import { GetBlockchainTrackResult } from "./services/blockchain/liquid";
 import Certificate from "./certificate";
+import { validateParsedXml } from "./validations/validate";
+import { ValidateOptions, ValidateResult } from "./validations/types";
+import Transfer from "./transfer";
+
+export type AssetValidation = {
+  isValid: boolean;
+  error_code?: "integrity" | "inconsistent_with_blockchain" | "not_found";
+};
 
 export interface FromXMLResponse {
   document: Document;
@@ -21,6 +29,7 @@ export interface FromXMLResponse {
   xmlOriginalHash: string;
   xmlHash: string;
   xml: XML;
+  validate: (options: ValidateOptions) => Promise<ValidateResult>;
 }
 
 const VERSION = "0.0.1";
@@ -199,7 +208,7 @@ export default class Document {
     return valid;
   }
 
-  async transfers() {
+  async transfers(): Promise<Transfer[]> {
     return await Promise.all(
       this.transfersXml.map(async (transfer, index) => {
         Object.entries(this.electronicDocument.$).map(([key, value]) => {
@@ -370,7 +379,7 @@ export default class Document {
     if (transfersLengthXml < transfersLengthBlockchain) return "not_updated";
   }
 
-  isValidAssetId(rootCertificates) {
+  isValidAssetId(rootCertificates): AssetValidation {
     if (!this.tracked) throw new Error("Document is not tracked");
 
     // plaintext positions hash | asset | address
@@ -489,6 +498,11 @@ export default class Document {
               xml.getConservancyRecord() &&
               xml.getConservancyRecord().originalXmlHash,
             xmlOriginalHash: xml.originalHash,
+            validate: (options: ValidateOptions) =>
+              validateParsedXml(
+                { xml, document: doc, xmlOriginalHash: xml.originalHash },
+                options
+              ),
           });
         })
         .catch((error) => reject(error))
