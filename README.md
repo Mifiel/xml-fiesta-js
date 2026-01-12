@@ -26,43 +26,63 @@ npm install xml-fiesta --save
 ## Usage
 
 ```javascript
-var fs        = require('fs');
-var XMLFiesta = require('xml-fiesta');
+var fs = require("fs");
+var XMLFiesta = require("xml-fiesta");
 var xml = "#{__dirname}/spec/fixtures/example_signed_cr-v1.0.0.xml";
 
-fs.readFile(xml, function(err, data) {
+fs.readFile(xml, function (err, data) {
   // Document.fromXml returns a promise
-  doc = XMLFiesta.Document.fromXml(data)
+  doc = XMLFiesta.Document.fromXml(data);
   doc.then(function () {
-    doc.file() // ASCII File
-    doc.file('hex') // HEX File
-    doc.file('base64') // Base64 File
-    signatures = doc.signatures()
-    signature = signatures[0]
-    signature.certificate()
-    signature.sig() // HEX signature
-    signature.sig('base64') // Base64 signature
-    signature.signedAt() // ~ 2016-05-03T00:51:05+00:00
-    signature.valid() // true
-    signature.signer
+    doc.file(); // ASCII File
+    doc.file("hex"); // HEX File
+    doc.file("base64"); // Base64 File
+    signatures = doc.signatures();
+    signature = signatures[0];
+    signature.certificate();
+    signature.sig(); // HEX signature
+    signature.sig("base64"); // Base64 signature
+    signature.signedAt(); // ~ 2016-05-03T00:51:05+00:00
+    signature.valid(); // true
+    signature.signer;
     // {
     //   id: 'AAA010101AAA',
     //   name: 'ACCEM SERVICIOS EMPRESARIALES SC',
     //   email: 'some@email.com'
     // }
 
-    doc.validSignatures() // true
+    doc.validSignatures(); // true
 
-    doc.record // -> XMLFiesta::ConservancyRecord
+    doc.record; // -> XMLFiesta::ConservancyRecord
     // validates that the record is valid
-    doc.record.valid()
+    doc.record.valid();
     // validates that the record timestamp is the same as the xml
-    doc.record.equalTimestamps()
+    doc.record.equalTimestamps();
     // validates that the archive of the record was signed with the user certificate
-    doc.record.validArchiveHash()
+    doc.record.validArchiveHash();
   });
 });
+```
 
+## Validations API
+
+You can validate a parsed XML instance by calling `validate()` (exposed on the object returned by `Document.fromXml`).
+
+```javascript
+const { Document } = require("xml-fiesta");
+
+async function validateXml(buffer, rootCertificates) {
+  const parsed = await Document.fromXml(buffer);
+
+  // ValidateOptions: { rootCertificates: [{ cer_hex: '...' }, ...] }
+  const result = await parsed.validate({ rootCertificates });
+
+  if (result.mode === "standard") {
+    return result.standard; // { status, isValid, document, signatures }
+  }
+
+  return result.tracked; // { status, isValid, asset, document, signatures, transfers? }
+}
 ```
 
 ## OpenSSL validations
@@ -84,12 +104,9 @@ Run `npm test` or `grunt test`. The coverage info is still pending.
 
 [npm-url]: https://badge.fury.io/js/xml-fiesta
 [npm-image]: https://badge.fury.io/js/xml-fiesta.svg
-
 [bower-image]: https://badge.fury.io/bo/xml-fiesta.svg
 [bower-url]: https://badge.fury.io/bo/xml-fiesta
-
 [travis-image]: https://travis-ci.org/Mifiel/xml-fiesta-js.svg?branch=master
 [travis-url]: https://travis-ci.org/Mifiel/xml-fiesta-js
-
 [coveralls-image]: https://coveralls.io/repos/github/Mifiel/xml-fiesta-js/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/Mifiel/xml-fiesta-js?branch=master

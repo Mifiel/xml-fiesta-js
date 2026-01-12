@@ -1,6 +1,6 @@
 import Certificate from "./certificate";
 import { b64toHex } from "./common";
-import Document from "./document";
+import Document, { AssetValidation } from "./document";
 import { GetTransfersByTxIdResult } from "./services/blockchain/liquid";
 import Signature from "./signature";
 import XML from "./xml";
@@ -20,7 +20,7 @@ export default class Transfer extends Document {
     this.xml = xml;
   }
 
-  validEndorser(rootCertificates) {
+  validEndorser(rootCertificates): AssetValidation {
     const isValidHolder = this.validateHolderBinding(
       this.prevHolder,
       rootCertificates
@@ -56,7 +56,7 @@ export default class Transfer extends Document {
     };
   }
 
-  validEndorsee(rootCertificates) {
+  validEndorsee(rootCertificates): AssetValidation {
     const isValidHolder = this.validateHolderBinding(
       this.currentHolder,
       rootCertificates

@@ -1,6 +1,6 @@
-import Certificate from './certificate';
-import { ArgumentError } from './errors';
-import { hextoB64 } from './common';
+import Certificate from "./certificate";
+import { ArgumentError } from "./errors";
+import { hextoB64 } from "./common";
 
 export default class Signature {
   signature: string;
@@ -9,21 +9,29 @@ export default class Signature {
   signedAt: string;
   email: string;
   certificate: Certificate;
-  signer: any;
+  signer: { id: string; name: string; email: string };
 
   constructor(cer, signature, signedAt, email, ePassInfo, name?: string) {
     this.signature = signature;
-    if (!ePassInfo) { ePassInfo = {} }
+    if (!ePassInfo) {
+      ePassInfo = {};
+    }
     const { content, algorithm, iterations, keySize } = ePassInfo;
     this.ePassInfo = { algorithm, iterations, keySize };
     this.ePassContent = content;
     this.signedAt = signedAt;
     this.email = email;
-    if (!this.signedAt) { throw new ArgumentError('Signature must have signedAt'); }
-    if (!cer) { throw new ArgumentError('Signature must have cer'); }
+    if (!this.signedAt) {
+      throw new ArgumentError("Signature must have signedAt");
+    }
+    if (!cer) {
+      throw new ArgumentError("Signature must have cer");
+    }
 
     this.certificate = new Certificate(null, cer);
-    if (this.email == null) { this.email = this.certificate.email(); }
+    if (this.email == null) {
+      this.email = this.certificate.email();
+    }
 
     this.signer = {
       id: this.certificate.owner_id(),
@@ -33,25 +41,35 @@ export default class Signature {
   }
 
   ePass(format) {
-    if ((format === 'hex') || !format) { return this.ePassContent; }
-    if (format === 'base64') { return hextoB64(this.ePassContent); }
+    if (format === "hex" || !format) {
+      return this.ePassContent;
+    }
+    if (format === "base64") {
+      return hextoB64(this.ePassContent);
+    }
     throw new ArgumentError(`unknown format ${format}`);
   }
 
   sig(format) {
-    if ((format === 'hex') || !format) { return this.signature; }
-    if (format === 'base64') { return hextoB64(this.signature); }
+    if (format === "hex" || !format) {
+      return this.signature;
+    }
+    if (format === "base64") {
+      return hextoB64(this.signature);
+    }
     throw new ArgumentError(`unknown format ${format}`);
   }
 
   valid(hash) {
-    if (!hash) { throw new ArgumentError('hash is required'); }
+    if (!hash) {
+      throw new ArgumentError("hash is required");
+    }
     const isValid = this.certificate.verifyString(hash, this.signature);
     if (!isValid) {
-      console.error('Signature validation failed', {
+      console.error("Signature validation failed", {
         hash,
         signature: this.signature,
-        certificate: this.certificate
+        certificate: this.certificate,
       });
     }
     return isValid;
