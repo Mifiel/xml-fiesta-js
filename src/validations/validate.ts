@@ -50,7 +50,7 @@ export const validateParsedXml = async (
     return {
       mode: "tracked",
       isValid: tracked.isValid,
-      tracked,
+      tracked: { ...tracked, transfers: [] },
     };
   }
 
