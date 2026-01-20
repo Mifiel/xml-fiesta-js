@@ -6,11 +6,13 @@ import { sha256 } from "../src/common";
 
 describe("XML", () => {
   describe("v0", () => {
+    let xml: XML;
+
     beforeEach((done) => {
       const xmlExample = `${__dirname}/fixtures/example_signed_cr.xml`;
       const xmlString = fs.readFileSync(xmlExample, "utf8");
-      this.xml = new XML();
-      this.xml.parse(xmlString).then(() => done());
+      xml = new XML();
+      xml.parse(xmlString).then(() => done());
     });
 
     describe("original xml hash", () => {
@@ -18,7 +20,7 @@ describe("XML", () => {
         "3e585f9cc5397f4f3295d6a4d650762e009b5db606e70417e5fb342f0ab07b7c";
 
       it("should be the sha256 of the XML", () => {
-        const calculated = sha256(this.xml.canonical());
+        const calculated = sha256(xml.canonical());
         expect(calculated).to.eq(originalXmlHash);
       });
     });
