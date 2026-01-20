@@ -7,9 +7,9 @@ describe("Validations", () => {
   describe("standard XML", () => {
     it("should expose validate() on fromXml result and return standard mode", async () => {
       const xmlExample = `${__dirname}/fixtures/example_signed_cr.xml`;
-      const xmlBuffer = fs.readFileSync(xmlExample);
+      const xmlString = fs.readFileSync(xmlExample, "utf8");
 
-      const parsed = await Document.fromXml(xmlBuffer);
+      const parsed = await Document.fromXml(xmlString);
       expect(parsed.validate).to.be.a("function");
 
       // This fixture is a valid signed XML, but without root certificates passed
