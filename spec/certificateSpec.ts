@@ -50,12 +50,12 @@ describe("Certificate", function () {
         expect(fielCertificate.getX509).to.be.a("function"));
 
       it("should have valid properties", function () {
-        expect(fielCertificate.getX509()).to.have.property(
-          "subjectPublicKeyRSA",
-        );
-        expect(fielCertificate.getX509()).to.have.property("hex");
-        expect(fielCertificate.getX509()).to.have.property("getIssuerHex");
-        expect(fielCertificate.getX509()).to.have.property("getNotAfter");
+        const x509 = fielCertificate.getX509();
+        expect(x509).to.have.property("publicKey");
+        expect(x509).to.have.property("validity");
+        expect(x509.validity).to.have.property("notAfter");
+        expect(x509).to.have.property("issuer");
+        expect(x509).to.have.property("serialNumber");
       });
     });
 
@@ -83,7 +83,7 @@ describe("Certificate", function () {
         expect(subject.O).to.equal("ACCEM SERVICIOS EMPRESARIALES SC");
         expect(subject.UI).to.equal("AAA010101AAA / HEGT7610034S2");
         expect(subject.serialNumber).to.equal(" / HEGT761003MDFNSR08");
-        expect(subject.emailAddress).to.equal("pruebas@sat.gob.mx");
+        expect(subject.E).to.equal("pruebas@sat.gob.mx");
       });
     });
 
