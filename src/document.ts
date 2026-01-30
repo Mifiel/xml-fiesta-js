@@ -1,10 +1,9 @@
 // const Promise = require('promise');
-const jsrsasign = require("jsrsasign");
 
 import Signature from "./signature";
 import ConservancyRecord from "./conservancyRecord";
 import ConservancyRecordNom2016 from "./conservancyRecordNom2016";
-import { extend, b64toAscii, b64toHex } from "./common";
+import { extend, b64toAscii, b64toHex, sha256hex } from "./common";
 import {
   ArgumentError,
   InvalidSignerError,
@@ -90,11 +89,7 @@ export default class Document {
     this.assetId = options.assetId;
     this.network = options.network;
     this.electronicDocument = options.electronicDocument;
-    const digest = new jsrsasign.crypto.MessageDigest({
-      alg: "sha256",
-      prov: "cryptojs",
-    });
-    this.originalHash = digest.digestHex(this.file("hex"));
+    this.originalHash = sha256hex(this.file("hex"));
 
     if (options.signers?.length > 0) {
       options.signers.forEach((el) => this.addSigner(el));
@@ -112,19 +107,19 @@ export default class Document {
           data.userCert,
           data.record,
           data.timestamp,
-          data.originalXmlHash
+          data.originalXmlHash,
         );
       } else {
         this.conservancyRecord = new ConservancyRecordNom2016(
           data.caCert,
           data.record,
           data.timestamp,
-          data.originalXmlHash
+          data.originalXmlHash,
         );
       }
     } catch (e) {
       throw new InvalidRecordError(
-        `The conservancy record is not valid: ${e.message}`
+        `The conservancy record is not valid: ${e.message}`,
       );
     }
   }
@@ -174,7 +169,7 @@ export default class Document {
   addSigner(signer) {
     if (!signer.cer || !signer.signature || !signer.signedAt) {
       throw new InvalidSignerError(
-        "signer must contain cer, signature and signedAt"
+        "signer must contain cer, signature and signedAt",
       );
     }
     return this.signers.push(signer);
@@ -189,8 +184,8 @@ export default class Document {
           signer.signedAt,
           signer.email,
           signer.ePass,
-          signer.name
-        )
+          signer.name,
+        ),
     );
   }
 
@@ -233,17 +228,17 @@ export default class Document {
         const prevAddress =
           index === 0
             ? this.currentHolder.binding[0].signature[0].$.plaintext.split(
-                "|"
+                "|",
               )[0]
             : this.transfersXml[
                 index - 1
               ].blockchain[0].holder[0].binding[0].signature[0].$.plaintext.split(
-                "|"
+                "|",
               )[0];
 
         const currentAddress =
           xml.eDocument.blockchain?.[0]?.holder?.[0]?.binding[0].signature[0].$.plaintext.split(
-            "|"
+            "|",
           )[0];
 
         const transferData = {
@@ -254,7 +249,7 @@ export default class Document {
 
         const Transfer = require("./transfer").default;
         return new Transfer(xml, opts, transferData);
-      })
+      }),
     );
   }
 
@@ -265,7 +260,7 @@ export default class Document {
     const certificateHex = b64toHex(certificateB64);
     const certificate = new Certificate(null, certificateHex);
     const isCa = rootCertificates.some((rootCer) =>
-      certificate.isCa(rootCer.cer_hex)
+      certificate.isCa(rootCer.cer_hex),
     );
     // isCa=true, its a simple tracked document
     return isCa;
@@ -292,7 +287,7 @@ export default class Document {
             originalHashInBlockchainBindingIsValid,
           providedOriginalHash: this.originalHash,
           originalHashInPlaintext: originalHashPlaintext,
-        }
+        },
       );
       return {
         isValid: false,
@@ -324,11 +319,11 @@ export default class Document {
     if (!trackedDocumentIsSimple) {
       const certificate = new Certificate(null, cerHex);
       const certificateNumberIsValid = rootCertificates.some((rootCer) =>
-        certificate.validParent(null, rootCer.cer_hex)
+        certificate.validParent(null, rootCer.cer_hex),
       );
 
       const certificateIsFromSigner = this.signers.some(
-        (signer) => signer.cer === cerHex
+        (signer) => signer.cer === cerHex,
       );
 
       if (!certificateNumberIsValid || !certificateIsFromSigner) {
@@ -337,7 +332,7 @@ export default class Document {
           {
             certificateNumberIsValid: certificateNumberIsValid,
             certificateIsFromSigner: certificateIsFromSigner,
-          }
+          },
         );
         return false;
       }
@@ -349,14 +344,14 @@ export default class Document {
       signatureData.signatureHex,
       signatureData.signedAt,
       null,
-      null
+      null,
     );
 
     const isValidSignature = signatureInstance.valid(hash);
 
     if (!isValidSignature) {
       console.error(
-        "Document(validate hash in blockchain binding): signature validation failed"
+        "Document(validate hash in blockchain binding): signature validation failed",
       );
       return false;
     }
@@ -388,7 +383,7 @@ export default class Document {
 
     const assetInBlockchainBindingIsValid = this.validHashInBlockchainBinding(
       rootCertificates,
-      plaintext
+      plaintext,
     );
 
     if (!assetInBlockchainBindingIsValid || this.assetId !== assetPlaintext) {
@@ -446,7 +441,7 @@ export default class Document {
     if (xml.tracked && isOriginalDocument) {
       const assetIdPlaintext =
         xml.eDocument.blockchain[0].binding[0].signature[0].$.plaintext.split(
-          "|"
+          "|",
         )[1];
 
       const network = xml.eDocument.blockchain[0].$.name;
@@ -456,9 +451,8 @@ export default class Document {
       try {
         const blockchainInstance = Blockchain.init(network);
         if (useTestnet) blockchainInstance.useTestnet();
-        const blockchainTrack = await blockchainInstance.getBlockchainTrack(
-          assetIdPlaintext
-        );
+        const blockchainTrack =
+          await blockchainInstance.getBlockchainTrack(assetIdPlaintext);
         opts.blockchainTrack = blockchainTrack;
       } catch (error) {
         console.error(error);
@@ -478,7 +472,7 @@ export default class Document {
 
   static async fromXml(
     xmlString,
-    useTestnet = false
+    useTestnet = false,
   ): Promise<FromXMLResponse> {
     return new Promise((resolve, reject) =>
       XML.parse(xmlString)
@@ -501,11 +495,11 @@ export default class Document {
             validate: (options: ValidateOptions) =>
               validateParsedXml(
                 { xml, document: doc, xmlOriginalHash: xml.originalHash },
-                options
+                options,
               ),
           });
         })
-        .catch((error) => reject(error))
+        .catch((error) => reject(error)),
     );
   }
 }

@@ -1,105 +1,141 @@
-import { CertificateError } from './errors';
-import { hextoAscii } from './common';
+import { CertificateError } from "./errors";
+import { hextoAscii } from "./common";
+import { ASN1HEX } from "./asn1hex";
+import * as forge from "node-forge";
 
-const parseDate = function(certDate) {
-  const parsed = certDate.match(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z/);
-  parsed.shift(1);
-  return new Date(Date.UTC(2000 + parseInt(parsed[0]), parseInt(parsed[1]) - 1, parsed[2], parsed[3], parsed[4], parsed[5]));
-};
-
-const jsrsasign = require('jsrsasign');
-
-jsrsasign.X509.hex2dnobj = function(e) {
-  const f = {};
-  const c = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(e, 0);
-  let d = 0;
-
-  while (d < c.length) {
-    const b = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(e, c[d]);
-    try {
-      const rdn = jsrsasign.X509.hex2rdnobj(b);
-      f[rdn[0]] = rdn[1];
-    } catch (err) {
-      console.error(err);
-    }
-    d++;
-  }
-  return f;
-};
-
-jsrsasign.X509.hex2rdnobj = function(a) {
-  const f = jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(a, 0, [0, 0]);
-  const e = jsrsasign.ASN1HEX.getDecendantHexVByNthList(a, 0, [0, 1]);
-  let c = '';
-  try {
-    c = jsrsasign.X509.DN_ATTRHEX[f];
-  } catch (b) {
-    c = f;
-  }
-  const d = jsrsasign.hextorstr(e);
-  return [c, d];
-};
-
-jsrsasign.X509.prototype.getSubjectObject = function() {
-  return jsrsasign.X509.hex2dnobj(
-    jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(this.hex, 0, [0, 5])
+function isRsaPublicKey(
+  key: forge.pki.PublicKey,
+): key is forge.pki.rsa.PublicKey {
+  return (
+    typeof (key as forge.pki.rsa.PublicKey).verify === "function" &&
+    typeof (key as forge.pki.rsa.PublicKey).n?.bitLength === "function"
   );
-};
+}
 
-jsrsasign.X509.DN_ATTRHEX = {
-  '0603550406': 'C',
-  '060355040a': 'O',
-  '060355040b': 'OU',
-  '0603550403': 'CN',
-  '0603550405': 'serialNumber',
-  '0603550408': 'ST',
-  '0603550407': 'L',
-  '060355042d': 'UI',
-  '0603550409': 'street',
-  '0603550429': 'name',
-  '0603550411': 'postalCode',
-  '06092a864886f70d010901': 'emailAddress',
-  '06092a864886f70d010902': 'unstructuredName'
-};
+// OIDs not in forge; register so subject.attributes get a friendly name/shortName.
+// 2.5.4.41 = name (X.520); 2.5.4.45 = unstructuredIdentifier (SAT/FIEL "UI").
+if (!forge.pki.oids["2.5.4.41"]) forge.pki.oids["2.5.4.41"] = "name";
+if (!forge.pki.oids["2.5.4.45"])
+  forge.pki.oids["2.5.4.45"] = "unstructuredIdentifier";
 
-const certFirstBytes = '2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d49494';
+/** Resolves subject key from forge shortName/name for API compatibility. Checks both for robustness. */
+function resolveSubjectKey(
+  shortName: string | undefined,
+  name: string | undefined,
+): string | null {
+  const s = shortName ?? "";
+  const n = name ?? "";
+  if (n === "givenName" || s === "GN") return "name";
+  if (n === "streetAddress" || s === "street") return "street";
+  if (n === "unstructuredIdentifier" || s === "UI") return "UI";
+  return null;
+}
+
+/** Derives "SHA256withRSA" style string from forge.pki.oids[signatureOid] (e.g. sha256WithRSAEncryption). */
+function signatureOidToAlg(oid: string): string {
+  const name = forge.pki.oids[oid];
+  if (!name || typeof name !== "string") return "SHA256withRSA";
+  const m = name.match(/^(.+?)WithRSA(?:Encryption|Signature)?$/i);
+  if (!m) return "SHA256withRSA";
+  const hash = m[1].toUpperCase();
+  return `${hash}withRSA`;
+}
+
+function bytesToHex(bytes: string) {
+  return forge.util.bytesToHex(bytes);
+}
+
+function derHexToPem(hex: string, label: string) {
+  const b64 = Buffer.from(hex, "hex").toString("base64");
+  const wrapped = b64.replace(/(.{64})/g, "$1\r\n").trim();
+  return `-----BEGIN ${label}-----\r\n${wrapped}\r\n-----END ${label}-----\r\n`;
+}
+
+function mdForAlg(alg: string) {
+  switch (alg) {
+    case "SHA1withRSA":
+      return forge.md.sha1.create();
+    case "SHA384withRSA":
+      return forge.md.sha384.create();
+    case "SHA512withRSA":
+      return forge.md.sha512.create();
+    case "SHA256withRSA":
+    default:
+      return forge.md.sha256.create();
+  }
+}
+
+function normalizeRsaSignatureBytes(
+  publicKey: forge.pki.rsa.PublicKey,
+  signatureBytes: string,
+) {
+  try {
+    const bits = publicKey.n.bitLength();
+    const keyBytes = Math.ceil(bits / 8);
+    let sig = signatureBytes;
+    while (sig.length > keyBytes && sig.charCodeAt(0) === 0x00) {
+      sig = sig.slice(1);
+    }
+    return sig;
+  } catch {
+    return signatureBytes;
+  }
+}
+
+function isExpectedRsaVerifyError(error: Error) {
+  const msg = String(error?.message || "");
+  // node-forge throws for invalid PKCS#1 v1.5 padding/signature.
+  return (
+    msg.includes("Encryption block is invalid") ||
+    msg.includes("Encrypted message length is invalid")
+  );
+}
+
+const certFirstBytes =
+  "2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d49494";
 
 export default class Certificate {
-  binaryString: string;
+  binaryString: string | null;
   pem: string;
-  certificate: any; // jsrsasign.X509;
-  subject: any;
+  certificate: forge.pki.Certificate;
+  subject: Record<string, string>;
   hex: string;
-  pubKey: any;
+  pubKey: forge.pki.rsa.PublicKey | null;
 
   constructor(binaryString: string | null, hexString?: string) {
-    let hex = binaryString ? jsrsasign.rstrtohex(binaryString) : hexString;
+    let hex = binaryString
+      ? Buffer.from(binaryString).toString("hex")
+      : hexString;
 
     this.binaryString = binaryString;
+    this.pubKey = null;
 
     if (
       (!binaryString && !hex) ||
       (binaryString && binaryString.length === 0) ||
-      (hex &&
-        !jsrsasign.ASN1HEX.isASN1HEX(hex) &&
-        !hex.startsWith(certFirstBytes))
+      (hex && !ASN1HEX.isASN1HEX(hex) && !hex.startsWith(certFirstBytes))
     ) {
       throw new CertificateError("The certificate is not valid.");
     }
 
     if (hex.startsWith(certFirstBytes)) {
-      this.pem = jsrsasign.hextorstr(hex);
+      this.pem = Buffer.from(hex, "hex").toString("utf8");
     } else {
-      this.pem = jsrsasign.asn1.ASN1Util.getPEMStringFromHex(
-        hex,
-        "CERTIFICATE"
-      );
+      this.pem = derHexToPem(hex, "CERTIFICATE");
     }
 
-    this.certificate = new jsrsasign.X509();
-    this.certificate.readCertPEM(this.pem);
-    this.hex = this.certificate.hex;
-    this.subject = this.certificate.getSubjectObject();
+    this.certificate = forge.pki.certificateFromPem(this.pem);
+
+    // Keep the original hex when it was provided as DER hex. When PEM-in-hex
+    // is provided, compute DER hex from the parsed certificate.
+    if (hex.startsWith(certFirstBytes)) {
+      const asn1 = forge.pki.certificateToAsn1(this.certificate);
+      this.hex = bytesToHex(forge.asn1.toDer(asn1).getBytes());
+    } else {
+      this.hex = hex.toLowerCase();
+    }
+
+    this.subject = this.buildSubjectObject();
   }
 
   toBinaryString() {
@@ -107,7 +143,7 @@ export default class Certificate {
   }
 
   toHex() {
-    return this.certificate.hex;
+    return this.hex;
   }
 
   toPem() {
@@ -119,7 +155,10 @@ export default class Certificate {
   }
 
   getSerialNumberHex() {
-    return this.certificate.getSerialNumberHex();
+    let serial = (this.certificate && this.certificate.serialNumber) || "";
+    serial = String(serial).toLowerCase();
+    if (serial.length % 2 === 1) serial = `0${serial}`;
+    return serial;
   }
 
   getSerialNumber() {
@@ -130,8 +169,9 @@ export default class Certificate {
     return this.subject;
   }
 
+  /** Returns subject email (E = emailAddress in X.500). */
   email() {
-    return this.subject.emailAddress;
+    return this.subject.E;
   }
 
   owner() {
@@ -155,7 +195,11 @@ export default class Certificate {
     if (this.pubKey) {
       return this.pubKey;
     }
-    return (this.pubKey = this.certificate.subjectPublicKeyRSA);
+    const pk = this.certificate.publicKey;
+    if (!isRsaPublicKey(pk)) {
+      throw new CertificateError("The certificate public key is not RSA.");
+    }
+    return (this.pubKey = pk);
   }
 
   verifyString(string: string, signedHexString: string, alg?: string) {
@@ -163,12 +207,16 @@ export default class Certificate {
       if (alg == null) {
         alg = "SHA256withRSA";
       }
-      const sig = new jsrsasign.crypto.Signature({ alg });
-      sig.init(this.pem);
-      sig.updateString(string);
-      return sig.verify(signedHexString);
+      const md = mdForAlg(alg);
+      md.update(string, "utf8");
+      let signatureBytes = forge.util.hexToBytes(signedHexString);
+      const pk = this.getRSAPublicKey();
+      signatureBytes = normalizeRsaSignatureBytes(pk, signatureBytes);
+      return pk.verify(md.digest().getBytes(), signatureBytes);
     } catch (error) {
-      console.error(error);
+      if (!isExpectedRsaVerifyError(error)) {
+        console.error(error);
+      }
       return false;
     }
   }
@@ -178,12 +226,16 @@ export default class Certificate {
       if (alg == null) {
         alg = "SHA256withRSA";
       }
-      const sig = new jsrsasign.crypto.Signature({ alg });
-      sig.init(this.pem);
-      sig.updateHex(hexString);
-      return sig.verify(signedHexString);
+      const md = mdForAlg(alg);
+      md.update(forge.util.hexToBytes(hexString));
+      let signatureBytes = forge.util.hexToBytes(signedHexString);
+      const pk = this.getRSAPublicKey();
+      signatureBytes = normalizeRsaSignatureBytes(pk, signatureBytes);
+      return pk.verify(md.digest().getBytes(), signatureBytes);
     } catch (error) {
-      console.error(error);
+      if (!isExpectedRsaVerifyError(error)) {
+        console.error(error);
+      }
       return false;
     }
   }
@@ -195,13 +247,13 @@ export default class Certificate {
   }
 
   hasExpired() {
-    const notAfter = parseDate(this.certificate.getNotAfter());
+    const notAfter: Date = this.certificate.validity.notAfter;
     const isExpired = notAfter.getTime() < new Date().getTime();
 
     if (isExpired) {
       console.error("Certificate: The certificate has expired", {
         notAfter: notAfter.toISOString(),
-        currentTime: new Date().toISOString()
+        currentTime: new Date().toISOString(),
       });
     }
 
@@ -209,66 +261,97 @@ export default class Certificate {
   }
 
   isValidOn(date) {
-    const notAfter = parseDate(this.certificate.getNotAfter());
-    const notBefore = parseDate(this.certificate.getNotBefore());
+    const notAfter: Date = this.certificate.validity.notAfter;
+    const notBefore: Date = this.certificate.validity.notBefore;
 
-    const isValid = (
+    const isValid =
       notAfter.getTime() >= date.getTime() &&
-      date.getTime() >= notBefore.getTime()
-    );
+      date.getTime() >= notBefore.getTime();
 
     if (!isValid) {
-      console.error("Certificate: The certificate is not valid on the given date", {
-        notAfter: notAfter.toISOString(),
-        notBefore: notBefore.toISOString(),
-        givenDate: date.toISOString()
-      });
+      console.error(
+        "Certificate: The certificate is not valid on the given date",
+        {
+          notAfter: notAfter.toISOString(),
+          notBefore: notBefore.toISOString(),
+          givenDate: date.toISOString(),
+        },
+      );
     }
 
     return isValid;
   }
 
   algorithm() {
-    return this.certificate.getSignatureAlgorithmField();
+    const oid =
+      this.certificate.signatureOid || this.certificate.siginfo?.algorithmOid;
+    return signatureOidToAlg(String(oid));
   }
 
   tbsCertificate() {
     // 1st child of SEQ is tbsCert
-    return jsrsasign.ASN1HEX.getDecendantHexTLVByNthList(this.hex, 0, [0]);
+    return ASN1HEX.getDecendantHexTLVByNthList(this.hex, 0, [0]);
   }
 
   signature() {
-    return jsrsasign.X509.getSignatureValueHex(this.hex);
+    // Certificate ::= SEQUENCE { tbsCertificate, signatureAlgorithm, signatureValue BIT STRING }
+    const children = ASN1HEX.getPosArrayOfChildren_AtObj(this.hex, 0);
+    // X.509 requires exactly 3 elements; fewer means invalid certificate structure.
+    if (children.length < 3) {
+      throw new Error("Invalid X.509 certificate structure");
+    }
+    // Third child is signatureValue (BIT STRING); get its value in hex.
+    const bitStringV = ASN1HEX.getHexOfV_AtObj(this.hex, children[2]);
+    // BIT STRING value starts with one "unused bits" byte (0x00 = 0 unused bits); strip it to get raw signature hex.
+    return bitStringV.startsWith("00") ? bitStringV.slice(2) : bitStringV;
   }
 
   isCa(rootCaHex) {
-  return this.hex === rootCaHex;
+    return this.hex === rootCaHex;
   }
 
   validParent(rootCaPem, rootCaHex = null) {
     try {
-      let rootCaCert;
+      let rootCaCert: Certificate;
       if (rootCaHex) {
         rootCaCert = new Certificate(null, rootCaHex);
       } else {
-        rootCaCert = new jsrsasign.X509();
-        rootCaCert.readCertPEM(rootCaPem);
-        const rootCa = jsrsasign.X509.getExtBasicConstraints(
-          rootCaCert.hex
-        ).cA;
-
-        if (!rootCa) return false;
-        rootCaCert = new Certificate(null, rootCaCert.hex);
+        const parsed = forge.pki.certificateFromPem(rootCaPem);
+        const basic = parsed.getExtension?.("basicConstraints") as
+          | { cA?: boolean }
+          | undefined;
+        const isCa = Boolean(basic?.cA);
+        if (!isCa) return false;
+        const asn1 = forge.pki.certificateToAsn1(parsed);
+        const derHex = bytesToHex(forge.asn1.toDer(asn1).getBytes());
+        rootCaCert = new Certificate(null, derHex);
       }
 
       return rootCaCert.verifyHexString(
         this.tbsCertificate(),
         this.signature(),
-        this.algorithm()
+        this.algorithm(),
       );
     } catch (error) {
       console.error(error);
       return false;
     }
   }
-};
+
+  private buildSubjectObject(): Record<string, string> {
+    const out: Record<string, string> = {};
+    const attrs = this.certificate?.subject?.attributes || [];
+    for (const attr of attrs) {
+      const key =
+        resolveSubjectKey(attr.shortName, attr.name) ??
+        attr.shortName ??
+        attr.name ??
+        attr.type;
+      out[key] = String(attr.value);
+    }
+    if (!out.name) {
+      out.name = out.O ?? out.CN;
+    }
+    return out;
+  }
+}

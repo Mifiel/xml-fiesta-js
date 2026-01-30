@@ -1,8 +1,7 @@
-import { b64toHex, hextoAscii, parseDate } from './common';
-import Certificate from './certificate';
-import { InvalidRecordError } from './errors';
-
-const jsrsasign = require('jsrsasign');
+import { b64toHex, hextoAscii, parseDate } from "./common";
+import Certificate from "./certificate";
+import { InvalidRecordError } from "./errors";
+import { ASN1HEX } from "./asn1hex";
 
 export default class ConservancyRecord {
   caCert: string;
@@ -20,7 +19,7 @@ export default class ConservancyRecord {
     userCert: string,
     record: string,
     timestamp: string,
-    signedHash: string
+    signedHash: string,
   ) {
     this.caCert = caCert;
     this.userCert = userCert;
@@ -40,14 +39,11 @@ export default class ConservancyRecord {
     }
 
     this.recordHex = b64toHex(this.record);
-    if (!jsrsasign.ASN1HEX.isASN1HEX(this.recordHex)) {
+    if (!ASN1HEX.isASN1HEX(this.recordHex)) {
       throw new InvalidRecordError("The record provided is invalid");
     }
 
-    this.positions = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
-      this.recordHex,
-      0
-    );
+    this.positions = ASN1HEX.getPosArrayOfChildren_AtObj(this.recordHex, 0);
   }
 
   caName() {
@@ -63,52 +59,25 @@ export default class ConservancyRecord {
   }
 
   timestampHex() {
-    return jsrsasign.ASN1HEX.getHexOfTLV_AtObj(
-      this.recordHex,
-      this.positions[2]
-    );
+    return ASN1HEX.getHexOfTLV_AtObj(this.recordHex, this.positions[2]);
   }
 
   archiveHex() {
-    return jsrsasign.ASN1HEX.getHexOfTLV_AtObj(
-      this.recordHex,
-      this.positions[1]
-    );
+    return ASN1HEX.getHexOfTLV_AtObj(this.recordHex, this.positions[1]);
   }
 
   archiveSignature() {
-    let ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
-      this.archiveHex(),
-      0
-    );
-    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
-      this.archiveHex(),
-      ar_pos[3]
-    );
-    return jsrsasign.ASN1HEX.getHexOfV_AtObj(this.archiveHex(), ar_pos[1]);
+    let ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), 0);
+    ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[3]);
+    return ASN1HEX.getHexOfV_AtObj(this.archiveHex(), ar_pos[1]);
   }
 
   archiveSignedHash() {
-    let ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
-      this.archiveHex(),
-      0
-    );
-    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
-      this.archiveHex(),
-      ar_pos[1]
-    );
-    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
-      this.archiveHex(),
-      ar_pos[0]
-    );
-    ar_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
-      this.archiveHex(),
-      ar_pos[1]
-    );
-    const signedHashH = jsrsasign.ASN1HEX.getHexOfV_AtObj(
-      this.archiveHex(),
-      ar_pos[1]
-    );
+    let ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), 0);
+    ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[1]);
+    ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[0]);
+    ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(this.archiveHex(), ar_pos[1]);
+    const signedHashH = ASN1HEX.getHexOfV_AtObj(this.archiveHex(), ar_pos[1]);
     // remove leading 0
     return hextoAscii(signedHashH.replace(/^[0]+/g, ""));
   }
@@ -117,63 +86,59 @@ export default class ConservancyRecord {
     if (this.signedHash !== this.archiveSignedHash()) {
       console.error("conservancyRecord: Signed hash mismatch", {
         providedSignedHash: this.signedHash,
-        archiveSignedHash: this.archiveSignedHash()
+        archiveSignedHash: this.archiveSignedHash(),
       });
       return false;
     }
 
     const isValid = this.userCertificate.verifyString(
       this.signedHash,
-      this.archiveSignature()
+      this.archiveSignature(),
     );
     if (!isValid) {
-      console.error("conservancyRecord: User certificate failed to verify the signed hash");
+      console.error(
+        "conservancyRecord: User certificate failed to verify the signed hash",
+      );
     }
 
     return isValid;
   }
 
   recordTimestamp() {
-    let ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    let ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(this.timestampHex(), 0);
+    ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.timestampHex(),
-      0
+      ts_pos[0],
     );
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.timestampHex(),
-      ts_pos[0]
+      ts_pos[1],
     );
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.timestampHex(),
-      ts_pos[1]
+      ts_pos[1],
     );
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.timestampHex(),
-      ts_pos[1]
+      ts_pos[0],
     );
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.timestampHex(),
-      ts_pos[0]
+      ts_pos[2],
     );
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.timestampHex(),
-      ts_pos[2]
+      ts_pos[1],
     );
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.timestampHex(),
-      ts_pos[1]
+      ts_pos[0],
     );
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    ts_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.timestampHex(),
-      ts_pos[0]
+      ts_pos[0],
     );
-    ts_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
-      this.timestampHex(),
-      ts_pos[0]
-    );
-    const date = jsrsasign.ASN1HEX.getHexOfV_AtObj(
-      this.timestampHex(),
-      ts_pos[4]
-    );
+    const date = ASN1HEX.getHexOfV_AtObj(this.timestampHex(), ts_pos[4]);
     return parseDate(hextoAscii(date));
   }
 
@@ -184,27 +149,27 @@ export default class ConservancyRecord {
     if (!isEqualTime) {
       console.error("conservancyRecord: Timestamps don't match", {
         providedTimestamp: this.timestamp,
-        parsedRecordTimestamp: this.recordTimestamp().toISOString()
+        parsedRecordTimestamp: this.recordTimestamp().toISOString(),
       });
     }
     return isEqualTime;
   }
 
   signedData() {
-    const nameHex = jsrsasign.ASN1HEX.getHexOfTLV_AtObj(
+    const nameHex = ASN1HEX.getHexOfTLV_AtObj(
       this.recordHex,
-      this.positions[0]
+      this.positions[0],
     );
 
     return nameHex + this.archiveHex() + this.timestampHex();
   }
 
   signature() {
-    const signature_pos = jsrsasign.ASN1HEX.getPosArrayOfChildren_AtObj(
+    const signature_pos = ASN1HEX.getPosArrayOfChildren_AtObj(
       this.recordHex,
-      this.positions[3]
+      this.positions[3],
     );
-    return jsrsasign.ASN1HEX.getHexOfV_AtObj(this.recordHex, signature_pos[1]);
+    return ASN1HEX.getHexOfV_AtObj(this.recordHex, signature_pos[1]);
   }
 
   valid() {
@@ -215,11 +180,11 @@ export default class ConservancyRecord {
 
     const isValid = this.caCertificate.verifyHexString(
       this.signedData(),
-      this.signature()
+      this.signature(),
     );
     if (!isValid) {
       console.error(
-        "conservancyRecord: CA certificate failed to verify the signed data"
+        "conservancyRecord: CA certificate failed to verify the signed data",
       );
     }
 
