@@ -13,7 +13,7 @@ export type ParsedInstanceLike = {
 
 export const validateParsedXml = async (
   parsed: ParsedInstanceLike,
-  options: ValidateOptions
+  options: ValidateOptions,
 ): Promise<ValidateResult> => {
   const { document, xml, xmlOriginalHash } = parsed;
 
@@ -24,16 +24,15 @@ export const validateParsedXml = async (
         document,
         xmlOriginalHash,
       },
-      options.rootCertificates
+      options.rootCertificates,
     );
 
-    const shouldValidateTransfers =
-      !tracked.showLimitData && document?.network !== "LTC";
+    const shouldValidateTransfers = document?.network !== "LTC";
 
     if (shouldValidateTransfers) {
       const transfers = await validateTransfers(
         { document: parsed.document },
-        options.rootCertificates
+        options.rootCertificates,
       );
       const transfersAreValid = transfers.every((t) => t.transferIsValid);
       const isValid = tracked.isValid && transfersAreValid;
@@ -59,7 +58,7 @@ export const validateParsedXml = async (
       document,
       xmlOriginalHash,
     },
-    options.rootCertificates
+    options.rootCertificates,
   );
 
   return {
