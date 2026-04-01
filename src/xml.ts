@@ -6,6 +6,7 @@ const Dom = require("xmldom").DOMParser;
 import { parseString, Builder, processors } from "xml2js";
 import { b64toHex, sha256 } from "./common";
 import Certificate from "./certificate";
+import * as forge from "node-forge";
 import PatchedXML from "./patches/xmlPatch";
 
 const ExclusiveCanonicalization =
@@ -221,7 +222,7 @@ export default class XML {
   }
 
   getCanonicalBuffer(electronicDocumentAttributes) {
-    return Buffer.from(this.canonical(electronicDocumentAttributes), "utf-8");
+    return forge.util.encodeUtf8(this.canonical(electronicDocumentAttributes));
   }
 
   file() {

@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   require('load-grunt-tasks')(grunt);
   const pkg = grunt.file.readJSON('package.json');
 
@@ -10,51 +10,31 @@ module.exports = function(grunt) {
         options: {
           reporter: 'spec',
           require: 'ts-node/register',
-          exlude: ['spec']
+          exlude: ['spec'],
         },
-        src: ['spec/*.ts']
-      }
+        src: ['spec/*.ts'],
+      },
     },
 
     coveralls: {
       options: {
         // dont fail ci if coveralls.io is down
-        force: false
+        force: false,
       },
       test: {
-        src: 'coverage/lcov.info'
-      }
+        src: 'coverage/lcov.info',
+      },
     },
 
     watch: {
       clear: {
-        files: ['src/*.ts', 'spec/*ts']
+        files: ['src/*.ts', 'spec/*.ts'],
       },
-        // tasks: ['clear']
       scripts: {
-        files: ['src/*.ts', 'spec/*ts'],
+        files: ['src/*.ts', 'spec/*.ts'],
         tasks: ['clear', 'mochaTest'],
-        options: {}
-      }
-    },
-
-    browserify: {
-      dist: {
-        options: {
-          browserifyOptions: {
-            standalone: 'XMLFiesta'
-          }
-        },
-        src: 'lib/xml-fiesta.js',
-        dest: 'dist/xml-fiesta.js'
-      }
-    },
-
-    ts: {
-      default : {
-        tsconfig: './tsconfig.json',
-        src: ["src/**/*.ts", "!node_modules/**"]
-      }
+        options: {},
+      },
     },
 
     bump: {
@@ -80,14 +60,8 @@ module.exports = function(grunt) {
         )
       }
     },
-
-    clean: {
-      dist: ['dist', 'lib'],
-    }
   });
 
   grunt.registerTask('default', ['watch']);
-  grunt.registerTask('build', ['clean', 'ts', 'browserify']);
   grunt.registerTask('test', ['mochaTest']);
 };
-
