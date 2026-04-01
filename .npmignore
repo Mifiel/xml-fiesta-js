@@ -10,7 +10,6 @@ src
 *.sublime-project
 *.sublime-workspace
 CHANGELOG.md
-Gruntfile.js
 yarn.lock
 tsconfig.json
 tslint.json

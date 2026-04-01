@@ -162,7 +162,7 @@ Run `yarn test` or `npm test`. For a local coverage report, run `yarn coverage`.
 ## Build and publish
 
 - Run `npm run build` or `yarn build` to compile TypeScript and produce `lib/` and the browser bundle `dist/xml-fiesta.js`.
-- Run `grunt bump` to bump the version in `package.json` and `README.md` (or use `npm version`).
+- Bump the version with `npm version` (or edit `package.json` and tag the release as you prefer).
 
 [npm-url]: https://badge.fury.io/js/xml-fiesta
 [npm-image]: https://badge.fury.io/js/xml-fiesta.svg
