@@ -2,6 +2,10 @@ coverage
 node_modules
 *.sublime-workspace
 lib
+
+# Generated TypeScript declarations copy for xml-fiesta-types npm package
+xml-fiesta-types/*
+!xml-fiesta-types/package.json
 builds
 dist
 package-lock.json
