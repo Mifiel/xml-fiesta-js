@@ -153,11 +153,11 @@ Optional manual checks: you can validate a certificate against a Certificate Aut
 
 ## Development
 
-Just run `grunt` in the root of this project and start developing, the terminal will run the tests on each change.
+Run `yarn test:watch` to re-run the test suite when `src/` or `spec/` files change (Mocha + `ts-node`).
 
 ## Test
 
-Run `npm test` or `grunt test`. For a local coverage report, run `yarn coverage`.
+Run `yarn test` or `npm test`. For a local coverage report, run `yarn coverage`.
 
 ## Build and publish
 

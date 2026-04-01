@@ -5,28 +5,6 @@ module.exports = function (grunt) {
   grunt.initConfig({
     pkg,
 
-    mochaTest: {
-      test: {
-        options: {
-          reporter: 'spec',
-          require: 'ts-node/register',
-          exlude: ['spec'],
-        },
-        src: ['spec/*.ts'],
-      },
-    },
-
-    watch: {
-      clear: {
-        files: ['src/*.ts', 'spec/*.ts'],
-      },
-      scripts: {
-        files: ['src/*.ts', 'spec/*.ts'],
-        tasks: ['clear', 'mochaTest'],
-        options: {},
-      },
-    },
-
     bump: {
       options: {
         files: ['package.json', 'README.md'],
@@ -44,6 +22,7 @@ module.exports = function (grunt) {
     },
   });
 
-  grunt.registerTask('default', ['watch']);
-  grunt.registerTask('test', ['mochaTest']);
+  grunt.registerTask('default', function () {
+    grunt.log.writeln('Use `yarn test` or `yarn test:watch` for tests; `grunt bump` for version bumps.');
+  });
 };
