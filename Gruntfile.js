@@ -16,16 +16,6 @@ module.exports = function (grunt) {
       },
     },
 
-    coveralls: {
-      options: {
-        // dont fail ci if coveralls.io is down
-        force: false,
-      },
-      test: {
-        src: 'coverage/lcov.info',
-      },
-    },
-
     watch: {
       clear: {
         files: ['src/*.ts', 'spec/*.ts'],

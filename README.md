@@ -2,9 +2,6 @@
 
 [![npm version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
-[![Coverage Status][coveralls-image]][coveralls-url]
-
-Version: 1.7.1
 
 Electronic signed document XML Protocol **reader** and validator for Node & Browser.
 
@@ -160,7 +157,7 @@ Just run `grunt` in the root of this project and start developing, the terminal 
 
 ## Test
 
-Run `npm test` or `grunt test`. The coverage info is still pending.
+Run `npm test` or `grunt test`. For a local coverage report, run `yarn coverage`.
 
 ## Build and publish
 
@@ -171,5 +168,3 @@ Run `npm test` or `grunt test`. The coverage info is still pending.
 [npm-image]: https://badge.fury.io/js/xml-fiesta.svg
 [travis-image]: https://travis-ci.org/Mifiel/xml-fiesta-js.svg?branch=master
 [travis-url]: https://travis-ci.org/Mifiel/xml-fiesta-js
-[coveralls-image]: https://coveralls.io/repos/github/Mifiel/xml-fiesta-js/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/Mifiel/xml-fiesta-js?branch=master

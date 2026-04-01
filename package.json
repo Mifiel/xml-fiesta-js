@@ -40,7 +40,6 @@
     "grunt-clear": "^0.2.1",
     "grunt-cli": "^1.5.0",
     "grunt-contrib-watch": "^1.0.0",
-    "grunt-coveralls": "^1.0.1",
     "grunt-mocha-test": "^0.12.7",
     "load-grunt-tasks": "^5.1.0",
     "mocha": "^2.4.5",
