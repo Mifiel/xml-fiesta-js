@@ -1,7 +1,6 @@
 # XMLFiesta
 
 [![npm version][npm-image]][npm-url]
-[![Bower version][bower-image]][bower-url]
 [![Build Status][travis-image]][travis-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
@@ -17,11 +16,6 @@ Electronic signed document XML Protocol **reader** and validator for Node & Brow
 
 ## Install
 
-## Browser - Bower
-
-```
-bower install xml-fiesta --save
-```
 
 ## NodeJS - NPM
 
@@ -170,13 +164,11 @@ Run `npm test` or `grunt test`. The coverage info is still pending.
 
 ## Build and publish
 
-- Run `grunt build` to generate the files to bower.
-- Run `grunt bump` to bump versions in bower and npm.
+- Run `npm run build` or `yarn build` to compile TypeScript and produce `lib/` and the browser bundle `dist/xml-fiesta.js`.
+- Run `grunt bump` to bump the version in `package.json` and `README.md` (or use `npm version`).
 
 [npm-url]: https://badge.fury.io/js/xml-fiesta
 [npm-image]: https://badge.fury.io/js/xml-fiesta.svg
-[bower-image]: https://badge.fury.io/bo/xml-fiesta.svg
-[bower-url]: https://badge.fury.io/bo/xml-fiesta
 [travis-image]: https://travis-ci.org/Mifiel/xml-fiesta-js.svg?branch=master
 [travis-url]: https://travis-ci.org/Mifiel/xml-fiesta-js
 [coveralls-image]: https://coveralls.io/repos/github/Mifiel/xml-fiesta-js/badge.svg?branch=master
