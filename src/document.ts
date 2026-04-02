@@ -1,5 +1,3 @@
-// const Promise = require('promise');
-
 import Signature from "./signature";
 import ConservancyRecord from "./conservancyRecord";
 import ConservancyRecordNom2016 from "./conservancyRecordNom2016";

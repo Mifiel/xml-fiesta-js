@@ -9,9 +9,7 @@ src
 .travis.yml
 *.sublime-project
 *.sublime-workspace
-bower.json
 CHANGELOG.md
-Gruntfile.js
 yarn.lock
 tsconfig.json
 tslint.json

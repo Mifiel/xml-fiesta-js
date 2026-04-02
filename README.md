@@ -1,11 +1,7 @@
 # XMLFiesta
 
 [![npm version][npm-image]][npm-url]
-[![Bower version][bower-image]][bower-url]
 [![Build Status][travis-image]][travis-url]
-[![Coverage Status][coveralls-image]][coveralls-url]
-
-Version: 1.7.1
 
 Electronic signed document XML Protocol **reader** and validator for Node & Browser.
 
@@ -17,11 +13,6 @@ Electronic signed document XML Protocol **reader** and validator for Node & Brow
 
 ## Install
 
-## Browser - Bower
-
-```
-bower install xml-fiesta --save
-```
 
 ## NodeJS - NPM
 
@@ -162,22 +153,20 @@ Optional manual checks: you can validate a certificate against a Certificate Aut
 
 ## Development
 
-Just run `grunt` in the root of this project and start developing, the terminal will run the tests on each change.
+Run `yarn test:watch` to re-run the test suite when `src/` or `spec/` files change (Mocha + `ts-node`).
 
 ## Test
 
-Run `npm test` or `grunt test`. The coverage info is still pending.
+Run `yarn test` or `npm test`. For a local coverage report, run `yarn coverage`.
+
+Dependencies are pinned to exact versions in `package.json`; commit `yarn.lock` and use `yarn install --frozen-lockfile` in CI so installs stay reproducible.
 
 ## Build and publish
 
-- Run `grunt build` to generate the files to bower.
-- Run `grunt bump` to bump versions in bower and npm.
+- Run `npm run build` or `yarn build` to compile TypeScript and produce `lib/` and the browser bundle `dist/xml-fiesta.js`.
+- Bump the version with `npm version` (or edit `package.json` and tag the release as you prefer).
 
 [npm-url]: https://badge.fury.io/js/xml-fiesta
 [npm-image]: https://badge.fury.io/js/xml-fiesta.svg
-[bower-image]: https://badge.fury.io/bo/xml-fiesta.svg
-[bower-url]: https://badge.fury.io/bo/xml-fiesta
 [travis-image]: https://travis-ci.org/Mifiel/xml-fiesta-js.svg?branch=master
 [travis-url]: https://travis-ci.org/Mifiel/xml-fiesta-js
-[coveralls-image]: https://coveralls.io/repos/github/Mifiel/xml-fiesta-js/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/Mifiel/xml-fiesta-js?branch=master

@@ -1,5 +1,3 @@
-const Promise = require("promise");
-const xmlCrypto = require("xml-crypto");
 const select = require("xpath.js");
 const Dom = require("xmldom").DOMParser;
 
@@ -7,11 +5,7 @@ import { parseString, Builder, processors } from "xml2js";
 import { b64toHex, sha256 } from "./common";
 import Certificate from "./certificate";
 import PatchedXML from "./patches/xmlPatch";
-
-const ExclusiveCanonicalization =
-  xmlCrypto.SignedXml.CanonicalizationAlgorithms[
-    "http://www.w3.org/2001/10/xml-exc-c14n#"
-  ];
+import { ExclusiveCanonicalization } from "./exclusive-canonicalization";
 
 const versionToNumber = (version: string) => {
   // splits the version string using the dots in an array of 3 numbers

@@ -3,20 +3,10 @@ language: node_js
 cache: yarn
 
 node_js:
-  - '10'
-  - '11'
-  - '12'
-  - '13'
-  - '14'
-  - '15'
-  - '16'
-
-before_install:
-  - yarn global add grunt-cli
+  - '18'
+  - '20'
+  - '22'
 
 script:
   - yarn test
   - yarn coverage
-
-after_script:
-  - grunt coveralls
