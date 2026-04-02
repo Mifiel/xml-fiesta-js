@@ -9,7 +9,7 @@
     "test:watch": "mocha --watch --watch-files src --watch-files spec",
     "coverage": "node -r ./scripts/nyc-cpus-polyfill.cjs ./node_modules/nyc/bin/nyc.js npm test",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
-    "build": "rimraf lib dist && tsc && node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && browserify lib/xml-fiesta.js --standalone XMLFiesta -o dist/xml-fiesta.js"
+    "build": "rimraf lib dist && tsc && node ./scripts/build-browser.mjs"
   },
   "repository": {
     "type": "git",
@@ -39,8 +39,10 @@
     "@types/node": "25.5.0",
     "@types/node-forge": "1.3.14",
     "@types/xml2js": "0.4.14",
-    "browserify": "17.0.1",
     "chai": "4.5.0",
+    "events": "3.3.0",
+    "esbuild": "0.25.5",
+    "esbuild-plugins-node-modules-polyfill": "1.8.1",
     "mocha": "10.8.2",
     "nyc": "18.0.0",
     "rimraf": "6.1.3",
