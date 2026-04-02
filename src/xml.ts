@@ -91,7 +91,7 @@ export default class XML {
   static detectNamespacePrefix(xmlString: string): string | null {
     // Find the prefix used in the electronicDocument element
     const prefixMatch = xmlString.match(
-      /<\s*([A-Za-z_][\w.-]*):electronicDocument\b/
+      /<\s*([A-Za-z_][\w.-]*):electronicDocument\b/,
     );
     return prefixMatch ? prefixMatch[1] : null;
   }
@@ -161,24 +161,13 @@ export default class XML {
           // Remove only the xmlns:<detectedPrefix> declarations after parsing
           el.parseByElectronicDocument(electronicDocument);
           return resolve(el);
-        }
-      )
+        },
+      ),
     );
   }
 
-  canonical(electronicDocumentAttributes = {}) {
+  canonical() {
     let edoc = JSON.parse(JSON.stringify(this.eDocument));
-
-    if (
-      electronicDocumentAttributes &&
-      Object.keys(electronicDocumentAttributes).length
-    ) {
-      Object.entries(electronicDocumentAttributes).map(([key, value]) => {
-        if (key.includes("xmlns")) {
-          edoc.$[key] = value;
-        }
-      });
-    }
 
     delete edoc.$.cancel;
     delete edoc.conservancyRecord;
@@ -214,8 +203,8 @@ export default class XML {
     return canonicalString.replace(/&#xD;/g, "");
   }
 
-  getCanonicalBuffer(electronicDocumentAttributes) {
-    return Buffer.from(this.canonical(electronicDocumentAttributes), "utf-8");
+  getCanonicalBuffer() {
+    return Buffer.from(this.canonical(), "utf-8");
   }
 
   file() {
