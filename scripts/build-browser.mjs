@@ -21,6 +21,7 @@ await esbuild.build({
   platform: 'browser',
   minify: true,
   legalComments: 'none',
+  drop: ['debugger'],
   alias: {
     events: eventsEntry,
     'node:events': eventsEntry,

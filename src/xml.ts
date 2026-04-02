@@ -1,4 +1,3 @@
-const xmlCrypto = require("xml-crypto");
 const select = require("xpath.js");
 const Dom = require("xmldom").DOMParser;
 
@@ -7,8 +6,7 @@ import { b64toHex, sha256 } from "./common";
 import Certificate from "./certificate";
 import * as forge from "node-forge";
 import PatchedXML from "./patches/xmlPatch";
-
-const ExclusiveCanonicalization = xmlCrypto.ExclusiveCanonicalization;
+import { ExclusiveCanonicalization } from "./exclusive-canonicalization";
 
 const versionToNumber = (version: string) => {
   // splits the version string using the dots in an array of 3 numbers
