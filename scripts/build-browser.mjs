@@ -19,6 +19,8 @@ await esbuild.build({
   format: 'iife',
   globalName: 'XMLFiesta',
   platform: 'browser',
+  minify: true,
+  legalComments: 'none',
   alias: {
     events: eventsEntry,
     'node:events': eventsEntry,
