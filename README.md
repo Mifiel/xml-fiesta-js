@@ -159,6 +159,8 @@ Run `yarn test:watch` to re-run the test suite when `src/` or `spec/` files chan
 
 Run `yarn test` or `npm test`. For a local coverage report, run `yarn coverage`.
 
+Dependencies are pinned to exact versions in `package.json`; commit `yarn.lock` and use `yarn install --frozen-lockfile` in CI so installs stay reproducible.
+
 ## Build and publish
 
 - Run `npm run build` or `yarn build` to compile TypeScript and produce `lib/` and the browser bundle `dist/xml-fiesta.js`.

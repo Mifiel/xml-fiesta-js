@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
+    "useUnknownInCatchVariables": false,
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "declaration": true,
@@ -7,13 +13,15 @@
     "outDir": "lib",
     "baseUrl": ".",
     "rootDir": "src/",
-    "lib": ["dom","es6"],
+    "lib": ["dom", "es6"],
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "target": "es5",
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "types": ["node", "mocha"]
   },
   "include": ["src", "types/jsx.d.ts"],
   "exclude": ["node_modules"]
