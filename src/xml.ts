@@ -1,4 +1,3 @@
-const Promise = require("promise");
 const xmlCrypto = require("xml-crypto");
 const select = require("xpath.js");
 const Dom = require("xmldom").DOMParser;
