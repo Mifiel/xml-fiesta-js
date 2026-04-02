@@ -14,7 +14,6 @@ import Certificate from "./certificate";
 import { validateParsedXml } from "./validations/validate";
 import { ValidateOptions, ValidateResult } from "./validations/types";
 import Transfer from "./transfer";
-import * as forge from "node-forge";
 
 export type AssetValidation = {
   isValid: boolean;
@@ -127,7 +126,7 @@ export default class Document {
     if (!this.pdf_content) {
       return null;
     }
-    return forge.util.decode64(this.pdf_content);
+    return Buffer.from(this.pdf_content, "base64");
   }
 
   // @deprecated

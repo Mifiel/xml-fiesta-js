@@ -46,7 +46,7 @@ function bytesToHex(bytes: string) {
 }
 
 function derHexToPem(hex: string, label: string) {
-  const b64 = forge.util.encode64(forge.util.hexToBytes(hex));
+  const b64 = Buffer.from(hex, "hex").toString("base64");
   const wrapped = b64.replace(/(.{64})/g, "$1\r\n").trim();
   return `-----BEGIN ${label}-----\r\n${wrapped}\r\n-----END ${label}-----\r\n`;
 }
@@ -104,7 +104,7 @@ export default class Certificate {
 
   constructor(binaryString: string | null, hexString?: string) {
     let hex = binaryString
-      ? forge.util.bytesToHex(binaryString)
+      ? Buffer.from(binaryString).toString("hex")
       : hexString;
 
     this.binaryString = binaryString;
@@ -119,7 +119,7 @@ export default class Certificate {
     }
 
     if (hex.startsWith(certFirstBytes)) {
-      this.pem = forge.util.decodeUtf8(forge.util.hexToBytes(hex));
+      this.pem = Buffer.from(hex, "hex").toString("utf8");
     } else {
       this.pem = derHexToPem(hex, "CERTIFICATE");
     }

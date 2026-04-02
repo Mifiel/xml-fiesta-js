@@ -9,19 +9,19 @@ function extend(object, properties) {
 }
 
 function b64toHex(b64String) {
-  return forge.util.bytesToHex(forge.util.decode64(b64String));
+  return Buffer.from(b64String, "base64").toString("hex");
 }
 
 function hextoB64(hexString) {
-  return forge.util.encode64(forge.util.hexToBytes(hexString));
+  return Buffer.from(hexString, "hex").toString("base64");
 }
 
 function hextoAscii(hexString) {
-  return forge.util.hexToBytes(hexString);
+  return Buffer.from(hexString, "hex").toString("ascii");
 }
 
 function b64toAscii(b64String) {
-  return forge.util.decode64(b64String);
+  return Buffer.from(b64String, "base64").toString("ascii");
 }
 
 function parseDate(date) {
