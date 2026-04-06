@@ -1,6 +1,6 @@
 {
   "name": "xml-fiesta",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Electronic signed document XML Protocol for Node & Browser",
   "main": "./lib/xml-fiesta.js",
   "types": "./lib/xml-fiesta.d.ts",
@@ -9,7 +9,9 @@
     "test:watch": "mocha --watch --watch-files src --watch-files spec",
     "coverage": "node -r ./scripts/nyc-cpus-polyfill.cjs ./node_modules/nyc/bin/nyc.js npm test",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
-    "build": "rimraf lib dist && tsc && node ./scripts/build-browser.mjs"
+    "build": "rimraf lib dist && tsc && node ./scripts/build-browser.mjs && node ./scripts/sync-types-package.mjs",
+    "prepublishOnly": "npm run build",
+    "postpublish": "(cd xml-fiesta-types && npm publish)"
   },
   "repository": {
     "type": "git",

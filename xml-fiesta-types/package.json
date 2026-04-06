@@ -1,0 +1,24 @@
+{
+  "name": "xml-fiesta-types",
+  "version": "1.8.1",
+  "description": "TypeScript definitions for xml-fiesta",
+  "types": "xml-fiesta.d.ts",
+  "files": [
+    "**/*.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mifiel/xml-fiesta-js.git"
+  },
+  "keywords": [
+    "xml-fiesta",
+    "typescript",
+    "types"
+  ],
+  "author": "Jesús López <alejandro@mifiel.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Mifiel/xml-fiesta-js/issues"
+  },
+  "homepage": "https://github.com/Mifiel/xml-fiesta-js#readme"
+}
