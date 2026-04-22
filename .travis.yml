@@ -2,6 +2,9 @@ language: node_js
 
 cache: yarn
 
+# This stops the entire job from running if it's a PR
+if: type != pull_request
+
 node_js:
   - '20'
   - '22'
