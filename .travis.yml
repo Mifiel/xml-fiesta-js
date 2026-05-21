@@ -1,6 +1,8 @@
 language: node_js
 
-cache: yarn
+cache:
+  directories:
+    - .yarn/cache
 
 # This stops the entire job from running if it's a PR
 if: type != pull_request
@@ -8,7 +10,15 @@ if: type != pull_request
 node_js:
   - '20'
   - '22'
+  - '25'
+
+before_install:
+  - npm install -g corepack
+  - corepack enable
+
+install:
+  - yarn install --immutable
 
 script:
   - yarn test
-  - yarn coverage
+  - yarn build
