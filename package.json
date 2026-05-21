@@ -52,9 +52,9 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.10",
     "node-forge": "1.4.0",
     "xml2js": "0.6.2",
-    "xmldom": "0.6.0",
     "xpath.js": "1.1.0"
   },
   "ts-node": {

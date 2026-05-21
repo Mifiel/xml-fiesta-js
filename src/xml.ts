@@ -1,5 +1,5 @@
 const select = require("xpath.js");
-const Dom = require("xmldom").DOMParser;
+const Dom = require("@xmldom/xmldom").DOMParser;
 
 import { parseString, Builder, processors } from "xml2js";
 import { b64toHex, sha256 } from "./common";
@@ -194,7 +194,7 @@ export default class XML {
     });
     const originalXml = builder.buildObject(edoc);
 
-    const doc = new Dom().parseFromString(originalXml);
+    const doc = new Dom().parseFromString(originalXml, "application/xml");
     const elem = select(doc, "//*")[0];
     const can = new ExclusiveCanonicalization();
     const canonicalString = can.process(elem).toString();
