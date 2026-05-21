@@ -8,6 +8,7 @@ if: type != pull_request
 node_js:
   - '20'
   - '22'
+  - '25'
 
 script:
   - yarn test
