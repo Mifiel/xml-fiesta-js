@@ -44,7 +44,7 @@
     "@types/xml2js": "0.4.14",
     "chai": "6.2.2",
     "esbuild": "0.27.7",
-    "esbuild-plugins-node-modules-polyfill": "1.8.1",
+    "esbuild-plugins-node-modules-polyfill": "1.8.2",
     "events": "3.3.0",
     "mocha": "11.7.5",
     "nyc": "18.0.0",

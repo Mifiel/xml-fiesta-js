@@ -985,16 +985,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild-plugins-node-modules-polyfill@npm:1.8.1":
-  version: 1.8.1
-  resolution: "esbuild-plugins-node-modules-polyfill@npm:1.8.1"
+"esbuild-plugins-node-modules-polyfill@npm:1.8.2":
+  version: 1.8.2
+  resolution: "esbuild-plugins-node-modules-polyfill@npm:1.8.2"
   dependencies:
     "@jspm/core": "npm:^2.1.0"
-    local-pkg: "npm:^1.1.2"
+    local-pkg: "npm:^1.2.1"
     resolve.exports: "npm:^2.0.3"
   peerDependencies:
-    esbuild: ">=0.14.0 <=0.27.x"
-  checksum: 10c0/5ce3fc35569a9bd5ca45426396365e5634986a9ff274600e48b0d3e4a9cc4a6123c6044c1f4656fb3fbb12e8e30619aa2cdafa19cde774136c3bf3741afa9f05
+    esbuild: ">=0.14.0 <=0.28.x"
+  checksum: 10c0/8f40bdd6582c625f3aebeb5c6ca659a224f0e46801437ccf5abc5861288c219ab688cbe15d597d4f6837b51c951b261ed987f84b7f0ab47844e292aa13f12aac
   languageName: node
   linkType: hard
 
@@ -1486,14 +1486,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"local-pkg@npm:^1.1.2":
-  version: 1.1.2
-  resolution: "local-pkg@npm:1.1.2"
+"local-pkg@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "local-pkg@npm:1.2.1"
   dependencies:
     mlly: "npm:^1.7.4"
     pkg-types: "npm:^2.3.0"
     quansync: "npm:^0.2.11"
-  checksum: 10c0/1bcfcc5528dea95cba3caa478126a348d3985aad9f69ecf7802c13efef90897e1c5ff7851974332c5e6d4a4698efe610fef758a068c8bc3feb5322aeb35d5993
+  checksum: 10c0/d21ccfc2595b2eddf7369f19797533573feb06820d8b5766467902a7a54e36b3a1f2b8cc2aa4481a2ad432c8e798576eabfac2f1ec0646a8e11a68694c2ef9d4
   languageName: node
   linkType: hard
 
@@ -2360,7 +2360,7 @@ __metadata:
     "@xmldom/xmldom": "npm:^0.9.10"
     chai: "npm:6.2.2"
     esbuild: "npm:0.27.7"
-    esbuild-plugins-node-modules-polyfill: "npm:1.8.1"
+    esbuild-plugins-node-modules-polyfill: "npm:1.8.2"
     events: "npm:3.3.0"
     mocha: "npm:11.7.5"
     node-forge: "npm:1.4.0"
