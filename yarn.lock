@@ -1617,7 +1617,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mocha@npm:11.7.5":
+"mocha@npm:^11.7.5":
   version: 11.7.5
   resolution: "mocha@npm:11.7.5"
   dependencies:
@@ -2362,7 +2362,7 @@ __metadata:
     esbuild: "npm:0.27.7"
     esbuild-plugins-node-modules-polyfill: "npm:1.8.1"
     events: "npm:3.3.0"
-    mocha: "npm:11.7.5"
+    mocha: "npm:^11.7.5"
     node-forge: "npm:1.4.0"
     nyc: "npm:18.0.0"
     rimraf: "npm:6.1.3"
