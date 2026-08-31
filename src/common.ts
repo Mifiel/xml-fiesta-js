@@ -25,34 +25,40 @@ function b64toAscii(b64String) {
 }
 
 function parseDate(date) {
-  let parsed;
-  try {
-    parsed = date.match(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\..*Z/);
-    parsed.shift(1);
+  let parsed = date.match(
+    /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(?:\.\d+)?Z$/,
+  );
+  if (parsed) {
+    parsed.shift();
     return new Date(
       Date.UTC(
-        parseInt(parsed[0]),
-        parseInt(parsed[1]) - 1,
-        parseInt(parsed[2]),
-        parseInt(parsed[3]),
-        parseInt(parsed[4]),
-        parseInt(parsed[5]),
-      ),
-    );
-  } catch (error) {
-    parsed = date.match(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\..*Z/);
-    parsed.shift(1);
-    return new Date(
-      Date.UTC(
-        parseInt(parsed[0]) + 2000,
-        parseInt(parsed[1]) - 1,
-        parseInt(parsed[2]),
-        parseInt(parsed[3]),
-        parseInt(parsed[4]),
-        parseInt(parsed[5]),
+        parseInt(parsed[0], 10),
+        parseInt(parsed[1], 10) - 1,
+        parseInt(parsed[2], 10),
+        parseInt(parsed[3], 10),
+        parseInt(parsed[4], 10),
+        parseInt(parsed[5], 10),
       ),
     );
   }
+
+  parsed = date.match(
+    /^(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(?:\.\d+)?Z$/,
+  );
+  if (!parsed) {
+    throw new Error(`Invalid ASN.1 time: ${date}`);
+  }
+  parsed.shift();
+  return new Date(
+    Date.UTC(
+      parseInt(parsed[0], 10) + 2000,
+      parseInt(parsed[1], 10) - 1,
+      parseInt(parsed[2], 10),
+      parseInt(parsed[3], 10),
+      parseInt(parsed[4], 10),
+      parseInt(parsed[5], 10),
+    ),
+  );
 }
 
 function sha256(string) {
