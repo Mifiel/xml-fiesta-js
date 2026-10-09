@@ -6,25 +6,16 @@ import { b64toHex, sha256 } from "./common";
 import Certificate from "./certificate";
 import PatchedXML from "./patches/xmlPatch";
 import { ExclusiveCanonicalization } from "./exclusive-canonicalization";
+import { extractOcspB64FromSigner, extractOcspProducedAt } from "./ocsp";
+import { ltVersion, gteVersion } from "./version";
 
-const versionToNumber = (version: string) => {
-  // splits the version string using the dots in an array of 3 numbers
-  // example: '2.4.1' -> [2, 4, 1]
-  const [firstNumber, secondNumber, thirdNumber] = version
-    .split(/\./)
-    .map((v) => parseInt(v));
-  // converts the previous in a number
-  // example: [2, 4, 1] -> 241
-  return firstNumber * 100 + secondNumber * 10 + thirdNumber;
-};
-
-const START_VERSION_WITHOUT_SINGERS_CER = versionToNumber("2.5.0");
+const VERSION_WITHOUT_SINGERS_CER = "2.5.0";
+const FILE_ELEMENT_VERSION = "1.0.0";
 
 export default class XML {
   eDocument: any;
   signed: boolean;
   version: any;
-  version_int: any;
   fileElementName: any;
   encrypted: any;
   name: any;
@@ -126,11 +117,10 @@ export default class XML {
     const eDocumentAttrs = el.eDocument.$;
     el.version = eDocumentAttrs.version;
     el.signed = eDocumentAttrs.signed;
-    el.version_int = versionToNumber(el.version);
 
     el.destroyed = eDocumentAttrs.cancel || false;
 
-    if (el.version_int < 100) {
+    if (ltVersion(el.version, FILE_ELEMENT_VERSION)) {
       el.fileElementName = "pdf";
     } else {
       el.fileElementName = "file";
@@ -178,11 +168,11 @@ export default class XML {
     xml.removeBlockchain(edoc);
     xml.removeTransfer(edoc);
 
-    if (this.version_int >= START_VERSION_WITHOUT_SINGERS_CER) {
+    if (gteVersion(this.version, VERSION_WITHOUT_SINGERS_CER)) {
       xml.removeSignersCertificate(edoc);
     }
 
-    if (this.version_int >= 100) {
+    if (gteVersion(this.version, FILE_ELEMENT_VERSION)) {
       edoc[this.fileElementName][0]._ = "";
     }
 
@@ -232,6 +222,8 @@ export default class XML {
         cer: cerHex,
         signature: b64toHex(signer.signature[0]._),
         signedAt: signer.signature[0].$.signedAt,
+        ocspResponseB64: extractOcspB64FromSigner(signer),
+        ocspProducedAt: extractOcspProducedAt(signer),
         legalEntity: certificate.getUniqueIdentifier().length > 1,
       };
       if (signer.ePass) {

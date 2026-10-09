@@ -5,6 +5,12 @@ import ConservancyRecord from "./conservancyRecord";
 import ConservancyRecordNom2016 from "./conservancyRecordNom2016";
 import XML from "./xml";
 import * as validations from "./validations";
+import { parseVersion, compareVersions, gteVersion, ltVersion } from "./version";
+import {
+  extractOcspB64FromSigner,
+  extractOcspProducedAt,
+  validateOcspTimes,
+} from "./ocsp";
 import {
   InvalidSignerError,
   CertificateError,
@@ -29,6 +35,13 @@ export {
   ConservancyRecordNom2016,
   XML,
   validations,
+  parseVersion,
+  compareVersions,
+  gteVersion,
+  ltVersion,
+  extractOcspB64FromSigner,
+  extractOcspProducedAt,
+  validateOcspTimes,
   errors,
   version,
 };
