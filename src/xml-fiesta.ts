@@ -7,7 +7,6 @@ import XML from "./xml";
 import * as validations from "./validations";
 import { parseVersion, compareVersions, gteVersion, ltVersion } from "./version";
 import {
-  extractOcspB64FromSigner,
   extractOcspProducedAt,
   validateOcspTimes,
 } from "./ocsp";
@@ -39,7 +38,6 @@ export {
   compareVersions,
   gteVersion,
   ltVersion,
-  extractOcspB64FromSigner,
   extractOcspProducedAt,
   validateOcspTimes,
   errors,

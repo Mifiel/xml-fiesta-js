@@ -6,7 +6,7 @@ import { b64toHex, sha256 } from "./common";
 import Certificate from "./certificate";
 import PatchedXML from "./patches/xmlPatch";
 import { ExclusiveCanonicalization } from "./exclusive-canonicalization";
-import { extractOcspB64FromSigner, extractOcspProducedAt } from "./ocsp";
+import { extractOcspProducedAt } from "./ocsp";
 import { ltVersion, gteVersion } from "./version";
 
 const VERSION_WITHOUT_SINGERS_CER = "2.5.0";
@@ -222,7 +222,6 @@ export default class XML {
         cer: cerHex,
         signature: b64toHex(signer.signature[0]._),
         signedAt: signer.signature[0].$.signedAt,
-        ocspResponseB64: extractOcspB64FromSigner(signer),
         ocspProducedAt: extractOcspProducedAt(signer),
         legalEntity: certificate.getUniqueIdentifier().length > 1,
       };

@@ -52,33 +52,6 @@ function revocationCheckedEvents(signer: any): any[] {
 }
 
 /**
- * Extracts the raw base64 OCSP response embedded in a parsed signer node
- * (`signer > auditTrail > event[name=revocation-status-checked] >
- * content[name=ocsp-response]`, as produced by the xml-fiesta Ruby gem).
- * Also honors the legacy `signer > event` shape and the
- * `revocation-status-checked` content-name variant. Returns null when the
- * signer carries no OCSP evidence.
- */
-export function extractOcspB64FromSigner(signer: any): string | null {
-  for (const event of revocationCheckedEvents(signer)) {
-    const contents: any[] = Array.isArray(event.content) ? event.content : [];
-    for (const content of contents) {
-      const contentName: string | undefined =
-        content && content.$ && content.$.name;
-      if (contentName !== "ocsp-response" && contentName !== "revocation-status-checked") {
-        continue;
-      }
-      const value: any = typeof content === "string" ? content : content._;
-      if (typeof value === "string" && value.trim().length > 0) {
-        return value.trim();
-      }
-    }
-  }
-
-  return null;
-}
-
-/**
  * Extracts the `@timestamp` of the signer's `revocation-status-checked`
  * auditTrail event — the moment the revocation check was produced.
  * Returns null when the signer carries no such event.

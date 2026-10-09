@@ -23,10 +23,7 @@ export const validateSignatures = (
     );
     const fielIsValid = signature.valid(document.originalHash) as boolean;
 
-    const ocspProducedAt: string | undefined =
-      signerRecords[index] && signerRecords[index].ocspProducedAt
-        ? signerRecords[index].ocspProducedAt
-        : undefined;
+    const ocspProducedAt: string | undefined = signerRecords[index]?.ocspProducedAt;
     const ocsp = validateOcspTimes({
       signerCertHex: signature.certificate.toHex(),
       producedAt: ocspProducedAt,
