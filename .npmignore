@@ -5,13 +5,13 @@ spec
 .deploy
 src
 .tscache
-.nvmrc
-.travis.yml
+mise.toml
 *.sublime-project
 *.sublime-workspace
 CHANGELOG.md
-yarn.lock
+pnpm-lock.yaml
+pnpm-workspace.yaml
 tsconfig.json
 tslint.json
-yarn-error.log
+pnpm-debug.log
 .gitignore

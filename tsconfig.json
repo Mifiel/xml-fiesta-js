@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "strict": false,
     "noImplicitAny": false,
     "strictNullChecks": false,
@@ -11,13 +10,12 @@
     "declaration": true,
     "experimentalDecorators": true,
     "outDir": "lib",
-    "baseUrl": ".",
     "rootDir": "src/",
     "lib": ["dom", "es6"],
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "target": "es5",
+    "target": "es2015",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
