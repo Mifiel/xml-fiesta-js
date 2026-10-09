@@ -1,7 +1,7 @@
 # XMLFiesta
 
 [![npm version][npm-image]][npm-url]
-[![Build Status][travis-image]][travis-url]
+[![Build Status][ci-image]][ci-url]
 
 Electronic signed document XML Protocol **reader** and validator for Node & Browser.
 
@@ -168,5 +168,5 @@ Dependencies are pinned to exact versions in `package.json`; commit `pnpm-lock.y
 
 [npm-url]: https://badge.fury.io/js/xml-fiesta
 [npm-image]: https://badge.fury.io/js/xml-fiesta.svg
-[travis-image]: https://travis-ci.org/Mifiel/xml-fiesta-js.svg?branch=master
-[travis-url]: https://travis-ci.org/Mifiel/xml-fiesta-js
+[ci-image]: https://github.com/Mifiel/xml-fiesta-js/actions/workflows/ci.yml/badge.svg?branch=trunk
+[ci-url]: https://github.com/Mifiel/xml-fiesta-js/actions/workflows/ci.yml

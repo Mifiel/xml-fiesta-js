@@ -6,7 +6,6 @@ spec
 src
 .tscache
 mise.toml
-.travis.yml
 *.sublime-project
 *.sublime-workspace
 CHANGELOG.md
