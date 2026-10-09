@@ -2,6 +2,7 @@ import Transfer from "../transfer";
 import Document from "../document";
 import Signature from "../signature";
 import { AssetValidation } from "../document";
+import { OcspValidationResult } from "../ocsp";
 
 export type RootCertificate = { cer_hex: string };
 
@@ -10,6 +11,7 @@ export type SignatureValidationResult = {
   certificateNumberIsValid: boolean;
   fielIsValid: boolean;
   isValid: boolean;
+  ocsp: OcspValidationResult;
   metadata: Signature;
 };
 
