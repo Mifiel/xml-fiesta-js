@@ -164,7 +164,8 @@ Dependencies are pinned to exact versions in `package.json`; commit `pnpm-lock.y
 ## Build and publish
 
 - Run `pnpm build` to compile TypeScript and produce `lib/` and the browser bundle `dist/xml-fiesta.js`.
-- Bump the version with `npm version` (or edit `package.json` and tag the release as you prefer).
+- Bump the version with `npm version` (or edit `package.json` and tag the release as you prefer). Pushing a `v*` tag runs the publish workflow.
+- Publishing uses npm trusted publishers. Before the first tagged release, add a trusted publisher on both `xml-fiesta` and `xml-fiesta-types`: npm package settings, Trusted Publisher, GitHub Actions, repository `Mifiel/xml-fiesta-js`, workflow filename `publish.yml`.
 
 [npm-url]: https://badge.fury.io/js/xml-fiesta
 [npm-image]: https://badge.fury.io/js/xml-fiesta.svg
