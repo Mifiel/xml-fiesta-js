@@ -153,17 +153,17 @@ Optional manual checks: you can validate a certificate against a Certificate Aut
 
 ## Development
 
-Run `yarn test:watch` to re-run the test suite when `src/` or `spec/` files change (Mocha + `ts-node`).
+Run `pnpm test:watch` to re-run the test suite when `src/` or `spec/` files change (Mocha).
 
 ## Test
 
-Run `yarn test` or `npm test`. For a local coverage report, run `yarn coverage`.
+Run `pnpm test`. For a local coverage report, run `pnpm coverage`.
 
-Dependencies are pinned to exact versions in `package.json`; commit `yarn.lock` and use `yarn install --frozen-lockfile` in CI so installs stay reproducible.
+Dependencies are pinned to exact versions in `package.json`; commit `pnpm-lock.yaml` and use `pnpm install --frozen-lockfile` in CI so installs stay reproducible.
 
 ## Build and publish
 
-- Run `npm run build` or `yarn build` to compile TypeScript and produce `lib/` and the browser bundle `dist/xml-fiesta.js`.
+- Run `pnpm build` to compile TypeScript and produce `lib/` and the browser bundle `dist/xml-fiesta.js`.
 - Bump the version with `npm version` (or edit `package.json` and tag the release as you prefer).
 
 [npm-url]: https://badge.fury.io/js/xml-fiesta

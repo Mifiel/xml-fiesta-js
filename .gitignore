@@ -10,7 +10,7 @@ builds
 dist
 package-lock.json
 .nyc_output
-yarn-error.log
+pnpm-debug.log
 .tscache
 
 # VS Code settings
