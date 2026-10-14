@@ -79,6 +79,33 @@ export default class XML {
     delete xmljs.transfers;
   }
 
+  static removeSchemaLocation(xmljs: any) {
+    if (!xmljs.$) {
+      return;
+    }
+    Object.keys(xmljs.$).forEach((key) => {
+      if (key.toLowerCase().includes("schemalocation")) {
+        delete xmljs.$[key];
+      }
+    });
+  }
+
+  static removeAuditTrailFileContents(xmljs: any) {
+    xmljs.signers?.[0]?.signer?.forEach(function (signer) {
+      const events =
+        (signer.auditTrail && signer.auditTrail[0]?.event) ||
+        signer.event ||
+        [];
+      events.forEach(function (event) {
+        event.files?.forEach(function (group) {
+          group.file?.forEach(function (file) {
+            file._ = "";
+          });
+        });
+      });
+    });
+  }
+
   static detectNamespacePrefix(xmlString: string): string | null {
     // Find the prefix used in the electronicDocument element
     const prefixMatch = xmlString.match(
@@ -174,6 +201,16 @@ export default class XML {
 
     if (gteVersion(this.version, FILE_ELEMENT_VERSION)) {
       edoc[this.fileElementName][0]._ = "";
+    }
+
+    // Since 2.6.0 the timestamped canonical excludes xsi:schemaLocation
+    // and audit-trail file bodies (see fix-xml-canonical-260).
+    if (gteVersion(this.version, "2.6.0")) {
+      xml.removeSchemaLocation(edoc);
+    }
+
+    if (gteVersion(this.version, "2.6.0")) {
+      xml.removeAuditTrailFileContents(edoc);
     }
 
     const builder = new Builder({
