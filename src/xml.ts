@@ -11,8 +11,6 @@ import { ltVersion, gteVersion } from "./version";
 
 const VERSION_WITHOUT_SINGERS_CER = "2.5.0";
 const FILE_ELEMENT_VERSION = "1.0.0";
-const CANONICAL_WITHOUT_SCHEMA_LOCATION = "2.6.0";
-const CANONICAL_WITHOUT_AUDIT_FILE_CONTENTS = "2.6.0";
 
 export default class XML {
   eDocument: any;
@@ -205,11 +203,13 @@ export default class XML {
       edoc[this.fileElementName][0]._ = "";
     }
 
-    if (gteVersion(this.version, CANONICAL_WITHOUT_SCHEMA_LOCATION)) {
+    // Since 2.6.0 the timestamped canonical excludes xsi:schemaLocation
+    // and audit-trail file bodies (see fix-xml-canonical-260).
+    if (gteVersion(this.version, "2.6.0")) {
       xml.removeSchemaLocation(edoc);
     }
 
-    if (gteVersion(this.version, CANONICAL_WITHOUT_AUDIT_FILE_CONTENTS)) {
+    if (gteVersion(this.version, "2.6.0")) {
       xml.removeAuditTrailFileContents(edoc);
     }
 
