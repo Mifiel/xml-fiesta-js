@@ -11,6 +11,8 @@ import { ltVersion, gteVersion } from "./version";
 
 const VERSION_WITHOUT_SINGERS_CER = "2.5.0";
 const FILE_ELEMENT_VERSION = "1.0.0";
+const CANONICAL_WITHOUT_SCHEMA_LOCATION = "2.6.0";
+const CANONICAL_WITHOUT_AUDIT_FILE_CONTENTS = "2.6.0";
 
 export default class XML {
   eDocument: any;
@@ -77,6 +79,33 @@ export default class XML {
 
   static removeTransfer(xmljs: any) {
     delete xmljs.transfers;
+  }
+
+  static removeSchemaLocation(xmljs: any) {
+    if (!xmljs.$) {
+      return;
+    }
+    Object.keys(xmljs.$).forEach((key) => {
+      if (key.toLowerCase().includes("schemalocation")) {
+        delete xmljs.$[key];
+      }
+    });
+  }
+
+  static removeAuditTrailFileContents(xmljs: any) {
+    xmljs.signers?.[0]?.signer?.forEach(function (signer) {
+      const events =
+        (signer.auditTrail && signer.auditTrail[0]?.event) ||
+        signer.event ||
+        [];
+      events.forEach(function (event) {
+        event.files?.forEach(function (group) {
+          group.file?.forEach(function (file) {
+            file._ = "";
+          });
+        });
+      });
+    });
   }
 
   static detectNamespacePrefix(xmlString: string): string | null {
@@ -174,6 +203,14 @@ export default class XML {
 
     if (gteVersion(this.version, FILE_ELEMENT_VERSION)) {
       edoc[this.fileElementName][0]._ = "";
+    }
+
+    if (gteVersion(this.version, CANONICAL_WITHOUT_SCHEMA_LOCATION)) {
+      xml.removeSchemaLocation(edoc);
+    }
+
+    if (gteVersion(this.version, CANONICAL_WITHOUT_AUDIT_FILE_CONTENTS)) {
+      xml.removeAuditTrailFileContents(edoc);
     }
 
     const builder = new Builder({
