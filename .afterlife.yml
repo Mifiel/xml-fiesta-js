@@ -1,2 +1,4 @@
+install: pnpm install --frozen-lockfile
+build: pnpm build
 deploy:
   type: cdn
