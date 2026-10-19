@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.9.0
 
 - Fix `versionToNumber` collisions on multi-digit components (e.g.
   `2.4.10` vs `2.5.0`) by comparing versions as semver (`parseVersion` /
