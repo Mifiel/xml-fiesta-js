@@ -108,7 +108,12 @@ export default class ConservancyRecordNom2016 {
     ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(pkcs9, ar_pos[0]);
     ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(pkcs9, ar_pos[0]);
     ar_pos = ASN1HEX.getPosArrayOfChildren_AtObj(pkcs9, ar_pos[0]);
-    return ASN1HEX.getHexOfV_AtObj(pkcs9, ar_pos[1]);
+    // ESSCertIDv2 may omit hashAlgorithm when it is the SHA-256 default.
+    // The certificate hash is the OCTET STRING, with or without that algorithm.
+    const hashPosition = ar_pos.find(
+      (position) => pkcs9.slice(position, position + 2) === "04",
+    );
+    return ASN1HEX.getHexOfV_AtObj(pkcs9, hashPosition);
   }
 
   tSTInfoHex() {
