@@ -62,8 +62,16 @@ export default class Liquid {
     const outspends = await this.getTxtOutspents(txid);
     const currentOutspends = outspends[indexTx];
 
+    const currentTransfer: GetTransfersByTxIdResult = {
+      currentAddress,
+      prevAddress,
+      txid,
+      prevTxid,
+      network: "LBTC",
+    };
+
     if (!currentOutspends.spent) {
-      return [{ currentAddress, prevAddress, txid, prevTxid }];
+      return [currentTransfer];
     } else {
       const transfers = await this.getTransfersByTxId(
         asset,
@@ -71,7 +79,7 @@ export default class Liquid {
         currentAddress,
         txid
       );
-      return [{ currentAddress, prevAddress, txid, prevTxid }, ...transfers];
+      return [currentTransfer, ...transfers];
     }
   };
 
