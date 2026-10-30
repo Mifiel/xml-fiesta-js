@@ -28,7 +28,7 @@ npm install xml-fiesta --save
 - **Mainnet**: Liquid production network (real assets). Used by default when parsing tracked XML.
 - **Testnet**: Liquid test network (no real value). Enable by passing `true` as the second argument to `Document.fromXml()`.
 - **LBTC**: Liquid Bitcoin network; fully supported via Blockstream API.
-- **LTC**: Legacy network identifier; some blockchain validations are skipped.
+- **LTC**: Litecoin colored-coin network; supported via BlockCypher the same way Liquid uses its explorer.
 - **oHashValid**: Whether the original hash in the XML matches the computed document hash (integrity check).
 - **Transfer**: Change of holder/ownership of the asset on the blockchain. **Endorser** = previous holder; **endorsee** = new holder.
 
@@ -101,7 +101,7 @@ An XML is considered **tracked** when it includes the `blockchain` node. For tra
 ### Blockchain support
 
 - **LBTC**: Supported via Liquid (Blockstream API).
-- **LTC**: Not supported; some blockchain validations are skipped for legacy reasons.
+- **LTC**: Supported via Litecoin colored coins (BlockCypher API), using the same `Blockchain.init` + `getBlockchainTrack` flow as Liquid.
 
 ### Network / testnet
 
@@ -122,8 +122,7 @@ Liquid tracking uses `fetch()` under the hood. In Node.js you must provide a glo
 
 Tracked XMLs can include a `transfers` node. When validating a tracked XML, transfers are validated when:
 
-- `tracked.showLimitData` is `false`, and
-- the document network is not `LTC`.
+- `tracked.showLimitData` is `false`.
 
 When transfers are validated, the result includes `tracked.transfers` with per-transfer validation results:
 

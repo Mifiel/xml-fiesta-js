@@ -301,9 +301,6 @@ export default class Document {
   validHashInBlockchainBinding(rootCertificates, hash: string) {
     if (!this.tracked) throw new Error("Document is not tracked");
 
-    // litecoin is not supported, we return true to omit the validation
-    if (this.network === "LTC") return true;
-
     const trackedDocumentIsSimple =
       this.isSimpleTrackedDocument(rootCertificates);
 
@@ -437,10 +434,10 @@ export default class Document {
     };
 
     if (xml.tracked && isOriginalDocument) {
-      const assetIdPlaintext =
-        xml.eDocument.blockchain[0].binding[0].signature[0].$.plaintext.split(
-          "|",
-        )[1];
+      const titlePlaintext =
+        xml.eDocument.blockchain[0].binding[0].signature[0].$.plaintext;
+      const [, assetIdPlaintext, firstHolderAddress] =
+        titlePlaintext.split("|");
 
       const network = xml.eDocument.blockchain[0].$.name;
 
@@ -449,20 +446,14 @@ export default class Document {
       try {
         const blockchainInstance = Blockchain.init(network);
         if (useTestnet) blockchainInstance.useTestnet();
-        const blockchainTrack =
-          await blockchainInstance.getBlockchainTrack(assetIdPlaintext);
+        const blockchainTrack = await blockchainInstance.getBlockchainTrack(
+          assetIdPlaintext,
+          firstHolderAddress,
+        );
         opts.blockchainTrack = blockchainTrack;
       } catch (error) {
         console.error(error);
       }
-    }
-
-    // litecoin is not supported, we mock a blockchain track so it doesn't fail, this mock will be removed when we no longer support litecoin
-    if (opts.network === "LTC") {
-      opts.blockchainTrack = {
-        transfers: [],
-        asset: opts.assetId,
-      };
     }
 
     return opts;

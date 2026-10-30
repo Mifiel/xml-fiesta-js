@@ -13,6 +13,7 @@ export type GetTransfersByTxIdResult = {
   txid: string;
   prevAddress: string;
   currentAddress: string;
+  network?: "LTC" | "LBTC";
 };
 
 export type GetBlockchainTrackResult = {
@@ -75,7 +76,8 @@ export default class Liquid {
   };
 
   getBlockchainTrack = async (
-    asset: string
+    asset: string,
+    _firstHolderAddress?: string,
   ): Promise<GetBlockchainTrackResult | null> => {
     const response = await fetch(`${this.BASE_URL}/asset/${asset}`);
 
