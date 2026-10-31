@@ -3,6 +3,7 @@ import Document from "../document";
 import Signature from "../signature";
 import { AssetValidation } from "../document";
 import { OcspValidationResult } from "../ocsp";
+import { BridgeValidationResult } from "../services/blockchain/litecoin-liquid-bridge";
 
 export type RootCertificate = { cer_hex: string };
 
@@ -50,6 +51,7 @@ export type TrackedValidationResult = {
   document: DocumentValidationResult;
   signatures: SignatureValidationResult[];
   transfers?: TransferValidationResult[];
+  litecoinLiquidBridge?: BridgeValidationResult;
 };
 
 export type ValidateOptions = {

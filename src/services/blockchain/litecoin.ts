@@ -6,14 +6,14 @@ import {
 } from "bs58check";
 import { GetBlockchainTrackResult, GetTransfersByTxIdResult } from "./liquid";
 
-type LitecoinInput = {
+export type LitecoinInput = {
   previousTransactionId: string;
   previousOutputIndex: number;
   value: number;
   addresses: string[];
 };
 
-type LitecoinOutput = {
+export type LitecoinOutput = {
   value: number;
   addresses: string[];
   scriptType?: string;
@@ -22,7 +22,7 @@ type LitecoinOutput = {
   spentByTransactionId?: string;
 };
 
-type LitecoinTransaction = {
+export type LitecoinTransaction = {
   transactionId: string;
   inputs: LitecoinInput[];
   outputs: LitecoinOutput[];
@@ -205,7 +205,7 @@ export default class Litecoin {
     return candidates.length === 1 ? candidates[0] : null;
   };
 
-  private getAddressTransactions = async (
+  getAddressTransactions = async (
     address: string,
   ): Promise<LitecoinTransaction[]> => {
     const response = await fetch(

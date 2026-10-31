@@ -8,7 +8,9 @@ import {
   InvalidRecordError,
 } from "./errors";
 import XML from "./patches/xmlPatch";
-import { Blockchain, Network } from "./services/blockchain";
+import { Network } from "./services/blockchain";
+import { buildBlockchainTrack } from "./services/blockchain/build-blockchain-track";
+import { BridgeValidationResult } from "./services/blockchain/litecoin-liquid-bridge";
 import { GetBlockchainTrackResult } from "./services/blockchain/liquid";
 import Certificate from "./certificate";
 import { validateParsedXml } from "./validations/validate";
@@ -46,6 +48,7 @@ export default class Document {
   tracked: boolean;
   destroyed: boolean;
   blockchainTrack: GetBlockchainTrackResult;
+  litecoinLiquidBridge?: BridgeValidationResult;
   blockchainBinding: any;
   currentHolder: any;
   prevHolder: any;
@@ -80,6 +83,7 @@ export default class Document {
     this.tracked = options.tracked;
     this.destroyed = options.destroyed;
     this.blockchainTrack = options.blockchainTrack;
+    this.litecoinLiquidBridge = options.litecoinLiquidBridge;
     this.blockchainBinding = options.blockchainBinding;
     this.transfersXml = options.transfersXml || [];
     this.currentHolder = options.currentHolder;
@@ -423,6 +427,7 @@ export default class Document {
       contentType: xml.contentType,
       conservancyRecord: xml.getConservancyRecord(),
       blockchainTrack: null,
+      litecoinLiquidBridge: null,
       tracked: xml.tracked,
       destroyed: parseStringToBoolean(xml.destroyed),
       transfersXml: xml.eDocument?.transfers?.[0]?.electronicDocument || null,
@@ -444,13 +449,15 @@ export default class Document {
       opts.assetId = assetIdPlaintext;
       opts.network = network;
       try {
-        const blockchainInstance = Blockchain.init(network);
-        if (useTestnet) blockchainInstance.useTestnet();
-        const blockchainTrack = await blockchainInstance.getBlockchainTrack(
-          assetIdPlaintext,
+        const builtTrack = await buildBlockchainTrack({
+          electronicDocument: xml.eDocument,
+          assetId: assetIdPlaintext,
           firstHolderAddress,
-        );
-        opts.blockchainTrack = blockchainTrack;
+          network,
+          useTestnet,
+        });
+        opts.blockchainTrack = builtTrack.track;
+        opts.litecoinLiquidBridge = builtTrack.litecoinLiquidBridge;
       } catch (error) {
         console.error(error);
       }
