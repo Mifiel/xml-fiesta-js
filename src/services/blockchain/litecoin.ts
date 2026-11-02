@@ -357,6 +357,7 @@ export default class Litecoin {
       }
 
       attempt += 1;
+      response.body?.cancel();
       await wait(RATE_LIMIT_DELAY_MS);
     }
   };
