@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.1
+
+- Support Litecoin colored-coin tracking via BlockCypher and LTC→LBTC
+  bridge validation when building the dual-network track.
+- Fix NOM-151 conservancy record hash when the certificate hash
+  algorithm (sha-256) is omitted.
+
 ## v1.9.0
 
 - Fix `versionToNumber` collisions on multi-digit components (e.g.
