@@ -11,6 +11,9 @@ export const validateTrackedXml = async (
 
   const signaturesValidation = validateSignatures(document, rootCertificates);
   const assetValidation = document.isValidAssetId(rootCertificates);
+  const litecoinLiquidBridge = document.litecoinLiquidBridge;
+  const litecoinLiquidBridgeIsAbsentOrValid =
+    !litecoinLiquidBridge || litecoinLiquidBridge.status === "valid";
   const showLimitData =
     document.isSimpleTrackedDocument(rootCertificates) &&
     signaturesValidation.length === 0;
@@ -23,7 +26,9 @@ export const validateTrackedXml = async (
   if (showLimitData) {
     const oHashValid = instance.xmlOriginalHash === document.originalHash;
     const isValid =
-      !documentValidation.metadata.encrypted && assetValidation.isValid;
+      !documentValidation.metadata.encrypted &&
+      assetValidation.isValid &&
+      litecoinLiquidBridgeIsAbsentOrValid;
 
     return {
       isValid,
@@ -32,6 +37,7 @@ export const validateTrackedXml = async (
       asset: assetValidation,
       document: documentValidation,
       signatures: [],
+      litecoinLiquidBridge,
     };
   }
 
@@ -48,7 +54,8 @@ export const validateTrackedXml = async (
     oHashValid &&
     documentValidation.isValid &&
     assetValidation.isValid &&
-    signaturesAreValid;
+    signaturesAreValid &&
+    litecoinLiquidBridgeIsAbsentOrValid;
 
   return {
     isValid,
@@ -57,5 +64,6 @@ export const validateTrackedXml = async (
     asset: assetValidation,
     document: documentValidation,
     signatures: signaturesValidation,
+    litecoinLiquidBridge,
   };
 };

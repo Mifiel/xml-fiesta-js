@@ -13,11 +13,36 @@ export type GetTransfersByTxIdResult = {
   txid: string;
   prevAddress: string;
   currentAddress: string;
+  network?: "LTC" | "LBTC";
+  outputIndex?: number;
+};
+
+export type BlockchainIssuanceOutpoint = {
+  transactionId: string;
+  outputIndex: number;
+  address?: string;
 };
 
 export type GetBlockchainTrackResult = {
   asset: string;
-  transfers: GetTransfersByTxIdResult[]
+  transfers: GetTransfersByTxIdResult[];
+  issuance?: BlockchainIssuanceOutpoint;
+};
+
+export type LiquidAsset = {
+  issuanceTransactionId: string;
+  issuedAmount: number;
+};
+
+export type LiquidTransactionOutput = {
+  address?: string;
+  assetId: string;
+  value: number;
+};
+
+export type LiquidTransaction = {
+  transactionId: string;
+  outputs: LiquidTransactionOutput[];
 };
 
 export default class Liquid {
@@ -26,6 +51,50 @@ export default class Liquid {
   useTestnet() {
     this.BASE_URL = "https://blockstream.info/liquidtestnet/api";
   }
+
+  getAsset = async (assetId: string): Promise<LiquidAsset | null> => {
+    const response = await fetch(
+      `${this.BASE_URL}/asset/${encodeURIComponent(assetId)}`,
+    );
+
+    if (response.status === 404 || response.status === 400) {
+      return null;
+    }
+    if (!response.ok) {
+      throw new Error(`Error de red: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      issuanceTransactionId: data.issuance_txin.txid,
+      issuedAmount: data.chain_stats.issued_amount,
+    };
+  };
+
+  getTransaction = async (
+    transactionId: string,
+  ): Promise<LiquidTransaction | null> => {
+    const response = await fetch(
+      `${this.BASE_URL}/tx/${encodeURIComponent(transactionId)}`,
+    );
+
+    if (response.status === 404 || response.status === 400) {
+      return null;
+    }
+    if (!response.ok) {
+      throw new Error(`Error de red: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      transactionId: data.txid,
+      outputs: (data.vout || []).map((output) => ({
+        address: output.scriptpubkey_address,
+        assetId: output.asset,
+        value: output.value,
+      })),
+    };
+  };
 
   getTxData = async (txid: string, asset: string): Promise<GetTxDataResult> => {
     const { vout } = await fetch(`${this.BASE_URL}/tx/${txid}`).then(
@@ -61,8 +130,17 @@ export default class Liquid {
     const outspends = await this.getTxtOutspents(txid);
     const currentOutspends = outspends[indexTx];
 
+    const currentTransfer: GetTransfersByTxIdResult = {
+      currentAddress,
+      prevAddress,
+      txid,
+      prevTxid,
+      outputIndex: indexTx,
+      network: "LBTC",
+    };
+
     if (!currentOutspends.spent) {
-      return [{ currentAddress, prevAddress, txid, prevTxid }];
+      return [currentTransfer];
     } else {
       const transfers = await this.getTransfersByTxId(
         asset,
@@ -70,28 +148,23 @@ export default class Liquid {
         currentAddress,
         txid
       );
-      return [{ currentAddress, prevAddress, txid, prevTxid }, ...transfers];
+      return [currentTransfer, ...transfers];
     }
   };
 
   getBlockchainTrack = async (
-    asset: string
+    asset: string,
+    _firstHolderAddress?: string,
   ): Promise<GetBlockchainTrackResult | null> => {
-    const response = await fetch(`${this.BASE_URL}/asset/${asset}`);
-
-    if (!response.ok) {
-      // 400 = bad request o 404 = not found
-      if (response.status === 404 || response.status === 400) {
-        return null;
-      }
-
-      throw new Error(`Error de red: ${response.status}`);
+    const liquidAsset = await this.getAsset(asset);
+    if (!liquidAsset) {
+      return null;
     }
 
-    const { issuance_txin } = await response.json();
-    const { txid } = issuance_txin;
-
-    const data = await this.getTransfersByTxId(asset, txid);
+    const data = await this.getTransfersByTxId(
+      asset,
+      liquidAsset.issuanceTransactionId,
+    );
     // @ts-ignore
     const [_, ...transfers] = data;
 

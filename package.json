@@ -53,6 +53,8 @@
   },
   "dependencies": {
     "@xmldom/xmldom": "^0.9.12",
+    "bs58check": "1.0.8",
+    "cc-transaction": "1.2.1",
     "node-forge": "1.4.0",
     "xml2js": "0.6.2",
     "xpath.js": "1.1.0"

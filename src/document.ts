@@ -8,7 +8,9 @@ import {
   InvalidRecordError,
 } from "./errors";
 import XML from "./patches/xmlPatch";
-import { Blockchain, Network } from "./services/blockchain";
+import { Network } from "./services/blockchain";
+import { buildBlockchainTrack } from "./services/blockchain/build-blockchain-track";
+import { BridgeValidationResult } from "./services/blockchain/litecoin-liquid-bridge";
 import { GetBlockchainTrackResult } from "./services/blockchain/liquid";
 import Certificate from "./certificate";
 import { validateParsedXml } from "./validations/validate";
@@ -46,6 +48,7 @@ export default class Document {
   tracked: boolean;
   destroyed: boolean;
   blockchainTrack: GetBlockchainTrackResult;
+  litecoinLiquidBridge?: BridgeValidationResult;
   blockchainBinding: any;
   currentHolder: any;
   prevHolder: any;
@@ -80,6 +83,7 @@ export default class Document {
     this.tracked = options.tracked;
     this.destroyed = options.destroyed;
     this.blockchainTrack = options.blockchainTrack;
+    this.litecoinLiquidBridge = options.litecoinLiquidBridge;
     this.blockchainBinding = options.blockchainBinding;
     this.transfersXml = options.transfersXml || [];
     this.currentHolder = options.currentHolder;
@@ -301,9 +305,6 @@ export default class Document {
   validHashInBlockchainBinding(rootCertificates, hash: string) {
     if (!this.tracked) throw new Error("Document is not tracked");
 
-    // litecoin is not supported, we return true to omit the validation
-    if (this.network === "LTC") return true;
-
     const trackedDocumentIsSimple =
       this.isSimpleTrackedDocument(rootCertificates);
 
@@ -426,6 +427,7 @@ export default class Document {
       contentType: xml.contentType,
       conservancyRecord: xml.getConservancyRecord(),
       blockchainTrack: null,
+      litecoinLiquidBridge: null,
       tracked: xml.tracked,
       destroyed: parseStringToBoolean(xml.destroyed),
       transfersXml: xml.eDocument?.transfers?.[0]?.electronicDocument || null,
@@ -437,32 +439,28 @@ export default class Document {
     };
 
     if (xml.tracked && isOriginalDocument) {
-      const assetIdPlaintext =
-        xml.eDocument.blockchain[0].binding[0].signature[0].$.plaintext.split(
-          "|",
-        )[1];
+      const titlePlaintext =
+        xml.eDocument.blockchain[0].binding[0].signature[0].$.plaintext;
+      const [, assetIdPlaintext, firstHolderAddress] =
+        titlePlaintext.split("|");
 
       const network = xml.eDocument.blockchain[0].$.name;
 
       opts.assetId = assetIdPlaintext;
       opts.network = network;
       try {
-        const blockchainInstance = Blockchain.init(network);
-        if (useTestnet) blockchainInstance.useTestnet();
-        const blockchainTrack =
-          await blockchainInstance.getBlockchainTrack(assetIdPlaintext);
-        opts.blockchainTrack = blockchainTrack;
+        const builtTrack = await buildBlockchainTrack({
+          electronicDocument: xml.eDocument,
+          assetId: assetIdPlaintext,
+          firstHolderAddress,
+          network,
+          useTestnet,
+        });
+        opts.blockchainTrack = builtTrack.track;
+        opts.litecoinLiquidBridge = builtTrack.litecoinLiquidBridge;
       } catch (error) {
         console.error(error);
       }
-    }
-
-    // litecoin is not supported, we mock a blockchain track so it doesn't fail, this mock will be removed when we no longer support litecoin
-    if (opts.network === "LTC") {
-      opts.blockchainTrack = {
-        transfers: [],
-        asset: opts.assetId,
-      };
     }
 
     return opts;

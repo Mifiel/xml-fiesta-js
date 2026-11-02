@@ -27,29 +27,19 @@ export const validateParsedXml = async (
       options.rootCertificates,
     );
 
-    const shouldValidateTransfers = document?.network !== "LTC";
-
-    if (shouldValidateTransfers) {
-      const transfers = await validateTransfers(
-        { document: parsed.document },
-        options.rootCertificates,
-      );
-      const transfersAreValid = transfers.every((t) => t.transferIsValid);
-      const isValid = tracked.isValid && transfersAreValid;
-      return {
-        mode: "tracked",
-        isValid,
-        tracked: {
-          ...tracked,
-          transfers,
-        },
-      };
-    }
-
+    const transfers = await validateTransfers(
+      { document: parsed.document },
+      options.rootCertificates,
+    );
+    const transfersAreValid = transfers.every((t) => t.transferIsValid);
+    const isValid = tracked.isValid && transfersAreValid;
     return {
       mode: "tracked",
-      isValid: tracked.isValid,
-      tracked: { ...tracked, transfers: [] },
+      isValid,
+      tracked: {
+        ...tracked,
+        transfers,
+      },
     };
   }
 

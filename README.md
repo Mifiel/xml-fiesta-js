@@ -8,7 +8,7 @@ Electronic signed document XML Protocol **reader** and validator for Node & Brow
 **Supported validation modes:**
 
 - **Standard**: Documents without a `blockchain` node (signatures and document integrity).
-- **Tracked**: Documents with a `blockchain` node (plus on-chain data; Liquid only).
+- **Tracked**: Documents with a `blockchain` node (plus on-chain data for Liquid and/or Litecoin, including LTC→LBTC bridges).
 - **Transfers**: For tracked XMLs, validation of the `transfers` node (holder changes on the chain).
 
 ## Install
@@ -25,10 +25,9 @@ npm install xml-fiesta --save
 - **Standard XML**: Document without a `blockchain` node. Validation checks signatures and document integrity only (no on-chain data).
 - **Tracked XML**: Document that includes a `blockchain` node. Validation compares XML data with on-chain data (asset, hash, transfers).
 - **Blockchain track**: The on-chain history for the asset referenced in the XML (used to verify that the document matches the chain).
-- **Mainnet**: Liquid production network (real assets). Used by default when parsing tracked XML.
-- **Testnet**: Liquid test network (no real value). Enable by passing `true` as the second argument to `Document.fromXml()`.
+- **Mainnet / testnet (Liquid)**: Liquid production vs test network. Litecoin lookups always use BlockCypher Litecoin mainnet.
 - **LBTC**: Liquid Bitcoin network; fully supported via Blockstream API.
-- **LTC**: Legacy network identifier; some blockchain validations are skipped.
+- **LTC**: Litecoin colored-coin network; supported via BlockCypher.
 - **oHashValid**: Whether the original hash in the XML matches the computed document hash (integrity check).
 - **Transfer**: Change of holder/ownership of the asset on the blockchain. **Endorser** = previous holder; **endorsee** = new holder.
 
@@ -90,7 +89,11 @@ async function validateXml(xmlString, rootCertificates) {
     return result.standard; // { isValid, document, signatures }
   }
 
-  return result.tracked; // { isValid, showLimitData, oHashValid, asset, document, signatures, transfers }
+  // tracked: {
+  //   isValid, showLimitData, oHashValid, asset, document, signatures, transfers?,
+  //   litecoinLiquidBridge? // present when the XML has an LTC→LBTC transition
+  // }
+  return result.tracked;
 }
 ```
 
@@ -101,29 +104,28 @@ An XML is considered **tracked** when it includes the `blockchain` node. For tra
 ### Blockchain support
 
 - **LBTC**: Supported via Liquid (Blockstream API).
-- **LTC**: Not supported; some blockchain validations are skipped for legacy reasons.
+- **LTC**: Supported via Litecoin colored coins (BlockCypher API), using the same `Blockchain.init` + `getBlockchainTrack` flow as Liquid.
 
 ### Network / testnet
 
-**Testnet** is a separate Liquid network used for testing (no real value). Mainnet is the production network where real assets live.
+`Document.fromXml(xmlString, useTestnet)` accepts a second boolean argument that only affects **Liquid (LBTC)** lookups:
 
-`Document.fromXml(xmlString, useTestnet)` accepts a second boolean argument:
+- **Omit it or pass `false`** (default): Liquid **mainnet** (Blockstream).
+- **Pass `true`**: Liquid **testnet** (Blockstream liquidtestnet).
 
-- **Omit it or pass `false`** (default): uses Liquid **mainnet** for blockchain lookups.
-- **Pass `true`**: uses Liquid **testnet** for blockchain lookups.
+**Litecoin (LTC)** always uses BlockCypher Litecoin **mainnet**. `useTestnet` is a no-op for LTC (BlockCypher does not expose Litecoin testnet in this integration).
 
-Example: `Document.fromXml(xmlString, true)` enables testnet; `Document.fromXml(xmlString)` uses mainnet.
+Example: `Document.fromXml(xmlString, true)` uses Liquid testnet when the document/track needs Liquid; Litecoin segments still query mainnet. `Document.fromXml(xmlString)` uses Liquid mainnet.
 
 ### Node.js note (fetch required)
 
-Liquid tracking uses `fetch()` under the hood. In Node.js you must provide a global `fetch` implementation.
+Blockchain tracking (Liquid and Litecoin) uses `fetch()` under the hood. In Node.js you must provide a global `fetch` implementation.
 
 ## Transfers (tracked XML)
 
 Tracked XMLs can include a `transfers` node. When validating a tracked XML, transfers are validated when:
 
-- `tracked.showLimitData` is `false`, and
-- the document network is not `LTC`.
+- `tracked.showLimitData` is `false`.
 
 When transfers are validated, the result includes `tracked.transfers` with per-transfer validation results:
 
