@@ -43,6 +43,12 @@ const ASSET_PREFIX_BY_POLICY = {
   dispersed: "20e4",
 };
 
+const RATE_LIMIT_RETRIES = 2;
+const RATE_LIMIT_DELAY_MS = 1000;
+
+const wait = (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
 export default class Litecoin {
   private BASE_URL = "https://api.blockcypher.com/v1/ltc/main";
 
@@ -220,7 +226,7 @@ export default class Litecoin {
         params.set("before", String(before));
       }
 
-      const response = await fetch(
+      const response = await this.fetchWithRateLimitRetry(
         `${this.BASE_URL}/addrs/${encodeURIComponent(address)}/full?${params}`,
       );
 
@@ -296,7 +302,7 @@ export default class Litecoin {
     const outputs = [];
 
     while (nextUrl) {
-      const response = await fetch(nextUrl);
+      const response = await this.fetchWithRateLimitRetry(nextUrl);
 
       if (response.status === 400 || response.status === 404) {
         return null;
@@ -337,6 +343,22 @@ export default class Litecoin {
     transaction: LitecoinTransaction,
   ) => {
     transactionCache.set(transaction.transactionId, transaction);
+  };
+
+  private fetchWithRateLimitRetry = async (
+    url: string,
+  ): Promise<Response> => {
+    let attempt = 0;
+
+    for (;;) {
+      const response = await fetch(url);
+      if (response.status !== 429 || attempt >= RATE_LIMIT_RETRIES) {
+        return response;
+      }
+
+      attempt += 1;
+      await wait(RATE_LIMIT_DELAY_MS);
+    }
   };
 
   private normalizeTransaction = (transaction): LitecoinTransaction => ({
