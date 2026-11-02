@@ -7,8 +7,10 @@ import {
 } from "./liquid";
 import {
   BridgeValidationResult,
+  deriveLitecoinAssetOutpoint,
   findLitecoinToLiquidTransition,
   resolveLitecoinToLiquidBridge,
+  takeTransfersUntilHolder,
 } from "./litecoin-liquid-bridge";
 
 export type BuildBlockchainTrackOptions = {
@@ -63,28 +65,22 @@ export const buildBlockchainTrack = async ({
     liquid.useTestnet();
   }
 
-  const litecoinLiquidBridge = await resolveLitecoinToLiquidBridge(
-    lastLitecoinHolder,
-    firstLiquidHolder,
-    litecoin,
-    liquid,
-  );
-
-  if (litecoinLiquidBridge.status !== "valid" || !litecoinLiquidBridge.assetId) {
-    return {
-      track: null,
-      litecoinLiquidBridge,
-    };
+  let litecoinTrack: GetBlockchainTrackResult | null;
+  try {
+    litecoinTrack = await litecoin.getBlockchainTrack(
+      assetId,
+      firstHolderAddress,
+    );
+  } catch (_error) {
+    return unverifiableBridgeResult();
   }
-
-  const litecoinTrack = await litecoin.getBlockchainTrack(
-    assetId,
-    firstHolderAddress,
-  );
   if (!litecoinTrack) {
     return {
       track: null,
-      litecoinLiquidBridge,
+      litecoinLiquidBridge: {
+        status: "invalid",
+        reason: "litecoin_track_not_found",
+      },
     };
   }
 
@@ -96,13 +92,50 @@ export const buildBlockchainTrack = async ({
   if (!litecoinTransfers) {
     return {
       track: null,
+      litecoinLiquidBridge: {
+        status: "invalid",
+        reason: "litecoin_holder_not_found_in_track",
+      },
+    };
+  }
+
+  const litecoinAssetOutpoint = deriveLitecoinAssetOutpoint(
+    litecoinTrack.issuance,
+    litecoinTransfers,
+  );
+  if (!litecoinAssetOutpoint) {
+    return {
+      track: null,
+      litecoinLiquidBridge: {
+        status: "invalid",
+        reason: "litecoin_asset_outpoint_not_found",
+      },
+    };
+  }
+
+  const litecoinLiquidBridge = await resolveLitecoinToLiquidBridge(
+    lastLitecoinHolder,
+    firstLiquidHolder,
+    litecoinAssetOutpoint,
+    litecoin,
+    liquid,
+  );
+
+  if (litecoinLiquidBridge.status !== "valid" || !litecoinLiquidBridge.assetId) {
+    return {
+      track: null,
       litecoinLiquidBridge,
     };
   }
 
-  const liquidTrack = await liquid.getBlockchainTrack(
-    litecoinLiquidBridge.assetId,
-  );
+  let liquidTrack: GetBlockchainTrackResult | null;
+  try {
+    liquidTrack = await liquid.getBlockchainTrack(
+      litecoinLiquidBridge.assetId,
+    );
+  } catch (_error) {
+    return unverifiableBridgeResult();
+  }
   if (!liquidTrack) {
     return {
       track: null,
@@ -135,6 +168,7 @@ export const buildBlockchainTrack = async ({
           network: "LBTC" as const,
         })),
       ],
+      issuance: litecoinTrack.issuance,
     },
   };
 };
@@ -155,22 +189,10 @@ const getSingleNetworkTrack = async ({
   return blockchainInstance.getBlockchainTrack(assetId, firstHolderAddress);
 };
 
-const takeTransfersUntilHolder = (
-  transfers: GetTransfersByTxIdResult[],
-  holderAddress: string,
-  firstHolderAddress: string,
-): GetTransfersByTxIdResult[] | null => {
-  let holderIndex = -1;
-  for (let index = transfers.length - 1; index >= 0; index -= 1) {
-    if (transfers[index].currentAddress === holderAddress) {
-      holderIndex = index;
-      break;
-    }
-  }
-
-  if (holderIndex === -1) {
-    return holderAddress === firstHolderAddress ? [] : null;
-  }
-
-  return transfers.slice(0, holderIndex + 1);
-};
+const unverifiableBridgeResult = (): BuildBlockchainTrackResult => ({
+  track: null,
+  litecoinLiquidBridge: {
+    status: "unverifiable",
+    reason: "blockchain_provider_failure",
+  },
+});

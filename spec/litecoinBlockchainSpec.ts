@@ -150,9 +150,15 @@ describe("Litecoin blockchain support", () => {
           txid: transferTxid,
           prevAddress: firstHolder,
           currentAddress: secondHolder,
+          outputIndex: 0,
           network: "LTC",
         },
       ],
+      issuance: {
+        transactionId: issuanceTxid,
+        outputIndex: 8,
+        address: firstHolder,
+      },
     });
   });
 });

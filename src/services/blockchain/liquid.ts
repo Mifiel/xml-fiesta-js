@@ -14,11 +14,19 @@ export type GetTransfersByTxIdResult = {
   prevAddress: string;
   currentAddress: string;
   network?: "LTC" | "LBTC";
+  outputIndex?: number;
+};
+
+export type BlockchainIssuanceOutpoint = {
+  transactionId: string;
+  outputIndex: number;
+  address?: string;
 };
 
 export type GetBlockchainTrackResult = {
   asset: string;
-  transfers: GetTransfersByTxIdResult[]
+  transfers: GetTransfersByTxIdResult[];
+  issuance?: BlockchainIssuanceOutpoint;
 };
 
 export type LiquidAsset = {
@@ -127,6 +135,7 @@ export default class Liquid {
       prevAddress,
       txid,
       prevTxid,
+      outputIndex: indexTx,
       network: "LBTC",
     };
 

@@ -2,7 +2,12 @@ import Litecoin, {
   LitecoinInput,
   LitecoinTransaction,
 } from "./litecoin";
-import Liquid, { LiquidAsset, LiquidTransaction } from "./liquid";
+import Liquid, {
+  BlockchainIssuanceOutpoint,
+  GetTransfersByTxIdResult,
+  LiquidAsset,
+  LiquidTransaction,
+} from "./liquid";
 
 export type BridgeValidationStatus = "valid" | "invalid" | "unverifiable";
 
@@ -28,13 +33,21 @@ export type LitecoinToLiquidTransition =
       firstLiquidHolder: string;
     };
 
+export type LitecoinAssetOutpoint = {
+  transactionId: string;
+  outputIndex: number;
+};
+
 type LitecoinBridgeCandidate = {
   transaction: LitecoinTransaction;
   input: LitecoinInput;
   assetId: string;
 };
 
-export type BridgeLitecoinClient = Pick<Litecoin, "getAddressTransactions">;
+export type BridgeLitecoinClient = Pick<
+  Litecoin,
+  "getAddressTransactions" | "getBlockchainTrack"
+>;
 export type BridgeLiquidClient = Pick<Liquid, "getAsset" | "getTransaction">;
 
 const LIQUID_ASSET_PREFIX_HEX = "6c697175696400";
@@ -110,6 +123,8 @@ export const findLitecoinToLiquidTransition = (
  */
 export const validateLitecoinToLiquidBridge = async (
   electronicDocument,
+  litecoinAssetId: string,
+  firstHolderAddress: string,
   litecoin: BridgeLitecoinClient,
   liquid: BridgeLiquidClient,
 ): Promise<BridgeValidationResult> => {
@@ -123,12 +138,45 @@ export const validateLitecoinToLiquidBridge = async (
     return invalidResult(transition.reason);
   }
 
-  return resolveLitecoinToLiquidBridge(
-    transition.lastLitecoinHolder,
-    transition.firstLiquidHolder,
-    litecoin,
-    liquid,
-  );
+  try {
+    const litecoinTrack = await litecoin.getBlockchainTrack(
+      litecoinAssetId,
+      firstHolderAddress,
+    );
+    if (!litecoinTrack) {
+      return invalidResult("litecoin_track_not_found");
+    }
+
+    const litecoinTransfers = takeTransfersUntilHolder(
+      litecoinTrack.transfers,
+      transition.lastLitecoinHolder,
+      firstHolderAddress,
+    );
+    if (!litecoinTransfers) {
+      return invalidResult("litecoin_holder_not_found_in_track");
+    }
+
+    const litecoinAssetOutpoint = deriveLitecoinAssetOutpoint(
+      litecoinTrack.issuance,
+      litecoinTransfers,
+    );
+    if (!litecoinAssetOutpoint) {
+      return invalidResult("litecoin_asset_outpoint_not_found");
+    }
+
+    return resolveLitecoinToLiquidBridge(
+      transition.lastLitecoinHolder,
+      transition.firstLiquidHolder,
+      litecoinAssetOutpoint,
+      litecoin,
+      liquid,
+    );
+  } catch (_error) {
+    return {
+      status: "unverifiable",
+      reason: "blockchain_provider_failure",
+    };
+  }
 };
 
 /**
@@ -137,6 +185,7 @@ export const validateLitecoinToLiquidBridge = async (
 export const resolveLitecoinToLiquidBridge = async (
   lastLitecoinHolder: string,
   firstLiquidHolder: string,
+  litecoinAssetOutpoint: LitecoinAssetOutpoint,
   litecoin: BridgeLitecoinClient,
   liquid: BridgeLiquidClient,
 ): Promise<BridgeValidationResult> => {
@@ -146,6 +195,7 @@ export const resolveLitecoinToLiquidBridge = async (
     const bridgeCandidate = findUniqueBridgeCandidate(
       litecoinTransactions,
       lastLitecoinHolder,
+      litecoinAssetOutpoint,
     );
 
     if (!bridgeCandidate) {
@@ -233,16 +283,69 @@ export const extractBlockchainLayers = (
     .filter(Boolean);
 };
 
+export const takeTransfersUntilHolder = (
+  transfers: GetTransfersByTxIdResult[],
+  holderAddress: string,
+  firstHolderAddress: string,
+): GetTransfersByTxIdResult[] | null => {
+  let holderIndex = -1;
+  for (let index = transfers.length - 1; index >= 0; index -= 1) {
+    if (transfers[index].currentAddress === holderAddress) {
+      holderIndex = index;
+      break;
+    }
+  }
+
+  if (holderIndex === -1) {
+    return holderAddress === firstHolderAddress ? [] : null;
+  }
+
+  return transfers.slice(0, holderIndex + 1);
+};
+
+export const deriveLitecoinAssetOutpoint = (
+  issuance: BlockchainIssuanceOutpoint | undefined,
+  transfersUntilHolder: GetTransfersByTxIdResult[],
+): LitecoinAssetOutpoint | null => {
+  if (transfersUntilHolder.length === 0) {
+    if (!issuance) {
+      return null;
+    }
+    return {
+      transactionId: issuance.transactionId,
+      outputIndex: issuance.outputIndex,
+    };
+  }
+
+  const holderTransfer = transfersUntilHolder[transfersUntilHolder.length - 1];
+  if (
+    !holderTransfer?.txid ||
+    holderTransfer.outputIndex === undefined ||
+    holderTransfer.outputIndex === null
+  ) {
+    return null;
+  }
+
+  return {
+    transactionId: holderTransfer.txid,
+    outputIndex: holderTransfer.outputIndex,
+  };
+};
+
 const findUniqueBridgeCandidate = (
   transactions: LitecoinTransaction[],
   holderAddress: string,
+  litecoinAssetOutpoint: LitecoinAssetOutpoint,
 ): LitecoinBridgeCandidate | null => {
   const candidates: LitecoinBridgeCandidate[] = [];
 
   for (const transaction of transactions) {
     const bridgeInputs = transaction.inputs.filter(
       (input) =>
-        input.value === 1000 && input.addresses.includes(holderAddress),
+        input.value === 1000 &&
+        input.addresses.includes(holderAddress) &&
+        input.previousTransactionId === litecoinAssetOutpoint.transactionId &&
+        input.previousOutputIndex === litecoinAssetOutpoint.outputIndex,
     );
     const hasBurnOutput = transaction.outputs.some(
       (output) =>

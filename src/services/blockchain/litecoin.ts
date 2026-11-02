@@ -27,6 +27,7 @@ export type LitecoinTransaction = {
   inputs: LitecoinInput[];
   outputs: LitecoinOutput[];
   hasMoreOutputs?: boolean;
+  blockHeight?: number;
 };
 
 type ColoredCoinData = ReturnType<typeof ColoredCoinTransaction.fromHex>;
@@ -80,6 +81,11 @@ export default class Litecoin {
     return {
       asset,
       transfers,
+      issuance: {
+        transactionId: issuanceOutput.transaction.transactionId,
+        outputIndex: issuanceOutput.outputIndex,
+        address: firstHolderAddress,
+      },
     };
   };
 
@@ -106,6 +112,7 @@ export default class Litecoin {
       prevAddress,
       txid,
       prevTxid,
+      outputIndex,
       network: "LTC",
     };
 
@@ -164,15 +171,11 @@ export default class Litecoin {
       await this.getAddressTransactions(holderAddress);
     const candidates: ColoredOutput[] = [];
 
-    // Prefer txs from /full; only refetch when BlockCypher truncated outputs.
     for (const addressTransaction of addressTransactions) {
-      this.rememberTransaction(transactionCache, addressTransaction);
-      const transaction = addressTransaction.hasMoreOutputs
-        ? await this.getTransaction(
-            addressTransaction.transactionId,
-            transactionCache,
-          )
-        : addressTransaction;
+      const transaction = await this.ensureCompleteTransaction(
+        addressTransaction,
+        transactionCache,
+      );
       if (!transaction) {
         continue;
       }
@@ -208,19 +211,74 @@ export default class Litecoin {
   getAddressTransactions = async (
     address: string,
   ): Promise<LitecoinTransaction[]> => {
-    const response = await fetch(
-      `${this.BASE_URL}/addrs/${encodeURIComponent(address)}/full?limit=50`,
-    );
+    const transactions: LitecoinTransaction[] = [];
+    let before: number | undefined;
 
-    if (response.status === 400 || response.status === 404) {
-      return [];
-    }
-    if (!response.ok) {
-      throw new Error(`Error de red: ${response.status}`);
+    for (;;) {
+      const params = new URLSearchParams({ limit: "50" });
+      if (before !== undefined) {
+        params.set("before", String(before));
+      }
+
+      const response = await fetch(
+        `${this.BASE_URL}/addrs/${encodeURIComponent(address)}/full?${params}`,
+      );
+
+      if (response.status === 400 || response.status === 404) {
+        return transactions;
+      }
+      if (!response.ok) {
+        throw new Error(`Error de red: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const pageTransactions = (data.txs || []).map(this.normalizeTransaction);
+      transactions.push(...pageTransactions);
+
+      if (!data.hasMore || pageTransactions.length === 0) {
+        break;
+      }
+
+      const confirmedHeights = pageTransactions
+        .map((transaction) => transaction.blockHeight)
+        .filter((height): height is number => typeof height === "number" && height > 0);
+
+      if (confirmedHeights.length === 0) {
+        break;
+      }
+
+      const oldestHeight = Math.min(...confirmedHeights);
+      if (before !== undefined && oldestHeight >= before) {
+        break;
+      }
+      before = oldestHeight;
     }
 
-    const data = await response.json();
-    return (data.txs || []).map(this.normalizeTransaction);
+    const transactionCache = new Map<string, LitecoinTransaction>();
+    const completeTransactions: LitecoinTransaction[] = [];
+    for (const transaction of transactions) {
+      const completeTransaction = await this.ensureCompleteTransaction(
+        transaction,
+        transactionCache,
+      );
+      if (completeTransaction) {
+        completeTransactions.push(completeTransaction);
+      }
+    }
+
+    return completeTransactions;
+  };
+
+  private ensureCompleteTransaction = async (
+    transaction: LitecoinTransaction,
+    transactionCache: Map<string, LitecoinTransaction>,
+  ): Promise<LitecoinTransaction | null> => {
+    if (!transaction.hasMoreOutputs) {
+      this.rememberTransaction(transactionCache, transaction);
+      return transaction;
+    }
+
+    return this.getTransaction(transaction.transactionId, transactionCache);
   };
 
   private getTransaction = async (
@@ -232,18 +290,44 @@ export default class Litecoin {
       return cachedTransaction;
     }
 
-    const response = await fetch(
-      `${this.BASE_URL}/txs/${encodeURIComponent(transactionId)}?limit=1000`,
-    );
+    let nextUrl: string | null =
+      `${this.BASE_URL}/txs/${encodeURIComponent(transactionId)}?limit=1000`;
+    let baseTransaction: any = null;
+    const outputs = [];
 
-    if (response.status === 400 || response.status === 404) {
+    while (nextUrl) {
+      const response = await fetch(nextUrl);
+
+      if (response.status === 400 || response.status === 404) {
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error(`Error de red: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        outputs.push(...data);
+        nextUrl = null;
+        continue;
+      }
+
+      if (!baseTransaction) {
+        baseTransaction = data;
+      }
+      outputs.push(...(data.outputs || []));
+      nextUrl = data.next_outputs || null;
+    }
+
+    if (!baseTransaction) {
       return null;
     }
-    if (!response.ok) {
-      throw new Error(`Error de red: ${response.status}`);
-    }
 
-    const transaction = this.normalizeTransaction(await response.json());
+    const transaction = this.normalizeTransaction({
+      ...baseTransaction,
+      outputs,
+      next_outputs: undefined,
+    });
     this.rememberTransaction(transactionCache, transaction);
     return transaction;
   };
@@ -272,6 +356,7 @@ export default class Litecoin {
       spentByTransactionId: output.spent_by,
     })),
     hasMoreOutputs: Boolean(transaction.next_outputs),
+    blockHeight: transaction.block_height,
   });
 
   private readColoredCoinData = (

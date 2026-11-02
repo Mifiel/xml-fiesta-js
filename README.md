@@ -8,7 +8,7 @@ Electronic signed document XML Protocol **reader** and validator for Node & Brow
 **Supported validation modes:**
 
 - **Standard**: Documents without a `blockchain` node (signatures and document integrity).
-- **Tracked**: Documents with a `blockchain` node (plus on-chain data; Liquid only).
+- **Tracked**: Documents with a `blockchain` node (plus on-chain data for Liquid and/or Litecoin, including LTC→LBTC bridges).
 - **Transfers**: For tracked XMLs, validation of the `transfers` node (holder changes on the chain).
 
 ## Install
@@ -25,10 +25,9 @@ npm install xml-fiesta --save
 - **Standard XML**: Document without a `blockchain` node. Validation checks signatures and document integrity only (no on-chain data).
 - **Tracked XML**: Document that includes a `blockchain` node. Validation compares XML data with on-chain data (asset, hash, transfers).
 - **Blockchain track**: The on-chain history for the asset referenced in the XML (used to verify that the document matches the chain).
-- **Mainnet**: Liquid production network (real assets). Used by default when parsing tracked XML.
-- **Testnet**: Liquid test network (no real value). Enable by passing `true` as the second argument to `Document.fromXml()`.
+- **Mainnet / testnet (Liquid)**: Liquid production vs test network. Litecoin lookups always use BlockCypher Litecoin mainnet.
 - **LBTC**: Liquid Bitcoin network; fully supported via Blockstream API.
-- **LTC**: Litecoin colored-coin network; supported via BlockCypher the same way Liquid uses its explorer.
+- **LTC**: Litecoin colored-coin network; supported via BlockCypher.
 - **oHashValid**: Whether the original hash in the XML matches the computed document hash (integrity check).
 - **Transfer**: Change of holder/ownership of the asset on the blockchain. **Endorser** = previous holder; **endorsee** = new holder.
 
@@ -90,7 +89,11 @@ async function validateXml(xmlString, rootCertificates) {
     return result.standard; // { isValid, document, signatures }
   }
 
-  return result.tracked; // { isValid, showLimitData, oHashValid, asset, document, signatures, transfers }
+  // tracked: {
+  //   isValid, showLimitData, oHashValid, asset, document, signatures, transfers?,
+  //   litecoinLiquidBridge? // present when the XML has an LTC→LBTC transition
+  // }
+  return result.tracked;
 }
 ```
 
