@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.9.2
+
+- Retry BlockCypher Litecoin requests on HTTP 429 after a 1s delay
+  (up to two retries).
+
 ## v1.9.1
 
 - Support Litecoin colored-coin tracking via BlockCypher and LTC→LBTC
