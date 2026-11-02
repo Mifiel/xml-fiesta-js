@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.9.3
+
+- Republish release (1.9.2 version number was reserved after a partial
+  publish; includes the Litecoin BlockCypher 429 retry).
+
 ## v1.9.2
 
 - Retry BlockCypher Litecoin requests on HTTP 429 after a 1s delay
