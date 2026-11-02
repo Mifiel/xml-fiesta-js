@@ -7,7 +7,7 @@ import {
 } from "./liquid";
 import {
   BridgeValidationResult,
-  extractBlockchainLayers,
+  findLitecoinToLiquidTransition,
   resolveLitecoinToLiquidBridge,
 } from "./litecoin-liquid-bridge";
 
@@ -31,19 +31,9 @@ export const buildBlockchainTrack = async ({
   network,
   useTestnet = false,
 }: BuildBlockchainTrackOptions): Promise<BuildBlockchainTrackResult> => {
-  const layers = extractBlockchainLayers(electronicDocument);
-  const transitionIndexes = layers.reduce((indexes, layer, index) => {
-    if (
-      index > 0 &&
-      layers[index - 1].network === "LTC" &&
-      layer.network === "LBTC"
-    ) {
-      indexes.push(index);
-    }
-    return indexes;
-  }, [] as number[]);
+  const transition = findLitecoinToLiquidTransition(electronicDocument);
 
-  if (transitionIndexes.length === 0) {
+  if (transition.kind === "none") {
     return {
       track: await getSingleNetworkTrack({
         network,
@@ -54,45 +44,17 @@ export const buildBlockchainTrack = async ({
     };
   }
 
-  if (transitionIndexes.length > 1) {
+  if (transition.kind === "invalid") {
     return {
       track: null,
       litecoinLiquidBridge: {
         status: "invalid",
-        reason: "multiple_litecoin_to_liquid_transitions",
+        reason: transition.reason,
       },
     };
   }
 
-  const transitionIndex = transitionIndexes[0];
-  const litecoinLayersAreContiguous = layers
-    .slice(0, transitionIndex)
-    .every(({ network: layerNetwork }) => layerNetwork === "LTC");
-  const liquidLayersAreContiguous = layers
-    .slice(transitionIndex)
-    .every(({ network: layerNetwork }) => layerNetwork === "LBTC");
-
-  if (!litecoinLayersAreContiguous || !liquidLayersAreContiguous) {
-    return {
-      track: null,
-      litecoinLiquidBridge: {
-        status: "invalid",
-        reason: "invalid_blockchain_layer_sequence",
-      },
-    };
-  }
-
-  const lastLitecoinHolder = layers[transitionIndex - 1]?.holderAddress;
-  const firstLiquidHolder = layers[transitionIndex]?.holderAddress;
-  if (!lastLitecoinHolder || !firstLiquidHolder) {
-    return {
-      track: null,
-      litecoinLiquidBridge: {
-        status: "invalid",
-        reason: "missing_holder_address",
-      },
-    };
-  }
+  const { lastLitecoinHolder, firstLiquidHolder } = transition;
 
   const litecoin = Blockchain.init("LTC") as Litecoin;
   const liquid = Blockchain.init("LBTC") as Liquid;
@@ -129,7 +91,14 @@ export const buildBlockchainTrack = async ({
   const litecoinTransfers = takeTransfersUntilHolder(
     litecoinTrack.transfers,
     lastLitecoinHolder,
+    firstHolderAddress,
   );
+  if (!litecoinTransfers) {
+    return {
+      track: null,
+      litecoinLiquidBridge,
+    };
+  }
 
   const liquidTrack = await liquid.getBlockchainTrack(
     litecoinLiquidBridge.assetId,
@@ -189,15 +158,19 @@ const getSingleNetworkTrack = async ({
 const takeTransfersUntilHolder = (
   transfers: GetTransfersByTxIdResult[],
   holderAddress: string,
-): GetTransfersByTxIdResult[] => {
-  const selectedTransfers: GetTransfersByTxIdResult[] = [];
-
-  for (const transfer of transfers) {
-    selectedTransfers.push(transfer);
-    if (transfer.currentAddress === holderAddress) {
+  firstHolderAddress: string,
+): GetTransfersByTxIdResult[] | null => {
+  let holderIndex = -1;
+  for (let index = transfers.length - 1; index >= 0; index -= 1) {
+    if (transfers[index].currentAddress === holderAddress) {
+      holderIndex = index;
       break;
     }
   }
 
-  return selectedTransfers;
+  if (holderIndex === -1) {
+    return holderAddress === firstHolderAddress ? [] : null;
+  }
+
+  return transfers.slice(0, holderIndex + 1);
 };

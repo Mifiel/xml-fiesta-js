@@ -19,6 +19,15 @@ export type BlockchainLayer = {
   holderAddress: string;
 };
 
+export type LitecoinToLiquidTransition =
+  | { kind: "none" }
+  | { kind: "invalid"; reason: string }
+  | {
+      kind: "found";
+      lastLitecoinHolder: string;
+      firstLiquidHolder: string;
+    };
+
 type LitecoinBridgeCandidate = {
   transaction: LitecoinTransaction;
   input: LitecoinInput;
@@ -32,14 +41,11 @@ const LIQUID_ASSET_PREFIX_HEX = "6c697175696400";
 const LIQUID_ASSET_PAYLOAD_LENGTH = LIQUID_ASSET_PREFIX_HEX.length + 64;
 
 /**
- * Validates only the LTC→LBTC junction when present in the endorsement chain.
- * Liquid endorsements after the bridge are validated via the Liquid track segment.
+ * Detects 0 or 1 contiguous LTC→LBTC transition in the endorsement chain.
  */
-export const validateLitecoinToLiquidBridge = async (
+export const findLitecoinToLiquidTransition = (
   electronicDocument,
-  litecoin: BridgeLitecoinClient,
-  liquid: BridgeLiquidClient,
-): Promise<BridgeValidationResult> => {
+): LitecoinToLiquidTransition => {
   const layers = extractBlockchainLayers(electronicDocument);
   const transitionIndexes = layers.reduce((indexes, layer, index) => {
     if (
@@ -53,11 +59,14 @@ export const validateLitecoinToLiquidBridge = async (
   }, [] as number[]);
 
   if (transitionIndexes.length === 0) {
-    return { status: "valid" };
+    return { kind: "none" };
   }
 
   if (transitionIndexes.length > 1) {
-    return invalidResult("multiple_litecoin_to_liquid_transitions");
+    return {
+      kind: "invalid",
+      reason: "multiple_litecoin_to_liquid_transitions",
+    };
   }
 
   const transitionIndex = transitionIndexes[0];
@@ -72,19 +81,51 @@ export const validateLitecoinToLiquidBridge = async (
     !networksBeforeTransitionAreLitecoin ||
     !networksAfterTransitionAreLiquid
   ) {
-    return invalidResult("invalid_blockchain_layer_sequence");
+    return {
+      kind: "invalid",
+      reason: "invalid_blockchain_layer_sequence",
+    };
   }
 
-  const lastLitecoinHolder = layers[transitionIndex - 1].holderAddress;
-  const firstLiquidHolder = layers[transitionIndex].holderAddress;
+  const lastLitecoinHolder = layers[transitionIndex - 1]?.holderAddress;
+  const firstLiquidHolder = layers[transitionIndex]?.holderAddress;
 
   if (!lastLitecoinHolder || !firstLiquidHolder) {
-    return invalidResult("missing_holder_address");
+    return {
+      kind: "invalid",
+      reason: "missing_holder_address",
+    };
+  }
+
+  return {
+    kind: "found",
+    lastLitecoinHolder,
+    firstLiquidHolder,
+  };
+};
+
+/**
+ * Validates only the LTC→LBTC junction when present in the endorsement chain.
+ * Liquid endorsements after the bridge are validated via the Liquid track segment.
+ */
+export const validateLitecoinToLiquidBridge = async (
+  electronicDocument,
+  litecoin: BridgeLitecoinClient,
+  liquid: BridgeLiquidClient,
+): Promise<BridgeValidationResult> => {
+  const transition = findLitecoinToLiquidTransition(electronicDocument);
+
+  if (transition.kind === "none") {
+    return { status: "valid" };
+  }
+
+  if (transition.kind === "invalid") {
+    return invalidResult(transition.reason);
   }
 
   return resolveLitecoinToLiquidBridge(
-    lastLitecoinHolder,
-    firstLiquidHolder,
+    transition.lastLitecoinHolder,
+    transition.firstLiquidHolder,
     litecoin,
     liquid,
   );

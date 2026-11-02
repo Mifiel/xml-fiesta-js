@@ -105,18 +105,18 @@ An XML is considered **tracked** when it includes the `blockchain` node. For tra
 
 ### Network / testnet
 
-**Testnet** is a separate Liquid network used for testing (no real value). Mainnet is the production network where real assets live.
+`Document.fromXml(xmlString, useTestnet)` accepts a second boolean argument that only affects **Liquid (LBTC)** lookups:
 
-`Document.fromXml(xmlString, useTestnet)` accepts a second boolean argument:
+- **Omit it or pass `false`** (default): Liquid **mainnet** (Blockstream).
+- **Pass `true`**: Liquid **testnet** (Blockstream liquidtestnet).
 
-- **Omit it or pass `false`** (default): uses Liquid **mainnet** for blockchain lookups.
-- **Pass `true`**: uses Liquid **testnet** for blockchain lookups.
+**Litecoin (LTC)** always uses BlockCypher Litecoin **mainnet**. `useTestnet` is a no-op for LTC (BlockCypher does not expose Litecoin testnet in this integration).
 
-Example: `Document.fromXml(xmlString, true)` enables testnet; `Document.fromXml(xmlString)` uses mainnet.
+Example: `Document.fromXml(xmlString, true)` uses Liquid testnet when the document/track needs Liquid; Litecoin segments still query mainnet. `Document.fromXml(xmlString)` uses Liquid mainnet.
 
 ### Node.js note (fetch required)
 
-Liquid tracking uses `fetch()` under the hood. In Node.js you must provide a global `fetch` implementation.
+Blockchain tracking (Liquid and Litecoin) uses `fetch()` under the hood. In Node.js you must provide a global `fetch` implementation.
 
 ## Transfers (tracked XML)
 
