@@ -1,21 +1,23 @@
 import { expect } from "chai";
-import XML from "../src/patches/xmlPatch";
 import {
   BridgeLiquidClient,
   BridgeLitecoinClient,
   BridgeValidationResult,
   validateLitecoinToLiquidBridge,
 } from "../src/services/blockchain/litecoin-liquid-bridge";
-import { LitecoinTransaction } from "../src/services/blockchain/litecoin";
+import {
+  LitecoinInput,
+  LitecoinOutput,
+  LitecoinTransaction,
+} from "../src/services/blockchain/litecoin";
 import {
   LiquidAsset,
   LiquidTransaction,
+  LiquidTransactionOutput,
 } from "../src/services/blockchain/liquid";
 
-const fs = require("fs");
-
 type BridgeCase = {
-  fixture: string;
+  name: string;
   lastLitecoinHolder: string;
   bridgeTransactionId: string;
   assetId: string;
@@ -25,7 +27,7 @@ type BridgeCase = {
 
 const bridgeCases: BridgeCase[] = [
   {
-    fixture: "pagare_2110445.xml",
+    name: "folio 2110445",
     lastLitecoinHolder: "MF2sxYhnCemw2L7UcejmkfCPeYeqavmxtZ",
     bridgeTransactionId:
       "9d56eec9ddb9a877ec81ce60da0473de22ce7b5dc38f59a9593b7599efcc2b1a",
@@ -35,7 +37,7 @@ const bridgeCases: BridgeCase[] = [
     firstLiquidHolder: "Gts7fyoH1Bmayp3at8Yx4NRPkJKSZeMBFX",
   },
   {
-    fixture: "pagare_2035257.xml",
+    name: "folio 2035257",
     lastLitecoinHolder: "MJj7Na5YSTgVcN1KC53yAdZvHDjbXyWBf1",
     bridgeTransactionId:
       "2dfed5e513a62e66a7e3c21830bef6394238276fe3069beef65f1648435f27ae",
@@ -46,6 +48,8 @@ const bridgeCases: BridgeCase[] = [
   },
 ];
 
+const primaryBridgeCase = bridgeCases[0] as BridgeCase;
+
 type BridgeClients = {
   litecoin: BridgeLitecoinClient & {
     transactions: LitecoinTransaction[];
@@ -54,33 +58,80 @@ type BridgeClients = {
     asset: LiquidAsset;
     transactions: Record<string, LiquidTransaction>;
   };
+  litecoinBridgeInput: LitecoinInput;
+  opReturnOutput: LitecoinOutput;
+  liquidIssuanceOutput: LiquidTransactionOutput;
 };
 
+const createBlockchainLayer = (network: string, holderAddress: string) => ({
+  blockchain: [
+    {
+      $: { name: network },
+      holder: [
+        {
+          binding: [
+            {
+              signature: [
+                {
+                  $: { plaintext: `${holderAddress}|Holder` },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+});
+
+const createBridgeElectronicDocument = (bridgeCase: BridgeCase) => ({
+  ...createBlockchainLayer("LTC", bridgeCase.lastLitecoinHolder),
+  transfers: [
+    {
+      electronicDocument: [
+        createBlockchainLayer("LBTC", bridgeCase.firstLiquidHolder),
+      ],
+    },
+  ],
+});
+
+const liquidOnlyElectronicDocument = createBlockchainLayer(
+  "LBTC",
+  "GpYMtFU3TCGHu36BmRuiD644zqtjMbcJjQ",
+);
+
+const noBlockchainElectronicDocument = {};
+
 const createBridgeClients = (bridgeCase: BridgeCase): BridgeClients => {
-  const previousTransactionId = `${"0".repeat(63)}1`;
+  const litecoinBridgeInput: LitecoinInput = {
+    previousTransactionId: `${"0".repeat(63)}1`,
+    previousOutputIndex: 0,
+    value: 1000,
+    addresses: [bridgeCase.lastLitecoinHolder],
+  };
+  const opReturnOutput: LitecoinOutput = {
+    value: 0,
+    addresses: [],
+    scriptType: "null-data",
+    dataHex: `6c697175696400${bridgeCase.assetId}`,
+  };
+  const liquidIssuanceOutput: LiquidTransactionOutput = {
+    address: bridgeCase.firstLiquidHolder,
+    assetId: bridgeCase.assetId,
+    value: 1,
+  };
+
   const litecoinTransactions: LitecoinTransaction[] = [
     {
       transactionId: bridgeCase.bridgeTransactionId,
-      inputs: [
-        {
-          previousTransactionId,
-          previousOutputIndex: 0,
-          value: 1000,
-          addresses: [bridgeCase.lastLitecoinHolder],
-        },
-      ],
+      inputs: [litecoinBridgeInput],
       outputs: [
         {
           value: 600,
           addresses: ["variable-burn-address"],
           scriptType: "pay-to-script-hash",
         },
-        {
-          value: 0,
-          addresses: [],
-          scriptType: "null-data",
-          dataHex: `6c697175696400${bridgeCase.assetId}`,
-        },
+        opReturnOutput,
       ],
     },
   ];
@@ -88,13 +139,7 @@ const createBridgeClients = (bridgeCase: BridgeCase): BridgeClients => {
   const liquidTransactions: Record<string, LiquidTransaction> = {
     [bridgeCase.issuanceTransactionId]: {
       transactionId: bridgeCase.issuanceTransactionId,
-      outputs: [
-        {
-          address: bridgeCase.firstLiquidHolder,
-          assetId: bridgeCase.assetId,
-          value: 1,
-        },
-      ],
+      outputs: [liquidIssuanceOutput],
     },
   };
 
@@ -113,16 +158,35 @@ const createBridgeClients = (bridgeCase: BridgeCase): BridgeClients => {
       getTransaction: async (transactionId: string) =>
         clients.liquid.transactions[transactionId] || null,
     },
+    litecoinBridgeInput,
+    opReturnOutput,
+    liquidIssuanceOutput,
   };
 
   return clients;
 };
 
+const validateElectronicDocument = async (
+  electronicDocument: unknown,
+  clients: {
+    litecoin: BridgeLitecoinClient;
+    liquid: BridgeLiquidClient;
+  },
+): Promise<BridgeValidationResult> =>
+  validateLitecoinToLiquidBridge(
+    electronicDocument,
+    clients.litecoin,
+    clients.liquid,
+  );
+
 describe("Litecoin to Liquid bridge validation", () => {
   for (const bridgeCase of bridgeCases) {
-    it(`validates the real bridge fixture ${bridgeCase.fixture}`, async () => {
+    it(`validates the bridge for ${bridgeCase.name}`, async () => {
       const clients = createBridgeClients(bridgeCase);
-      const result = await validateFixture(bridgeCase.fixture, clients);
+      const result = await validateElectronicDocument(
+        createBridgeElectronicDocument(bridgeCase),
+        clients,
+      );
 
       expect(result.status).to.equal("valid");
       expect(result.assetId).to.equal(bridgeCase.assetId);
@@ -136,54 +200,56 @@ describe("Litecoin to Liquid bridge validation", () => {
   }
 
   it("rejects an incorrect OP_RETURN", async () => {
-    const bridgeCase = bridgeCases[0];
-    const clients = createBridgeClients(bridgeCase);
-    clients.litecoin.transactions[0].outputs[1].dataHex = `6c697175696401${bridgeCase.assetId}`;
+    const clients = createBridgeClients(primaryBridgeCase);
+    clients.opReturnOutput.dataHex = `6c697175696401${primaryBridgeCase.assetId}`;
 
-    const result = await validateFixture(bridgeCase.fixture, clients);
+    const result = await validateElectronicDocument(
+      createBridgeElectronicDocument(primaryBridgeCase),
+      clients,
+    );
 
     expect(result.status).to.equal("invalid");
     expect(result.reason).to.equal("litecoin_bridge_not_unique");
   });
 
   it("rejects a Liquid asset issued with a quantity other than one", async () => {
-    const bridgeCase = bridgeCases[0];
-    const clients = createBridgeClients(bridgeCase);
+    const clients = createBridgeClients(primaryBridgeCase);
     clients.liquid.asset.issuedAmount = 2;
 
-    const result = await validateFixture(bridgeCase.fixture, clients);
+    const result = await validateElectronicDocument(
+      createBridgeElectronicDocument(primaryBridgeCase),
+      clients,
+    );
 
     expect(result.status).to.equal("invalid");
     expect(result.reason).to.equal("liquid_asset_quantity_is_not_one");
   });
 
   it("rejects a Liquid issuance to a different holder", async () => {
-    const bridgeCase = bridgeCases[0];
-    const clients = createBridgeClients(bridgeCase);
-    clients.liquid.transactions[
-      bridgeCase.issuanceTransactionId
-    ].outputs[0].address = "different-holder";
+    const clients = createBridgeClients(primaryBridgeCase);
+    clients.liquidIssuanceOutput.address = "different-holder";
 
-    const result = await validateFixture(bridgeCase.fixture, clients);
+    const result = await validateElectronicDocument(
+      createBridgeElectronicDocument(primaryBridgeCase),
+      clients,
+    );
 
     expect(result.status).to.equal("invalid");
     expect(result.reason).to.equal("liquid_issuance_recipient_mismatch");
   });
 
   it("rejects two spends of the Litecoin bridge input", async () => {
-    const bridgeCase = bridgeCases[0];
-    const clients = createBridgeClients(bridgeCase);
+    const clients = createBridgeClients(primaryBridgeCase);
     clients.litecoin.transactions.push({
       transactionId: `${"f".repeat(63)}1`,
-      inputs: [
-        {
-          ...clients.litecoin.transactions[0].inputs[0],
-        },
-      ],
+      inputs: [{ ...clients.litecoinBridgeInput }],
       outputs: [],
     });
 
-    const result = await validateFixture(bridgeCase.fixture, clients);
+    const result = await validateElectronicDocument(
+      createBridgeElectronicDocument(primaryBridgeCase),
+      clients,
+    );
 
     expect(result.status).to.equal("invalid");
     expect(result.reason).to.equal(
@@ -192,48 +258,47 @@ describe("Litecoin to Liquid bridge validation", () => {
   });
 
   it("returns unverifiable when litecoin lookup fails", async () => {
-    const bridgeCase = bridgeCases[0];
-    const clients = createBridgeClients(bridgeCase);
+    const clients = createBridgeClients(primaryBridgeCase);
     clients.litecoin.getAddressTransactions = async () => {
       throw new Error("Network unavailable");
     };
 
-    const result = await validateFixture(bridgeCase.fixture, clients);
+    const result = await validateElectronicDocument(
+      createBridgeElectronicDocument(primaryBridgeCase),
+      clients,
+    );
 
     expect(result.status).to.equal("unverifiable");
     expect(result.reason).to.equal("blockchain_provider_failure");
   });
 
-  for (const fixture of ["pagare_lbtc_only.xml", "pagare_no_endosable.xml"]) {
-    it(`keeps ${fixture} valid without blockchain requests`, async () => {
-      const fail = async () => {
-        throw new Error("Blockchain clients should not be called");
-      };
-      const result = await validateFixture(fixture, {
+  it("keeps liquid-only documents valid without blockchain requests", async () => {
+    const fail = async () => {
+      throw new Error("Blockchain clients should not be called");
+    };
+    const result = await validateElectronicDocument(
+      liquidOnlyElectronicDocument,
+      {
         litecoin: { getAddressTransactions: fail },
         liquid: { getAsset: fail, getTransaction: fail },
-      });
+      },
+    );
 
-      expect(result).to.deep.equal({ status: "valid" });
-    });
-  }
+    expect(result).to.deep.equal({ status: "valid" });
+  });
+
+  it("keeps documents without blockchain valid without blockchain requests", async () => {
+    const fail = async () => {
+      throw new Error("Blockchain clients should not be called");
+    };
+    const result = await validateElectronicDocument(
+      noBlockchainElectronicDocument,
+      {
+        litecoin: { getAddressTransactions: fail },
+        liquid: { getAsset: fail, getTransaction: fail },
+      },
+    );
+
+    expect(result).to.deep.equal({ status: "valid" });
+  });
 });
-
-const validateFixture = async (
-  fixture: string,
-  clients: {
-    litecoin: BridgeLitecoinClient;
-    liquid: BridgeLiquidClient;
-  },
-): Promise<BridgeValidationResult> => {
-  const xmlString = fs.readFileSync(
-    `${__dirname}/../handoff/${fixture}`,
-    "utf8",
-  );
-  const xml = await XML.parse(xmlString);
-  return validateLitecoinToLiquidBridge(
-    xml.eDocument,
-    clients.litecoin,
-    clients.liquid,
-  );
-};
